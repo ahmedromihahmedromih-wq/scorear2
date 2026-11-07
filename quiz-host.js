@@ -96,7 +96,7 @@
     currentRoom = { pin, world: w, players: [], answers: {}, isLocked: false, status: 'lobby' };
 
     if (global.ScoreARRealtime) {
-      global.ScoreARRealtime.init('teacher', pin, handleHostIncomingMessage);
+      global.ScoreARRealtime.init('host', pin, handleHostIncomingMessage);
       global.ScoreARRealtime.subscribe(handleHostIncomingMessage);
     }
 
@@ -268,6 +268,7 @@
     readingTimeRemaining = 10;
     renderHostQuestionView('reading');
     sfx('reveal');
+    try { const d=(global.ScoreARAuth?.getDb?.())||global.firebase?.database?.(); if(d&&currentRoom?.pin) d.ref('rooms/'+currentRoom.pin).update({status:'question',currentQuestion:idx}).catch(()=>{}); } catch(e){}
 
     if (ev()) ev().publishQuestionReading(idx, activeQuestions.length, qData, (currentRoom?.world?.id || 'royal'));
 
@@ -292,6 +293,7 @@
     timeRemaining = qData.timeLimit || 20;
     renderHostQuestionView('answering');
     sfx('reveal');
+    try { const d=(global.ScoreARAuth?.getDb?.())||global.firebase?.database?.(); if(d&&currentRoom?.pin) d.ref('rooms/'+currentRoom.pin).update({status:'answering'}).catch(()=>{}); } catch(e){}
 
     if (ev()) ev().publishQuestionStart(currentQIndex, activeQuestions.length, qData, timeRemaining, (currentRoom?.world?.id || 'royal'));
     if (global.ScoreARBots) global.ScoreARBots.onQuestionStart(currentQIndex, qData, timeRemaining);

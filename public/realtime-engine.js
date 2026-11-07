@@ -22,8 +22,12 @@
     if (!msg || typeof msg !== 'object') return;
     
     // Ignore messages sent by self
-    if (msg._senderRole && msg._senderRole === currentRole) return;
-    if (msg._timestamp && sessionStartTime && msg._timestamp < sessionStartTime) return;
+    const isSelf = msg._senderRole && (
+      msg._senderRole === currentRole ||
+      ((currentRole === 'host' || currentRole === 'teacher') && (msg._senderRole === 'host' || msg._senderRole === 'teacher'))
+    );
+    if (isSelf) return;
+    if (msg._timestamp && (Date.now() - msg._timestamp > 180000)) return;
 
     // Deduplicate by _msgId across channels (BroadcastChannel & Firebase RTDB)
     if (msg._msgId) {
@@ -57,11 +61,12 @@
     let pin = '';
     if (/^\d{6}$/.test(String(arg1 || '').trim())) {
       pin = String(arg1).trim();
-      role = arg2 || 'teacher';
+      role = arg2 || 'host';
     } else {
       role = arg1 || 'student';
       pin = String(arg2 || '').trim();
     }
+    if (role === 'teacher' || role === 'admin') role = 'host';
 
     currentRole = role;
     currentPin = pin;

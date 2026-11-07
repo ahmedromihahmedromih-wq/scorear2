@@ -6,7 +6,7 @@
         ".read": "auth != null",
         "$eventId": {
           ".write": "auth != null && !data.exists()",
-          ".validate": "newData.hasChildren(['type', '_timestamp', '_senderRole']) && (newData.child('_senderRole').val() === 'host' || newData.child('_senderRole').val() === 'student') && newData.child('type').isString() && newData.child('type').val().length >= 2 && newData.child('type').val().length <= 64 && newData.child('_timestamp').isNumber() && (!newData.child('playerName').exists() || (newData.child('playerName').isString() && newData.child('playerName').val().length <= 40)) && (!newData.child('text').exists() || (newData.child('text').isString() && newData.child('text').val().length <= 500))"
+          ".validate": "newData.hasChildren(['type', '_timestamp', '_senderRole']) && (newData.child('_senderRole').val() === 'host' || newData.child('_senderRole').val() === 'teacher' || newData.child('_senderRole').val() === 'student') && newData.child('type').isString() && newData.child('type').val().length >= 2 && newData.child('type').val().length <= 64 && newData.child('_timestamp').isNumber() && (!newData.child('playerName').exists() || (newData.child('playerName').isString() && newData.child('playerName').val().length <= 40)) && (!newData.child('text').exists() || (newData.child('text').isString() && newData.child('text').val().length <= 500))"
         }
       }
     },

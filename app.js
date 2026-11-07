@@ -212,13 +212,15 @@ function openTeacherLoginModal(){
   }
 }
 
-function join(){
-  if (window.ScoreARAuthUI && typeof window.ScoreARAuthUI.openModal === 'function') {
-    window.ScoreARAuthUI.openModal('student');
-  } else if (typeof window.openAuthModal === 'function') {
-    window.openAuthModal('student');
+function join(initialPin = ''){
+  if (window.ScoreARStudentJoin && typeof window.ScoreARStudentJoin.openJoinModal === 'function') {
+    window.ScoreARStudentJoin.openJoinModal(initialPin);
+  } else if (window.ScoreARStudentJoin && typeof window.ScoreARStudentJoin.init === 'function') {
+    openModal('انضم إلى قاعة الاختبار 🎮', '<div id="scorearStudentJoinMount" style="padding:4px 0;"></div>');
+    const mount = document.getElementById('scorearStudentJoinMount');
+    if (mount) window.ScoreARStudentJoin.init(mount, initialPin);
   } else {
-    openModal('انضم إلى قاعتك', '<div class="modal-body-pad"><p>جارٍ تحميل وحدة المصادقة...</p></div>');
+    openModal('انضم إلى قاعتك بالـ PIN', '<div class="modal-body-pad"><p>جارٍ تحميل وحدة الانضمام...</p></div>');
   }
 }
 

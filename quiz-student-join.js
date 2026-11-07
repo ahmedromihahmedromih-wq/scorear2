@@ -455,8 +455,19 @@
     }
   }
 
+  function openJoinModal(initialPin = '') {
+    if (typeof global.openModal === 'function') {
+      global.openModal('انضم إلى قاعة الاختبار 🎮', '<div id="scorearStudentJoinMount" style="padding:4px 0;"></div>');
+      const mount = document.getElementById('scorearStudentJoinMount');
+      if (mount) {
+        init(mount, initialPin);
+      }
+    }
+  }
+
   const ScoreARStudentJoin = {
     init,
+    openJoinModal,
     goToStep,
     handleKeypad,
     submitStep1,

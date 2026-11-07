@@ -322,21 +322,28 @@
     try {
       const db = (global.ScoreARAuth && global.ScoreARAuth.getDb) ? global.ScoreARAuth.getDb() : (global.firebase && global.firebase.database ? global.firebase.database() : null);
       if (db) {
-        const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('DB_TIMEOUT')), 1200));
-        const [snapRooms, snapEvents] = await Promise.all([
-          Promise.race([db.ref('rooms/' + pin).once('value'), timeout]).catch(() => null),
+        const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('DB_TIMEOUT')), 1500));
+        const [snapStatus, snapLock, snapEvents] = await Promise.all([
+          Promise.race([db.ref('rooms/' + pin + '/status').once('value'), timeout]).catch(() => null),
+          Promise.race([db.ref('rooms/' + pin + '/isLocked').once('value'), timeout]).catch(() => null),
           Promise.race([db.ref('scorear_rooms/' + pin).once('value'), timeout]).catch(() => null)
         ]);
-        if (snapRooms && snapRooms.exists()) {
-          const val = snapRooms.val() || {};
-          if (val.status === 'closed') return { exists: false, isClosed: true };
-          return { exists: true, isLocked: !!(val.isLocked || val.status === 'locked'), players: val.players ? Object.values(val.players) : [] };
+        if (snapStatus && snapStatus.exists()) {
+          const sVal = snapStatus.val();
+          if (sVal === 'closed') return { exists: false, isClosed: true };
+          const isLocked = snapLock && snapLock.exists() ? !!snapLock.val() : false;
+          return { exists: true, isLocked, players: [] };
         }
         if (snapEvents && snapEvents.exists() && snapEvents.hasChildren()) {
-          const evs = Object.values(snapEvents.val() || {});
-          if (evs.some(e => e && e.type === 'ROOM_CLOSED')) return { exists: false, isClosed: true };
-          const lockEv = evs.slice().reverse().find(e => e && (e.type === 'ROOM_LOCK_STATE' || e.type === 'ROOM_LOCKED'));
-          return { exists: true, isLocked: !!(lockEv && (lockEv.isLocked || lockEv.locked)), players: [] };
+          const evs = Object.values(snapEvents.val() || {}).filter(Boolean).sort((a,b) => (a._timestamp||0) - (b._timestamp||0));
+          const lastOpen = evs.slice().reverse().find(e => e.type === 'ROOM_OPENED');
+          const lastClose = evs.slice().reverse().find(e => e.type === 'ROOM_CLOSED');
+          if (lastClose && (!lastOpen || (lastClose._timestamp||0) > (lastOpen._timestamp||0))) {
+            return { exists: false, isClosed: true };
+          }
+          const lastLock = evs.slice().reverse().find(e => e.type === 'ROOM_LOCK_STATE' || e.type === 'ROOM_LOCKED' || e.type === 'ROOM_UNLOCKED');
+          const isLocked = lastLock ? (lastLock.type !== 'ROOM_UNLOCKED' && !!(lastLock.isLocked || lastLock.locked)) : false;
+          return { exists: true, isLocked, players: [] };
         }
       }
     } catch(e) {}

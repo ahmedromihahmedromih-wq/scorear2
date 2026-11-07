@@ -20,6 +20,9 @@
         "status": {
           ".read": "auth != null"
         },
+        "isLocked": {
+          ".read": "auth != null"
+        },
         "currentQuestion": {
           ".read": "auth != null"
         },

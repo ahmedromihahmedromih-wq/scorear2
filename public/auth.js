@@ -367,23 +367,26 @@
     if (!roomExists) {
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
-          const timeoutDb = new Promise((_, rej) => setTimeout(() => rej(new Error('DB_TIMEOUT')), 1200));
-          const [snapEvents, snapRooms] = await Promise.all([
-            Promise.race([db.ref('scorear_rooms/' + cleanPin).once('value'), timeoutDb]).catch(() => null),
-            Promise.race([db.ref('rooms/' + cleanPin).once('value'), timeoutDb]).catch(() => null)
+          const timeoutDb = new Promise((_, rej) => setTimeout(() => rej(new Error('DB_TIMEOUT')), 1500));
+          const [snapStatus, snapLock, snapEvents] = await Promise.all([
+            Promise.race([db.ref('rooms/' + cleanPin + '/status').once('value'), timeoutDb]).catch(() => null),
+            Promise.race([db.ref('rooms/' + cleanPin + '/isLocked').once('value'), timeoutDb]).catch(() => null),
+            Promise.race([db.ref('scorear_rooms/' + cleanPin).once('value'), timeoutDb]).catch(() => null)
           ]);
 
-          if (snapRooms && snapRooms.exists()) {
-            const val = snapRooms.val() || {};
-            if (val.status === 'closed') { roomClosed = true; break; }
-            if (val.isLocked || val.status === 'locked') roomIsLocked = true;
+          if (snapStatus && snapStatus.exists()) {
+            const sVal = snapStatus.val();
+            if (sVal === 'closed') { roomClosed = true; break; }
+            if (snapLock && snapLock.exists() && snapLock.val()) roomIsLocked = true;
             roomExists = true;
             break;
           } else if (snapEvents && snapEvents.exists() && snapEvents.hasChildren()) {
-            const evs = Object.values(snapEvents.val() || {});
-            if (evs.some(e => e && e.type === 'ROOM_CLOSED')) { roomClosed = true; break; }
-            const lockEv = evs.slice().reverse().find(e => e && (e.type === 'ROOM_LOCK_STATE' || e.type === 'ROOM_LOCKED'));
-            if (lockEv && (lockEv.isLocked || lockEv.locked)) roomIsLocked = true;
+            const evs = Object.values(snapEvents.val() || {}).filter(Boolean).sort((a,b) => (a._timestamp||0) - (b._timestamp||0));
+            const lastOpen = evs.slice().reverse().find(e => e.type === 'ROOM_OPENED');
+            const lastClose = evs.slice().reverse().find(e => e.type === 'ROOM_CLOSED');
+            if (lastClose && (!lastOpen || (lastClose._timestamp||0) > (lastOpen._timestamp||0))) { roomClosed = true; break; }
+            const lastLock = evs.slice().reverse().find(e => e.type === 'ROOM_LOCK_STATE' || e.type === 'ROOM_LOCKED' || e.type === 'ROOM_UNLOCKED');
+            if (lastLock && (lastLock.type !== 'ROOM_UNLOCKED' && (lastLock.isLocked || lastLock.locked))) roomIsLocked = true;
             roomExists = true;
             break;
           }

@@ -1,0 +1,313 @@
+{
+  "version": "2.0.0",
+  "lastUpdated": "2026-10-31",
+  "defaultWorldId": "royal",
+  "worlds": {
+    "royal": {
+      "worldId": "royal",
+      "name": "القصر الملكي",
+      "englishName": "Royal Palace",
+      "tagline": "أبهة الأقواس الإسلامية والفخامة الملكية التراثية",
+      "description": "قصر عربي ملكي فخم مع أعمدة رخامية، أقواس إسلامية، أرضيات عاكسة، ثريات وإضاءة سينمائية دافئة.",
+      "colors": {
+        "primary": "#1E3A8A",
+        "accent": "#F5C76B",
+        "bg": "#080D1A",
+        "card": "rgba(16, 26, 46, 0.92)",
+        "border": "#F59E0B",
+        "glow": "rgba(245, 199, 107, 0.45)",
+        "text": "#F8FAFC",
+        "badge": "#F5C76B"
+      },
+      "backgrounds": {
+        "lobby": "assets/worlds/royal/lobby.webp",
+        "waiting": "assets/worlds/royal/lobby.webp",
+        "question": "assets/worlds/royal/question.webp",
+        "podium": "assets/worlds/royal/podium.webp"
+      },
+      "ornaments": {
+        "archStyle": "islamic-horseshoe",
+        "pattern": "arabesque-geometric",
+        "chandelier": true,
+        "borderMotif": "gold-filigree"
+      },
+      "characters": [
+        "char_01",
+        "char_02",
+        "char_03",
+        "char_04"
+      ],
+      "music": {
+        "track": "royal_theme",
+        "tempo": 260,
+        "key": "D Minor Hijaz",
+        "leadInstrument": "Arabic Strings & Oud",
+        "tensionTempo": 310
+      },
+      "sfx": {
+        "correct": "royal_fanfare",
+        "wrong": "soft_chime",
+        "countdownTick": "subtle_tock"
+      },
+      "transitions": {
+        "entrance": "fade-in-gold-glow",
+        "podiumCelebration": "confetti-gold"
+      }
+    },
+    "oasis": {
+      "worldId": "oasis",
+      "name": "الواحة العربية",
+      "englishName": "Arabian Oasis",
+      "tagline": "واحة النخيل والغسق الصحراوي الساحر",
+      "description": "واحة عربية أصيلة مع نخيل باسق وظلال الغسق ورمال ذهبية تحت قبة سماء مرصعة بالنجوم.",
+      "colors": {
+        "primary": "#065F46",
+        "accent": "#34D399",
+        "bg": "#061A14",
+        "card": "rgba(10, 35, 28, 0.92)",
+        "border": "#10B981",
+        "glow": "rgba(52, 211, 153, 0.45)",
+        "text": "#F8FAFC",
+        "badge": "#34D399"
+      },
+      "backgrounds": {
+        "lobby": "assets/worlds/oasis/lobby.webp",
+        "waiting": "assets/worlds/oasis/lobby.webp",
+        "question": "assets/worlds/oasis/question.webp",
+        "podium": "assets/worlds/oasis/podium.webp"
+      },
+      "ornaments": {
+        "archStyle": "bedouin-tent-canopy",
+        "pattern": "palm-frond-lattice",
+        "chandelier": false,
+        "borderMotif": "emerald-palm-vines"
+      },
+      "characters": [
+        "char_05",
+        "char_06",
+        "char_07",
+        "char_08"
+      ],
+      "music": {
+        "track": "oasis_theme",
+        "tempo": 240,
+        "key": "G Bayati",
+        "leadInstrument": "Nay & Desert Oud",
+        "tensionTempo": 285
+      },
+      "sfx": {
+        "correct": "desert_bells",
+        "wrong": "wind_rustle",
+        "countdownTick": "woodblock_tick"
+      },
+      "transitions": {
+        "entrance": "sand-breeze-fade",
+        "podiumCelebration": "lantern-glow"
+      }
+    },
+    "cosmic": {
+      "worldId": "cosmic",
+      "name": "محطة الفضاء",
+      "englishName": "Cosmic Space Station",
+      "tagline": "أفق المجرات ومستقبل العلوم والتكنولوجيا",
+      "description": "محطة مدارية فضائية متطورة تطل على سديم ملون وكواكب عملاقة مع شاشات هولوجرام رقمية.",
+      "colors": {
+        "primary": "#4F46E5",
+        "accent": "#22D3EE",
+        "bg": "#050816",
+        "card": "rgba(15, 23, 42, 0.92)",
+        "border": "#06B6D4",
+        "glow": "rgba(34, 211, 238, 0.50)",
+        "text": "#F8FAFC",
+        "badge": "#22D3EE"
+      },
+      "backgrounds": {
+        "lobby": "assets/worlds/cosmic/lobby.webp",
+        "waiting": "assets/worlds/cosmic/lobby.webp",
+        "question": "assets/worlds/cosmic/question.webp",
+        "podium": "assets/worlds/cosmic/podium.webp"
+      },
+      "ornaments": {
+        "archStyle": "cyber-hexagonal-frame",
+        "pattern": "circuit-grid",
+        "chandelier": false,
+        "borderMotif": "neon-hud-corners"
+      },
+      "characters": [
+        "char_09",
+        "char_10",
+        "char_11",
+        "char_12"
+      ],
+      "music": {
+        "track": "cosmic_theme",
+        "tempo": 250,
+        "key": "A Minor Synthwave",
+        "leadInstrument": "Analog Synth & Cyber Arp",
+        "tensionTempo": 300
+      },
+      "sfx": {
+        "correct": "cyber_laser_chime",
+        "wrong": "glitch_buzz",
+        "countdownTick": "pulsar_beep"
+      },
+      "transitions": {
+        "entrance": "warp-speed-pulse",
+        "podiumCelebration": "starlight-burst"
+      }
+    },
+    "treasure": {
+      "worldId": "treasure",
+      "name": "جزيرة الكنز",
+      "englishName": "Treasure Island",
+      "tagline": "مغامرة القراصنة والذهب المفقود في أعماق البحار",
+      "description": "شاطئ استوائي غامض مع سفينة قراصنة قديمة وصناديق ذهب متوهجة وجبال صخرية شاهقة.",
+      "colors": {
+        "primary": "#9A3412",
+        "accent": "#FBBF24",
+        "bg": "#140C06",
+        "card": "rgba(30, 20, 10, 0.92)",
+        "border": "#D97706",
+        "glow": "rgba(251, 191, 36, 0.45)",
+        "text": "#F8FAFC",
+        "badge": "#FBBF24"
+      },
+      "backgrounds": {
+        "lobby": "assets/worlds/treasure/lobby.webp",
+        "waiting": "assets/worlds/treasure/lobby.webp",
+        "question": "assets/worlds/treasure/question.webp",
+        "podium": "assets/worlds/treasure/podium.webp"
+      },
+      "ornaments": {
+        "archStyle": "nautical-rope-and-plank",
+        "pattern": "treasure-map-contours",
+        "chandelier": false,
+        "borderMotif": "golden-doubloon-trim"
+      },
+      "characters": [
+        "char_13",
+        "char_14",
+        "char_15",
+        "char_16"
+      ],
+      "music": {
+        "track": "treasure_theme",
+        "tempo": 245,
+        "key": "E Dorian Adventure",
+        "leadInstrument": "Accordion & Shanty Rhythm",
+        "tensionTempo": 290
+      },
+      "sfx": {
+        "correct": "coin_cascade",
+        "wrong": "cannon_dud",
+        "countdownTick": "ship_bell_tick"
+      },
+      "transitions": {
+        "entrance": "ocean-wave-reveal",
+        "podiumCelebration": "gold-coins-shower"
+      }
+    },
+    "stadium": {
+      "worldId": "stadium",
+      "name": "استاد الأبطال",
+      "englishName": "Champions Stadium",
+      "tagline": "أضواء الملاعب الكبرى وهتافات الجماهير الحماسية",
+      "description": "ملعب رياضي عملاق تحت أضواء كاشفة مبهرة مع مدرجات مليئة بالجماهير وشاشات إلكترونية.",
+      "colors": {
+        "primary": "#15803D",
+        "accent": "#38BDF8",
+        "bg": "#051A0D",
+        "card": "rgba(12, 35, 20, 0.92)",
+        "border": "#22C55E",
+        "glow": "rgba(56, 189, 248, 0.50)",
+        "text": "#F8FAFC",
+        "badge": "#38BDF8"
+      },
+      "backgrounds": {
+        "lobby": "assets/worlds/stadium/lobby.webp",
+        "waiting": "assets/worlds/stadium/lobby.webp",
+        "question": "assets/worlds/stadium/question.webp",
+        "podium": "assets/worlds/stadium/podium.webp"
+      },
+      "ornaments": {
+        "archStyle": "stadium-floodlight-gantry",
+        "pattern": "pitch-lines",
+        "chandelier": false,
+        "borderMotif": "neon-turf-outline"
+      },
+      "characters": [
+        "char_17",
+        "char_18",
+        "char_19",
+        "char_20"
+      ],
+      "music": {
+        "track": "stadium_theme",
+        "tempo": 270,
+        "key": "C Major Energetic Brass",
+        "leadInstrument": "Stadium Horns & Marching Percussion",
+        "tensionTempo": 320
+      },
+      "sfx": {
+        "correct": "whistle_crowd_cheer",
+        "wrong": "referee_whistle",
+        "countdownTick": "stadium_buzzer_tick"
+      },
+      "transitions": {
+        "entrance": "floodlight-sweep",
+        "podiumCelebration": "pyro-flares"
+      }
+    },
+    "magic": {
+      "worldId": "magic",
+      "name": "مملكة السحر",
+      "englishName": "Magic Kingdom",
+      "tagline": "غموض البلورات المشعة والتعاويذ الأسطورية الخالدة",
+      "description": "قلعة سحرية عائمة بين الغيوم الأرجوانية مع بلورات مشعة ودوائر سحرية تدور في الهواء.",
+      "colors": {
+        "primary": "#7E22CE",
+        "accent": "#F472B6",
+        "bg": "#130826",
+        "card": "rgba(25, 12, 45, 0.92)",
+        "border": "#A855F7",
+        "glow": "rgba(244, 114, 182, 0.45)",
+        "text": "#F8FAFC",
+        "badge": "#F472B6"
+      },
+      "backgrounds": {
+        "lobby": "assets/worlds/magic/lobby.webp",
+        "waiting": "assets/worlds/magic/lobby.webp",
+        "question": "assets/worlds/magic/question.webp",
+        "podium": "assets/worlds/magic/podium.webp"
+      },
+      "ornaments": {
+        "archStyle": "gothic-spire-crystal",
+        "pattern": "mystic-celestial-runes",
+        "chandelier": false,
+        "borderMotif": "ethereal-amethyst-aura"
+      },
+      "characters": [
+        "char_21",
+        "char_22",
+        "char_23",
+        "char_24"
+      ],
+      "music": {
+        "track": "magic_theme",
+        "tempo": 230,
+        "key": "F# Minor Mystical",
+        "leadInstrument": "Celesta, Harp & Ethereal Chimes",
+        "tensionTempo": 275
+      },
+      "sfx": {
+        "correct": "magic_sparkle_chime",
+        "wrong": "magic_fizzle",
+        "countdownTick": "crystal_clock_tick"
+      },
+      "transitions": {
+        "entrance": "portal-vortex-expand",
+        "podiumCelebration": "rainbow-crystal-dust"
+      }
+    }
+  }
+}

@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0d1d">
+<title>أبطال سكور آر | ٢٠ رفيقاً كرتونياً للمغامرة</title>
+<link rel="icon" type="image/svg+xml" href="assets/mark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=20261106_c2">
+<link rel="stylesheet" href="characters-v4.css?v=20261106_c2">
+<script src="characters-v4.js?v=20261106_c2"></script>
+<script src="nav.js?v=20261107_c16" defer></script>
+<style>
+  body {
+    margin: 0;
+    background: radial-gradient(ellipse at 20% 0, #30234f60, transparent 55%), #0c0d1d;
+    color: #eceeff;
+    font-family: Tajawal, Arial, sans-serif;
+    min-height: 100vh;
+  }
+  .character-gallery-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 24px 60px;
+  }
+  .gallery-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .gallery-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: #ffffff;
+  }
+  .gallery-brand img {
+    width: 42px;
+    height: 42px;
+    filter: drop-shadow(0 0 12px rgba(117, 80, 239, 0.5));
+  }
+  .gallery-brand b {
+    font-family: Cairo, sans-serif;
+    font-size: 24px;
+    font-weight: 900;
+  }
+  .gallery-brand b span { color: #52d9ed; }
+  .gallery-brand small {
+    display: block;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: #a1a4be;
+  }
+  .gallery-title-area {
+    margin: 36px 0 24px;
+  }
+  .gallery-title-area h1 {
+    font-family: Cairo, sans-serif;
+    font-size: clamp(30px, 4vw, 46px);
+    font-weight: 900;
+    margin: 10px 0;
+    color: #ffffff;
+  }
+  .gallery-title-area p {
+    color: #b1a2e9;
+    font-size: 15px;
+    max-width: 650px;
+    line-height: 1.8;
+  }
+  .character-stage {
+    background: radial-gradient(ellipse at 50% 50%, rgba(115, 91, 192, 0.35), transparent 70%), linear-gradient(160deg, #1d1a36, #111326) !important;
+    border: 1px solid rgba(142, 100, 239, 0.3) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+  }
+  .character-card {
+    background: linear-gradient(160deg, #1b1a32, #131427) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 20px !important;
+    padding: 12px 8px 14px !important;
+  }
+  .character-card:hover {
+    border-color: #8e64ef !important;
+    transform: translateY(-4px) !important;
+    box-shadow: 0 8px 24px rgba(117, 80, 239, 0.3) !important;
+  }
+  .character-card[aria-pressed=true] {
+    border-color: #52d9ed !important;
+    background: radial-gradient(ellipse at top, rgba(82, 217, 237, 0.18), transparent), #1f1d3a !important;
+    box-shadow: 0 0 25px rgba(82, 217, 237, 0.25) !important;
+  }
+  .character-tabs button {
+    background: #181930;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #b5b1cf;
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .character-tabs button:hover {
+    background: #27284d;
+    color: #ffffff;
+  }
+  .character-tabs button[aria-pressed=true] {
+    background: linear-gradient(110deg, #7550ef, #8e64ef) !important;
+    color: #ffffff !important;
+    border-color: #8e64ef !important;
+    box-shadow: 0 4px 16px rgba(117, 80, 239, 0.4);
+  }
+  .character-controls button {
+    background: #1f1d38;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ddd8ff;
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .character-controls button:hover {
+    background: #312c58;
+    color: #ffffff;
+  }
+  .character-controls button[aria-pressed=true] {
+    background: #52d9ed !important;
+    color: #0c0d1d !important;
+    border-color: #52d9ed !important;
+    font-weight: 900;
+    box-shadow: 0 0 16px rgba(82, 217, 237, 0.5);
+  }
+  .gallery-mobile-menu {
+    display: inline-flex !important;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .gallery-mobile-menu svg {
+    width: 22px;
+    height: 22px;
+  }
+  .btn-gallery-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(142, 100, 239, 0.18);
+    border: 1px solid rgba(142, 100, 239, 0.4);
+    color: #ddd8ff;
+    border-radius: 12px;
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    min-height: 42px;
+    font-family: inherit;
+  }
+  .btn-gallery-back:hover {
+    background: rgba(142, 100, 239, 0.35);
+    color: #ffffff;
+    border-color: #8e64ef;
+  }
+  @media (max-width: 1000px) {
+    .gallery-desktop-actions { display: none !important; }
+  }
+  .sidebar {
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 260px;
+    z-index: 1000;
+    box-shadow: none;
+  }
+  .sidebar.open {
+    transform: translateX(0) !important;
+    display: flex !important;
+    box-shadow: -20px 0 80px rgba(0, 0, 0, 0.85) !important;
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <a class="brand" href="index.html#home" aria-label="سكور آر الرئيسية">
+      <img src="assets/mark.svg" alt="" width="43" height="43">
+      <span><b>سكور آر<span class="brand-dot">.</span></b><small>LEARN. PLAY. BECOME.</small></span>
+    </a>
+    <button type="button" class="sidebar-close-btn" data-action="close-sidebar" aria-label="إغلاق القائمة">✕</button>
+  </div>
+  <div class="side-label">مساحتك، بطريقتك</div>
+  <nav aria-label="القائمة الرئيسية">
+    <a href="index.html#home" data-nav="home"><i data-icon="home"></i><span>الرئيسية</span></a>
+    <a href="index.html#studio" data-nav="studio"><i data-icon="grid"></i><span>استوديو المعلم</span></a>
+    <a href="index.html#worlds" data-nav="worlds"><i data-icon="planet"></i><span>قاعة المنافسات</span></a>
+    <a href="characters.html" data-nav="heroes" class="active"><i data-icon="spark"></i><span>قاعة الأبطال (٢٠)</span></a>
+    <a href="index.html#journey" data-nav="journey"><i data-icon="route"></i><span>رحلتي التعليمية</span></a>
+    <a href="index.html#library" data-nav="library"><i data-icon="book"></i><span>مكتبة المحتوى</span></a>
+  </nav>
+  <div class="side-bottom">
+    <a class="quiet" href="index.html#about"><i data-icon="info"></i><span>عن سكور آر</span></a>
+    <div class="maker">بفكرة وإشراف <b>أ. أحمد رميح</b></div>
+  </div>
+</aside>
+
+<main class="character-gallery-page">
+  <header class="gallery-header">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button type="button" id="btnBackToApp" class="btn-gallery-back" onclick="if(window.history.length>1){window.history.back()}else{window.location.href='index.html#home'}" aria-label="الرجوع">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <span>رجوع</span>
+      </button>
+      <a class="gallery-brand" href="index.html#home" aria-label="الرئيسية">
+        <img src="assets/mark.svg" alt="" width="38" height="38">
+        <div>
+          <b>سكور آر<span>.</span></b>
+          <small>LEARN. PLAY. BECOME.</small>
+        </div>
+      </a>
+    </div>
+    <div class="gallery-desktop-actions" style="display:flex;gap:10px;align-items:center;">
+      <a href="index.html#worlds" class="btn dark small" style="text-decoration:none;">🚀 قاعة المنافسات</a>
+      <a href="index.html#home" class="btn light small" style="text-decoration:none;">العودة للرئيسية ➔</a>
+    </div>
+    <button type="button" class="mobile-menu gallery-mobile-menu" data-action="menu" aria-label="فتح القائمة" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </header>
+
+  <div class="gallery-title-area">
+    <div class="eyebrow" style="margin-bottom:8px;">قاعة الأبطال الكرتونية</div>
+    <h1>لكل بطل حكاية.. وهنا تبدأ مغامرتك.</h1>
+    <p>٢٠ شخصية كرتونية أصلية بجسم كامل وتفاعل حي. جرّب أوضاع الوقوف، المشي، والاحتفال، واختر رفيقك لتحديات الفصل القادمة.</p>
+  </div>
+
+  <div class="character-picker">
+    <!-- ASIDE PREVIEW -->
+    <aside class="character-stage" aria-label="معاينة الشخصية">
+      <small style="color:#52d9ed;font-weight:800;letter-spacing:1px;display:block;margin-bottom:6px;">✦ البطل المختار حالياً ✦</small>
+      <div id="studentCustomPreviewBox" style="width:240px;height:300px;margin:8px auto;display:flex;align-items:center;justify-content:center;"></div>
+      <div id="studentCustomPreviewTitle" aria-live="polite" style="margin-top:12px;"></div>
+      
+      <div class="character-controls" aria-label="تجربة الحركة" style="margin-top:18px;">
+        <button type="button" data-character-pose="idle" onclick="ScoreARCharacters.preview(window.gallerySelected,'idle')">🧍 وقوف</button>
+        <button type="button" data-character-pose="walk" onclick="ScoreARCharacters.preview(window.gallerySelected,'walk')">🚶 مشي</button>
+        <button type="button" data-character-pose="celebrate" onclick="ScoreARCharacters.preview(window.gallerySelected,'celebrate')">🎉 احتفال</button>
+      </div>
+      <button type="button" class="character-motion" data-character-motion onclick="ScoreARCharacters.toggleMotion()" style="margin-top:14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);padding:8px 16px;border-radius:10px;color:#ddd8ff;cursor:pointer;">إيقاف الحركة</button>
+    </aside>
+
+    <!-- COLLECTION & TABS -->
+    <div class="character-collection">
+      <div class="character-section-head" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h4 style="font-size:20px;font-weight:900;color:#ffffff;margin:0;">اختر رفيق رحلتك في التحدي</h4>
+        <span style="background:rgba(117,80,239,0.2);color:#c9baff;border:1px solid rgba(117,80,239,0.4);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:800;">٢٠ شخصية جاهزة</span>
+      </div>
+
+      <div class="character-tabs" aria-label="فئات الشخصيات">
+        <button type="button" id="charTab-all" onclick="window.galleryFilter('all')" aria-pressed="true">الكل · ٢٠</button>
+        <button type="button" id="charTab-human" onclick="window.galleryFilter('human')" aria-pressed="false">مستكشفون · ٨</button>
+        <button type="button" id="charTab-animal" onclick="window.galleryFilter('animal')" aria-pressed="false">أصدقاء · ٦</button>
+        <button type="button" id="charTab-fantasy" onclick="window.galleryFilter('fantasy')" aria-pressed="false">خيال · ٦</button>
+      </div>
+
+      <div id="avatarsGrid" aria-labelledby="studentAvatarSelectLabel"></div>
+      <p class="character-note" style="color:#b1a2e9;font-size:12px;margin-top:16px;line-height:1.7;">
+        💡 جميع الشخصيات متاحة لجميع الطلاب. اختيارك يحدد مظهر بطلك في قاعة الانتظار وعلى منصة التتويج، بينما المعرفة وسرعة الإجابة هي التي تصنع الفوز.
+      </p>
+    </div>
+  </div>
+
+  <footer style="margin-top:40px;padding:20px 24px;border-top:1px solid rgba(142,100,239,0.2);color:#94a3b8;font-size:13px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;direction:rtl;">
+    <div>
+      <span style="color:#fff;font-weight:900;">سكور آر</span> · <span>إعداد وتصميم: <b style="color:#fff;">أ. أحمد رميح</b> — معلم أول (أ) لغة عربية</span>
+    </div>
+    <div style="font-size:12px;color:#878aa6;">
+      جميع حقوق الطبع والنشر محفوظة © 2026/2027
+    </div>
+  </footer>
+</main>
+
+<script>
+window.gallerySelected = 1;
+window.galleryCategory = 'all';
+try {
+  const saved = JSON.parse(localStorage.getItem('scorear_student_profile_v1') || '{}');
+  if (saved.avatarId) window.gallerySelected = ScoreARCharacters.get(saved.avatarId).id;
+} catch(e){}
+
+function galleryRender(){
+  ScoreARCharacters.grid(document.getElementById('avatarsGrid'), window.galleryCategory, window.gallerySelected, id => {
+    window.gallerySelected = id;
+    try {
+      const p = JSON.parse(localStorage.getItem('scorear_student_profile_v1') || '{}');
+      p.avatarId = id;
+      localStorage.setItem('scorear_student_profile_v1', JSON.stringify(p));
+    } catch(e){}
+    galleryRender();
+  });
+  ScoreARCharacters.preview(window.gallerySelected);
+}
+
+function galleryFilter(c){
+  window.galleryCategory = c;
+  ['all','human','animal','fantasy'].forEach(x => {
+    const btn = document.getElementById('charTab-' + x);
+    if (btn) btn.setAttribute('aria-pressed', String(x === c));
+  });
+  galleryRender();
+}
+
+window.galleryFilter = galleryFilter;
+window.galleryRender = galleryRender;
+
+// Ensure sidebar is closed and inert on page arrival
+if (window.ScoreARNav && typeof window.ScoreARNav.closeSidebar === 'function') {
+  window.ScoreARNav.closeSidebar();
+} else {
+  const sb = document.getElementById('sidebar');
+  if (sb) { sb.classList.remove('open'); sb.inert = true; }
+  if (document.body) document.body.style.overflow = '';
+}
+
+galleryRender();
+</script>
+</body>
+</html>

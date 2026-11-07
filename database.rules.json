@@ -1,0 +1,205 @@
+{
+  "rules": {
+    "scorear_rooms": {
+      "$pin": {
+        ".validate": "$pin.matches(/^[0-9]{6}$/)",
+        ".read": "auth != null",
+        "$eventId": {
+          ".write": "auth != null && !data.exists()",
+          ".validate": "newData.hasChildren(['type', '_timestamp', '_senderRole']) && (newData.child('_senderRole').val() === 'host' || newData.child('_senderRole').val() === 'student') && newData.child('type').isString() && newData.child('type').val().length >= 2 && newData.child('type').val().length <= 64 && newData.child('_timestamp').isNumber() && (!newData.child('playerName').exists() || (newData.child('playerName').isString() && newData.child('playerName').val().length <= 40)) && (!newData.child('text').exists() || (newData.child('text').isString() && newData.child('text').val().length <= 500))"
+        }
+      }
+    },
+    "rooms": {
+      "$pin": {
+        ".validate": "$pin.matches(/^[0-9]{6}$/)",
+        ".write": "auth != null && (auth.token.role === 'teacher' || auth.token.role === 'admin')",
+        "worldId": {
+          ".read": "auth != null"
+        },
+        "status": {
+          ".read": "auth != null"
+        },
+        "currentQuestion": {
+          ".read": "auth != null"
+        },
+        "questionData": {
+          ".read": "auth != null && (auth.token.role === 'teacher' || auth.token.role === 'admin')"
+        },
+        "players": {
+          ".read": "auth != null",
+          "$playerId": {
+            ".write": "auth != null && (auth.uid === $playerId || auth.token.role === 'teacher' || auth.token.role === 'admin')",
+            ".validate": "newData.hasChildren(['id', 'name'])",
+            "id": { ".validate": "newData.val() === $playerId" },
+            "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+            "avatarId": { ".validate": "newData.isString() && newData.val().length <= 30" },
+            "score": { ".validate": "newData.isNumber()" },
+            "streak": { ".validate": "newData.isNumber()" },
+            "lastPointsGained": { ".validate": "newData.isNumber()" },
+            "isReconnect": { ".validate": "newData.isBoolean()" },
+            "joinedAt": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        },
+        "answers": {
+          ".read": "auth != null && (auth.token.role === 'teacher' || auth.token.role === 'admin')",
+          "$qIndex": {
+            "$playerId": {
+              ".write": "auth != null && !data.exists() && auth.uid === $playerId",
+              ".validate": "newData.hasChildren(['optionIndex', 'ts'])",
+              "optionIndex": { ".validate": "newData.isNumber()" },
+              "ts": { ".validate": "newData.isNumber()" },
+              "$other": { ".validate": false }
+            }
+          }
+        }
+      }
+    },
+    "scorear_teachers_registry": {
+      ".read": "auth != null && (auth.token.role === 'admin' || (auth.token.role === 'teacher' && query.orderByChild === 'firebaseUid' && query.equalTo === auth.uid))",
+      ".write": false,
+      ".indexOn": ["firebaseUid"]
+    },
+    "scorear_revoked_sessions": {
+      ".read": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'teacher')",
+      ".write": false
+    },
+    "scorear_deleted_teachers": {
+      ".read": "auth != null && auth.token.role === 'admin'",
+      ".write": false
+    },
+    "scorear_admin_notifications": {
+      ".read": "auth != null && auth.token.role === 'admin'",
+      ".write": false
+    },
+    "scorear_completed_sessions": {
+      ".read": "auth != null && (auth.token.role === 'admin' || (auth.token.role === 'teacher' && query.orderByChild === 'ownerUid' && query.equalTo === auth.uid))",
+      ".write": "auth != null && (auth.token.role === 'teacher' || auth.token.role === 'admin')",
+      ".indexOn": ["ownerUid", "userId", "username", "createdAt"]
+    },
+    "scorear_quizzes": {
+      ".read": "auth != null && (auth.token.role === 'admin' || (auth.token.role === 'teacher' && query.orderByChild === 'ownerUid' && query.equalTo === auth.uid))",
+      "$quizId": {
+        ".read": "auth != null && (data.child('ownerUid').val() === auth.uid || auth.token.role === 'admin' || data.child('isPublic').val() === true)",
+        ".write": "auth != null && (auth.token.role === 'teacher' || auth.token.role === 'admin') && ((!data.exists() && newData.child('ownerUid').val() === auth.uid) || (data.exists() && data.child('ownerUid').val() === auth.uid && (!newData.exists() || newData.child('ownerUid').val() === auth.uid)) || auth.token.role === 'admin')",
+        ".validate": "newData.hasChildren(['title', 'ownerUid', 'createdAt'])",
+        "title": { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 150" },
+        "ownerUid": { ".validate": "newData.val() === auth.uid || auth.token.role === 'admin'" },
+        "createdAt": { ".validate": "newData.isNumber()" }
+      },
+      ".indexOn": ["ownerUid", "userId", "ownerUsername", "folderId", "createdAt"]
+    },
+    "scorear_question_bank": {
+      ".read": "auth != null && (auth.token.role === 'admin' || (auth.token.role === 'teacher' && query.orderByChild === 'ownerUid' && query.equalTo === auth.uid))",
+      "$questionId": {
+        ".read": "auth != null && (data.child('ownerUid').val() === auth.uid || auth.token.role === 'admin' || data.child('isPublic').val() === true)",
+        ".write": "auth != null && (auth.token.role === 'teacher' || auth.token.role === 'admin') && ((!data.exists() && newData.child('ownerUid').val() === auth.uid) || (data.exists() && data.child('ownerUid').val() === auth.uid && (!newData.exists() || newData.child('ownerUid').val() === auth.uid)) || auth.token.role === 'admin')",
+        ".validate": "newData.hasChildren(['text', 'ownerUid', 'createdAt'])",
+        "text": { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 500" },
+        "ownerUid": { ".validate": "newData.val() === auth.uid || auth.token.role === 'admin'" },
+        "createdAt": { ".validate": "newData.isNumber()" }
+      },
+      ".indexOn": ["ownerUid", "subject", "grade", "folderId", "createdAt"]
+    },
+    "scorear_folders": {
+      ".read": "auth != null && (auth.token.role === 'admin' || (auth.token.role === 'teacher' && query.orderByChild === 'ownerUid' && query.equalTo === auth.uid))",
+      "$folderId": {
+        ".read": "auth != null && (data.child('ownerUid').val() === auth.uid || auth.token.role === 'admin')",
+        ".write": "auth != null && (auth.token.role === 'teacher' || auth.token.role === 'admin') && ((!data.exists() && newData.child('ownerUid').val() === auth.uid) || (data.exists() && data.child('ownerUid').val() === auth.uid && (!newData.exists() || newData.child('ownerUid').val() === auth.uid)) || auth.token.role === 'admin')",
+        ".validate": "newData.hasChildren(['name', 'ownerUid', 'createdAt'])",
+        "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 100" },
+        "ownerUid": { ".validate": "newData.val() === auth.uid || auth.token.role === 'admin'" },
+        "createdAt": { ".validate": "newData.isNumber()" }
+      },
+      ".indexOn": ["ownerUid", "type", "createdAt"]
+    },
+    "scorear_ai_quotas": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.role === 'admin')",
+        ".write": false
+      }
+    },
+    "scorear_account_requests": {
+      ".read": "auth != null && auth.token.role === 'admin'",
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.role === 'admin')",
+        ".write": "auth != null && (auth.token.role === 'admin' || (!data.exists() && auth.uid === $uid))",
+        ".validate": "newData.hasChildren(['uid', 'email', 'displayName', 'status', 'createdAt'])",
+        "uid": {
+          ".validate": "newData.isString() && newData.val() === $uid && (auth.token.role === 'admin' || newData.val() === auth.uid)"
+        },
+        "email": {
+          ".validate": "newData.isString() && (auth.token.role === 'admin' || newData.val() === auth.token.email) && (!data.exists() || data.val() === newData.val())"
+        },
+        "displayName": {
+          ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 60"
+        },
+        "subject": {
+          ".validate": "newData.isString() && newData.val().length <= 50"
+        },
+        "school": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "status": {
+          ".validate": "newData.isString() && ((auth.token.role === 'admin' && (newData.val() === 'pending' || newData.val() === 'approved' || newData.val() === 'rejected')) || (auth.token.role !== 'admin' && newData.val() === 'pending'))"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && (!data.exists() || data.val() === newData.val())"
+        },
+        "reviewedAt": {
+          ".validate": "auth.token.role === 'admin' && newData.isNumber()"
+        },
+        "reviewedBy": {
+          ".validate": "auth.token.role === 'admin' && newData.isString()"
+        },
+        "reviewNote": {
+          ".validate": "auth.token.role === 'admin' && newData.isString()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      },
+      ".indexOn": ["status", "createdAt"]
+    },
+    "scorear_students": {
+      ".read": "auth != null && auth.token.role === 'admin'",
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.role === 'admin')",
+        ".write": "auth != null && (auth.token.role === 'admin' || (auth.uid === $uid && (!data.child('isActive').exists() || data.child('isActive').val() === true)))",
+        ".validate": "newData.hasChildren(['uid', 'username', 'displayName', 'createdAt'])",
+        "uid": {
+          ".validate": "newData.isString() && newData.val() === $uid && (auth.token.role === 'admin' || newData.val() === auth.uid)"
+        },
+        "username": {
+          ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 30 && newData.val().matches(/^[a-zA-Z0-9_]+$/) && (!data.exists() || data.val() === newData.val())"
+        },
+        "displayName": {
+          ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 50"
+        },
+        "className": {
+          ".validate": "newData.isString() && newData.val().length <= 50"
+        },
+        "avatarId": {
+          ".validate": "newData.isString() && newData.val().length <= 20"
+        },
+        "isActive": {
+          ".validate": "auth.token.role === 'admin' && newData.isBoolean()"
+        },
+        "isTemporaryPassword": {
+          ".validate": "auth.token.role === 'admin' && newData.isBoolean()"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && (!data.exists() || data.val() === newData.val())"
+        },
+        "updatedAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      },
+      ".indexOn": ["username", "className", "createdAt", "isActive"]
+    }
+  }
+}

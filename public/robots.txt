@@ -1,0 +1,14 @@
+# ScoreAR Robots.txt - Allow all search crawlers to index the platform
+User-agent: *
+Allow: /
+Allow: /assets/
+Allow: /cards/
+Allow: /worlds.js
+Allow: /cards.json
+
+# Disallow indexing of private teacher admin dashboards and internal session data
+Disallow: /admin
+Disallow: /dashboard
+
+# Sitemap location
+Sitemap: https://scorear-e4186.web.app/sitemap.xml

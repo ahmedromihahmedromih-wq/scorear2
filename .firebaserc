@@ -1,0 +1,9 @@
+{
+  "projects": {
+    "default": "scorear-staging-test",
+    "staging": "scorear-staging-test",
+    "production": "scorear2"
+  },
+  "targets": {},
+  "etags": {}
+}

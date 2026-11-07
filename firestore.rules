@@ -1,0 +1,71 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // المسابقات - quizzes
+    // المعلم يستطيع إنشاء وقراءة وتحديث وحذف مسابقاته فقط
+    // الطلاب لا يستطيعون الوصول إلى المسابقات المحفوظة
+    match /quizzes/{quizId} {
+      // السماح بالقراءة للمعلم فقط إذا كان uid يطابق uid المالك
+      allow read: if request.auth != null
+                  && request.auth.uid == resource.data.ownerUid;
+
+      // السماح بالإنشاء إذا كان المعلم مسجل الدخول والـ uid مطابق
+      allow create: if request.auth != null
+                   && request.auth.uid == request.resource.data.ownerUid;
+
+      // السماح بالتعديل للمعلم فقط إذا كان المالك
+      allow update: if request.auth != null
+                   && request.auth.uid == resource.data.ownerUid
+                   && request.auth.uid == request.resource.data.ownerUid;
+
+      // السماح بالحذف للمعلم فقط إذا كان المالك
+      allow delete: if request.auth != null
+                   && request.auth.uid == resource.data.ownerUid;
+    }
+
+    // بنك الأسئلة - question_bank
+    match /question_bank/{questionId} {
+      allow read: if request.auth != null
+                  && (request.auth.uid == resource.data.ownerUid || request.auth.token.role == 'admin');
+
+      allow create: if request.auth != null
+                   && request.auth.uid == request.resource.data.ownerUid;
+
+      allow update: if request.auth != null
+                   && request.auth.uid == resource.data.ownerUid
+                   && request.auth.uid == request.resource.data.ownerUid;
+
+      allow delete: if request.auth != null
+                   && (request.auth.uid == resource.data.ownerUid || request.auth.token.role == 'admin');
+    }
+
+    // المجلدات - folders
+    match /folders/{folderId} {
+      allow read: if request.auth != null
+                  && (request.auth.uid == resource.data.ownerUid || request.auth.token.role == 'admin');
+
+      allow create: if request.auth != null
+                   && request.auth.uid == request.resource.data.ownerUid;
+
+      allow update: if request.auth != null
+                   && request.auth.uid == resource.data.ownerUid
+                   && request.auth.uid == request.resource.data.ownerUid;
+
+      allow delete: if request.auth != null
+                   && (request.auth.uid == resource.data.ownerUid || request.auth.token.role == 'admin');
+    }
+
+    // بيانات المعلمين/المستخدمين
+    match /users/{userId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+
+    // منع أي وصول آخر غير مصرح به
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

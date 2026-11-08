@@ -203,10 +203,13 @@
       numericId = match ? Math.max(1, Math.min(20, parseInt(match[0], 10))) : 1;
       cleanCode = 'char_' + String(numericId).padStart(2, '0');
     }
-    if (global.ScoreARCharacters && typeof global.ScoreARCharacters.render === 'function') {
-      return `<div style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;filter:drop-shadow(0 14px 28px rgba(0,0,0,0.75));">${global.ScoreARCharacters.render(numericId, 'celebrate')}</div>`;
-    }
-    return `<img src="assets/characters/animated/${cleanCode}-idle.webp" onerror="this.src='assets/characters/animated/char_01-idle.webp'" alt="${escapeHtml(name)}" style="height:100%;object-fit:contain;animation:character-joy 1.1s ease-in-out infinite;filter:drop-shadow(0 14px 28px rgba(0,0,0,0.75));">`;
+    const heroName = (global.ScoreARCharacters && typeof global.ScoreARCharacters.get === 'function')
+      ? (global.ScoreARCharacters.get(numericId)?.name || name || 'البطل')
+      : (name || 'البطل');
+
+    return `<div class="character-podium-hero scorear-character character-celebrate" role="img" aria-label="${escapeHtml(heroName)}" style="--character-atlas:url('assets/characters/animated/${cleanCode}-atlas.webp');width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;filter:drop-shadow(0 14px 28px rgba(0,0,0,0.75));">
+      <img src="assets/characters/animated/${cleanCode}-idle.webp" onerror="this.src='assets/characters/animated/char_01-idle.webp'" alt="${escapeHtml(heroName)}" style="max-height:100%;max-width:100%;height:100%;object-fit:contain;animation:character-joy 1.1s ease-in-out infinite;visibility:visible!important;display:block!important;">
+    </div>`;
   }
 
   // --- 2. Stepwise Podium Controller & Renderer ---
@@ -315,10 +318,16 @@
         </div>
 
         <!-- Suspense Stepwise Reveal Controls -->
-        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin:16px 0;z-index:30;">
-          <button id="podiumRevealBtn" type="button" onclick="ScoreARPodiumEffects.advanceReveal()" style="background:linear-gradient(135deg, #f59e0b, #d97706);color:#fff;font-size:16px;font-weight:900;border:none;border-radius:16px;padding:14px 34px;cursor:pointer;box-shadow:0 6px 24px rgba(245,158,11,0.5);display:flex;align-items:center;gap:10px;">
-            <span>🥉 كشف صاحب المركز الثالث</span>
-          </button>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin:16px 0;z-index:30;">
+          <div id="podiumPromptText" style="font-size:13px;color:#fcd34d;font-weight:800;">👇 اضغط هنا لكشف الأبطال وتتويج الفائزين بالترتيب</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+            <button id="podiumRevealBtn" type="button" onclick="ScoreARPodiumEffects.advanceReveal()" style="background:linear-gradient(135deg, #f59e0b, #d97706);color:#fff;font-size:15px;font-weight:900;border:none;border-radius:16px;padding:12px 28px;cursor:pointer;box-shadow:0 6px 24px rgba(245,158,11,0.5);display:flex;align-items:center;gap:10px;">
+              <span>🥉 كشف صاحب المركز الثالث</span>
+            </button>
+            <button id="podiumRevealAllBtn" type="button" onclick="ScoreARPodiumEffects.revealAll()" style="background:rgba(255,255,255,0.12);color:#f1f5f9;font-size:13px;font-weight:800;border:1px solid rgba(255,255,255,0.25);border-radius:14px;padding:10px 18px;cursor:pointer;">
+              ⚡ كشف وتتويج الجميع فوراً
+            </button>
+          </div>
         </div>
 
         <!-- Full Results Table (Initially Collapsed until step 4) -->
@@ -437,6 +446,10 @@
         btn.innerHTML = `<span>📋 عرض كشف الترتيب النهائي لكافة المتسابقين</span>`;
         btn.style.background = 'linear-gradient(135deg, #6366f1, #4f46e5)';
       }
+      const allBtn = document.getElementById('podiumRevealAllBtn');
+      if (allBtn) allBtn.style.display = 'none';
+      const prompt = document.getElementById('podiumPromptText');
+      if (prompt) prompt.style.display = 'none';
     } else if (revealStep >= 4) {
       // Show full roster table
       if (roster) {
@@ -452,6 +465,10 @@
         };
       }
     }
+  }
+
+  function revealAll() {
+    while (revealStep < 3) advanceReveal();
   }
 
   // --- 3. Realtime Floating Student Reactions ---
@@ -474,7 +491,7 @@
     bubble.addEventListener('animationend', () => bubble.remove());
   }
 
-  const ScoreARPodiumEffects = { renderHostPodium, advanceReveal, handleStudentReaction, initWorldCanvas };
+  const ScoreARPodiumEffects = { renderHostPodium, advanceReveal, revealAll, handleStudentReaction, initWorldCanvas };
   global.ScoreARPodiumEffects = ScoreARPodiumEffects;
   try { if (typeof globalThis !== 'undefined') globalThis.ScoreARPodiumEffects = ScoreARPodiumEffects; } catch(e){}
   if (typeof module !== 'undefined' && module.exports) module.exports = ScoreARPodiumEffects;

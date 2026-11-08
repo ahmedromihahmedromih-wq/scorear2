@@ -435,7 +435,7 @@
       <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 25%, rgba(42,34,84,0.78) 0%, rgba(10,11,22,0.94) 100%);z-index:2;"></div>
       <header style="position:relative;z-index:10;padding:12px;background:rgba(15,16,33,0.9);border-bottom:1px solid rgba(255,255,255,0.1);text-align:center;"><span style="font-size:16px;font-weight:900;color:#fcd34d;">🏆 نهاية التحدي والتتويج</span></header>
       <main style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center;gap:10px;">
-        <img src="assets/characters/animated/${currentStudent.avatarId}-idle.webp" alt="${currentStudent.name}" style="width:90px;height:110px;object-fit:contain;">
+        <img src="assets/characters/animated/${currentStudent?.avatarId || 'char_01'}-idle.webp" onerror="this.src='assets/characters/animated/char_01-idle.webp'" alt="${escapeHtml(currentStudent?.name || 'البطل')}" style="width:100px;height:120px;object-fit:contain;animation:character-joy 1.1s ease-in-out infinite;filter:drop-shadow(0 8px 18px rgba(0,0,0,0.6));">
         <h2 style="font-size:19px;font-weight:900;color:#ffffff;margin:0;">أحسنت يا ${currentStudent.name}! 🌟</h2>
         <div style="background:rgba(21,23,49,0.9);border:2px solid #f59e0b;border-radius:18px;padding:12px;width:100%;max-width:300px;">
           <div style="font-size:11px;color:#a89bff;">مجموع نقاطك النهائي:</div>

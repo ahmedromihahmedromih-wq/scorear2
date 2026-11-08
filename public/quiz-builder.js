@@ -276,10 +276,12 @@
     closeBuilder();
     if (global.toast) global.toast('تم اعتماد ونشر المسابقة بنجاح! اختر عالم المنافسة 🚀');
     if (global.ScoreARWorldFlow && typeof global.ScoreARWorldFlow.openWorldPicker === 'function') {
+      const lastWorld = (typeof localStorage !== 'undefined') ? (localStorage.getItem('scorear_last_world') || 'royal') : 'royal';
       global.ScoreARWorldFlow.openWorldPicker({
-        defaultWorldId: 'royal',
+        defaultWorldId: lastWorld,
         quizTitle: currentQuiz.title || 'مسابقة جديدة',
         onConfirm: (chosenWorld) => {
+          try { if (typeof localStorage !== 'undefined') localStorage.setItem('scorear_last_world', chosenWorld); } catch(e){}
           if (global.ScoreARQuizHost && global.ScoreARQuizHost.startHostLobby) {
             global.ScoreARQuizHost.startHostLobby(chosenWorld, null, true);
           }

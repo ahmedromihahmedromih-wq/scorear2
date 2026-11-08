@@ -70,14 +70,19 @@
     if (el && el.open) el.close();
   }
 
-  function openWorld(worldId) {
+  async function openWorld(worldId) {
     const role = getCurrentRole();
     const world = getWorld(worldId);
     wizardState.worldId = world.id;
+    try { localStorage.setItem('scorear_last_world', world.id); } catch(e){}
 
     if (role === 'teacher') {
-      wizardState.step = 1;
-      renderTeacherWizardModal();
+      if (global.ScoreARWorldContentPicker && typeof global.ScoreARWorldContentPicker.openContentPicker === 'function') {
+        await global.ScoreARWorldContentPicker.openContentPicker({ worldId: world.id });
+      } else {
+        wizardState.step = 2;
+        renderTeacherWizardModal();
+      }
     } else {
       renderGuestShowcaseModal(world);
     }
@@ -294,7 +299,7 @@
 
   function openWorldPicker(options = {}) {
     activePickerCallback = options.onConfirm || null;
-    activeSelectedWorldId = options.defaultWorldId || wizardState.worldId || 'royal';
+    activeSelectedWorldId = options.defaultWorldId || localStorage.getItem('scorear_last_world') || wizardState.worldId || 'royal';
     const modal = getOrCreateModal();
 
     function renderPicker() {
@@ -375,6 +380,7 @@
   function confirmPickerWorld() {
     closeWorldModal();
     const chosen = activeSelectedWorldId || 'royal';
+    try { localStorage.setItem('scorear_last_world', chosen); } catch(e){}
     if (typeof activePickerCallback === 'function') {
       activePickerCallback(chosen);
     } else {

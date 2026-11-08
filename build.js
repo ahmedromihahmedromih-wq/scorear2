@@ -49,7 +49,7 @@ console.log('✅ Copied clean root index.html to public/ and dist/');
 const portalFiles = [
   'styles.css', 'launch.css', 'workspace.css',
   'firebase-config.js', 'app.js', 'auth.js', 'auth-ui.js', 'auth-register-ui.js', 'quiz-student-join.js', 'realtime-engine.js',
-  'quiz-evaluator.js', 'quiz-audio.js', 'quiz-host-leaderboard.js', 'quiz-host-events.js', 'quiz-host-view.js', 'quiz-host.js', 'quiz-bots.js', 'quiz-podium-effects.js', 'quiz-student-view.js', 'quiz-student.js',
+  'quiz-evaluator.js', 'quiz-audio.js', 'quiz-host-leaderboard.js', 'quiz-host-events.js', 'quiz-host-view.js', 'quiz-host.js', 'quiz-bots.js', 'quiz-podium-capture.js', 'quiz-podium-effects.js', 'quiz-student-view.js', 'quiz-student.js',
   'quiz-builder-actions.js', 'quiz-builder-media.js', 'quiz-builder.js', 'quiz-bank-data.js', 'quiz-bank.js', 'quiz-importer.js', 'quiz-doc-extractor.js', 'quiz-ai-pipeline.js', 'quiz-ai-review.js', 'quiz-ai.js', 'quiz-reports.js', 'admin-management.js',
   'student-journey.js', 'mistake-scheduler.js', 'mistake-notebook.js', 'streak.js',
   'skill-engine.js', 'skill-map.js', 'nav.js', 'world-content-picker.js', 'world-flow.js', 'launch.js', 'workspace.js',

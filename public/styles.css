@@ -759,3 +759,51 @@ dialog::backdrop {
   pointer-events: none !important;
   transition: opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.6s ease, transform 0.6s ease !important;
 }
+
+/* ============================================================
+   ScoreAR Batch 4: Themed Race Leaderboard & World Climax Podium
+   Hardware-accelerated transforms & reduced-motion accessibility
+   ============================================================ */
+@keyframes crownDescend {
+  0% { transform: translateY(-100px) scale(0.6); opacity: 0; }
+  65% { transform: translateY(6px) scale(1.08); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes rocketBoostUp {
+  0% { transform: translateY(50px) scale(0.75); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes floodlightSweep {
+  0% { transform: rotate(-28deg); opacity: 0.35; }
+  100% { transform: rotate(28deg); opacity: 0.8; }
+}
+
+@keyframes spellCircleSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fountainJetRise {
+  0% { transform: scaleY(0.25); opacity: 0.3; }
+  100% { transform: scaleY(1); opacity: 0.95; }
+}
+
+@keyframes floatUpReaction {
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  15% { transform: translateY(-40px) scale(1.2); opacity: 1; }
+  80% { transform: translateY(-380px) scale(1.05); opacity: 0.9; }
+  100% { transform: translateY(-480px) scale(0.9); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #podiumCameraRig {
+    transition: none !important;
+    transform: none !important;
+  }
+  .char-procedural-rig, .speed-lines-svg, #championCrownEl {
+    animation: none !important;
+  }
+}
+

@@ -181,7 +181,77 @@
           <button type="button" onclick="ScoreARQuizStudent.sendReaction('❤️')" style="background:none;border:none;font-size:22px;cursor:pointer;padding:2px 4px;">❤️</button>
           <button type="button" onclick="ScoreARQuizStudent.sendReaction('🎉')" style="background:none;border:none;font-size:22px;cursor:pointer;padding:2px 4px;">🎉</button>
         </div>
+        ${(myFinalRank !== '-' && myFinalRank <= 3) ? `<button onclick="if(global.ScoreARPodiumCapture?.downloadCertificate){global.ScoreARPodiumCapture.downloadCertificate({name:'${escapeHtml(currentStudent?.name||'البطل')}',score:${currentScore}},${myFinalRank},${currentScore},'${currentWorldId}');}" style="background:linear-gradient(135deg, #10b981, #059669);color:#fff;font-weight:900;font-size:13px;border:none;border-radius:12px;padding:9px 20px;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 4px 14px rgba(16,185,129,0.4);">🎓 تحميل شهادتي التقديرية (PNG)</button>` : ''}
         <button onclick="ScoreARQuizStudent.closeStudentSession()" style="background:linear-gradient(135deg, #8e64ef, #6a34e8);color:#fff;font-weight:900;font-size:13px;border:none;border-radius:12px;padding:9px 22px;cursor:pointer;">العودة للرئيسية 🏠</button>
+      </main>`;
+  }
+
+  function renderStudentLeaderboardCard(stage, msg, currentStudent, currentScore, currentWorldId) {
+    const myId = String(currentStudent?.uid || '');
+    const myName = currentStudent?.name || '';
+    const myInfo = (msg.allRanks || []).find(r => String(r.id) === myId || r.name === myName) || {
+      rank: '-', score: currentScore, delta: 0, streak: 0, gapToAbove: 0
+    };
+    const rankNum = typeof myInfo.rank === 'number' ? myInfo.rank : '-';
+    const total = msg.totalPlayers || (msg.allRanks ? msg.allRanks.length : 1);
+
+    let deltaHtml = '<span style="color:#94a3b8;font-weight:800;">➖ ثابت</span>';
+    if (myInfo.delta > 0) {
+      deltaHtml = `<span style="color:#34d399;font-weight:900;">▲ صعدت ${myInfo.delta} ${myInfo.delta === 1 ? 'مركز' : 'مراكز'}</span>`;
+    } else if (myInfo.delta < 0) {
+      deltaHtml = `<span style="color:#f59e0b;font-weight:900;">▼ تراجعت ${Math.abs(myInfo.delta)}</span>`;
+    }
+
+    const gapText = (rankNum === 1)
+      ? '👑 أنت في صدارة المركز الأول!'
+      : (myInfo.gapToAbove > 0 ? `تفصلك ${myInfo.gapToAbove} نقطة عن المركز الأعلى` : 'أداء رائع، استمر في التحدي!');
+
+    const charAvatarId = currentStudent?.avatarId || 'char_01';
+
+    stage.innerHTML = `
+      <div style="position:absolute;inset:0;background:url('assets/worlds/${currentWorldId}/results.jpg') center/cover no-repeat;filter:brightness(0.35);z-index:1;"></div>
+      <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 25%, rgba(42,34,84,0.8) 0%, rgba(10,11,22,0.95) 100%);z-index:2;"></div>
+      <header style="position:relative;z-index:10;padding:12px 18px;background:rgba(15,16,33,0.92);border-bottom:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:15px;font-weight:900;color:#fcd34d;">🏁 لوحة الترتيب بعد السؤال</span>
+        <span style="font-size:12px;color:#94a3b8;">إجمالي المتسابقين: <b style="color:#52d9ed;">${total}</b></span>
+      </header>
+      <main style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center;gap:12px;">
+        <img src="assets/characters/animated/${charAvatarId}-idle.webp" onerror="this.src='assets/characters/animated/char_01-idle.webp'" alt="${escapeHtml(myName)}" style="width:90px;height:105px;object-fit:contain;animation:character-joy 1.1s ease-in-out infinite;filter:drop-shadow(0 8px 18px rgba(0,0,0,0.6));">
+        <h3 style="font-size:18px;font-weight:900;color:#ffffff;margin:0;">يا ${escapeHtml(myName)}! 🚀</h3>
+        
+        <div style="width:100%;max-width:340px;background:rgba(21,23,49,0.92);border:2px solid rgba(142,100,239,0.4);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 12px 30px rgba(0,0,0,0.5);">
+          <div style="display:flex;justify-content:space-around;align-items:center;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:10px;">
+            <div>
+              <div style="font-size:11px;color:#a89bff;font-weight:700;">ترتيبي الشخصي</div>
+              <div style="font-size:24px;font-weight:900;color:#fcd34d;">المركز ${rankNum}</div>
+            </div>
+            <div style="width:1px;height:32px;background:rgba(255,255,255,0.15);"></div>
+            <div>
+              <div style="font-size:11px;color:#a89bff;font-weight:700;">حركة الترتيب</div>
+              <div style="font-size:14px;margin-top:4px;">${deltaHtml}</div>
+            </div>
+          </div>
+          
+          <div style="display:flex;justify-content:space-around;align-items:center;">
+            <div>
+              <div style="font-size:11px;color:#a89bff;font-weight:700;">مجموع نقاطي</div>
+              <div style="font-size:20px;font-weight:900;color:#38bdf8;font-family:monospace;">${myInfo.score ?? currentScore}</div>
+            </div>
+            <div style="width:1px;height:28px;background:rgba(255,255,255,0.15);"></div>
+            <div>
+              <div style="font-size:11px;color:#a89bff;font-weight:700;">سلسلة الإجابات</div>
+              <div style="font-size:14px;font-weight:900;color:#fbbf24;">${myInfo.streak > 0 ? `🔥 ${myInfo.streak} متتالية` : '💪 ابدأ السلسلة!'}</div>
+            </div>
+          </div>
+
+          <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:8px 12px;font-size:12px;font-weight:800;color:#e2e8f0;">
+            ${gapText}
+          </div>
+        </div>
+
+        <div style="font-size:12px;color:#c9baff;font-weight:800;">
+          ⏳ المعلم يراجع النتائج ويستعد للسؤال التالي...
+        </div>
       </main>`;
   }
 
@@ -207,6 +277,7 @@
     renderStudentReading,
     renderStudentQuestion,
     renderStudentResult,
+    renderStudentLeaderboardCard,
     renderStudentFinalPodium,
     renderStudentRoomClosed
   };

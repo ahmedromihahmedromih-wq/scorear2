@@ -106,6 +106,11 @@
       renderStudentQuestion(msg);
     } else if (msg.type === 'QUESTION_RESULT') {
       renderStudentResult(msg);
+    } else if (msg.type === 'LEADERBOARD_UPDATE') {
+      if (qTimerInterval) clearInterval(qTimerInterval);
+      if (view() && typeof view().renderStudentLeaderboardCard === 'function') {
+        view().renderStudentLeaderboardCard(getOrCreateStudentStage(), msg, currentStudent, currentScore, currentWorldId);
+      }
     } else if (msg.type === 'QUESTION_SKIPPED') {
       if (qTimerInterval) clearInterval(qTimerInterval);
       const fb = document.getElementById('studentFeedbackBox');

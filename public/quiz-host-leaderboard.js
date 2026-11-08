@@ -1,127 +1,254 @@
 /**
- * ScoreAR Quiz Host Leaderboard & Podium Module
- * Renders Host Leaderboard FLIP transitions, Staggered Rows, Crowning Podium Ceremony & Full Results Roster.
- * Strictly Rule 7 Compliant (<300 lines).
+ * ScoreAR Quiz Host Leaderboard Race Module (quiz-host-leaderboard.js)
+ * Implements Themed 6-World Race Track Leaderboard (Top 5 only) with Procedural Motion,
+ * Speed Lines, Counting Points, World Goal Decor, and Gap-to-Next Badges.
+ * Strictly Rule 7 Compliant (<450 lines).
  */
 (function(global) {
   'use strict';
 
   const previousRanks = new Map();
 
+  const WORLD_RACE_THEMES = {
+    royal: {
+      name: 'القصر الملكي الأندلسي',
+      trackTitle: 'طريق السجادة الحمراء نحو العرش',
+      targetIcon: '👑',
+      targetLabel: 'العرش الملكي',
+      bgGradient: 'linear-gradient(90deg, rgba(120, 20, 30, 0.75) 0%, rgba(185, 28, 28, 0.8) 75%, rgba(245, 158, 11, 0.85) 100%)',
+      laneBorder: 'rgba(245, 158, 11, 0.45)',
+      speedColor: '#fbbf24',
+      accentColor: '#f59e0b'
+    },
+    cosmic: {
+      name: 'محطة الفضاء العربية',
+      trackTitle: 'مسارات الصواريخ المدارية',
+      targetIcon: '🪐',
+      targetLabel: 'المحطة المدارية',
+      bgGradient: 'linear-gradient(90deg, rgba(15, 23, 42, 0.8) 0%, rgba(14, 116, 144, 0.75) 75%, rgba(139, 92, 246, 0.85) 100%)',
+      laneBorder: 'rgba(6, 182, 212, 0.45)',
+      speedColor: '#38bdf8',
+      accentColor: '#06b6d4'
+    },
+    treasure: {
+      name: 'جزيرة الكنز الأسطورية',
+      trackTitle: 'تسلق الجرف الصخري نحو الكنز',
+      targetIcon: '💎',
+      targetLabel: 'صندوق الكنز',
+      bgGradient: 'linear-gradient(90deg, rgba(67, 30, 10, 0.8) 0%, rgba(180, 83, 9, 0.78) 75%, rgba(251, 191, 36, 0.85) 100%)',
+      laneBorder: 'rgba(251, 191, 36, 0.45)',
+      speedColor: '#fde047',
+      accentColor: '#f59e0b'
+    },
+    stadium: {
+      name: 'استاد الأبطال الرياضي',
+      trackTitle: 'مضمار الجري الرياضي بحارات السرعة',
+      targetIcon: '🏆',
+      targetLabel: 'خط النهاية والكأس',
+      bgGradient: 'linear-gradient(90deg, rgba(20, 30, 45, 0.8) 0%, rgba(22, 101, 52, 0.78) 75%, rgba(56, 189, 248, 0.85) 100%)',
+      laneBorder: 'rgba(74, 222, 128, 0.45)',
+      speedColor: '#4ade80',
+      accentColor: '#22c55e'
+    },
+    oasis: {
+      name: 'واحة النخيل والرمال',
+      trackTitle: 'مجرى النهر الفيروزي نحو الواحة',
+      targetIcon: '🌴',
+      targetLabel: 'الواحة والينبوع',
+      bgGradient: 'linear-gradient(90deg, rgba(15, 35, 30, 0.8) 0%, rgba(13, 148, 136, 0.75) 75%, rgba(16, 185, 129, 0.85) 100%)',
+      laneBorder: 'rgba(52, 211, 153, 0.45)',
+      speedColor: '#6ee7b7',
+      accentColor: '#10b981'
+    },
+    magic: {
+      name: 'المملكة السحرية العائمة',
+      trackTitle: 'طيران السحر والبسط الطائرة في الشفق',
+      targetIcon: '🏰',
+      targetLabel: 'قلعة السحر المعلقة',
+      bgGradient: 'linear-gradient(90deg, rgba(30, 15, 45, 0.8) 0%, rgba(109, 40, 217, 0.75) 75%, rgba(236, 72, 153, 0.85) 100%)',
+      laneBorder: 'rgba(192, 132, 252, 0.45)',
+      speedColor: '#f472b6',
+      accentColor: '#c084fc'
+    }
+  };
+
   function escapeHtml(str) {
     return typeof str !== 'string' ? String(str || '') : str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
   }
   function sfx(t) { if (global.ScoreARAudio) global.ScoreARAudio.playSfx(t); }
-  function music(tr, vol) { if (global.ScoreARAudio) global.ScoreARAudio.playMusic(tr, vol); }
 
   function renderHostLeaderboard(stage, currentRoom, activeQuestions, currentQIndex, onNext, onPodium, onClose) {
-    const sorted = [...currentRoom.players].sort((a, b) => b.score - a.score);
+    const sorted = [...(currentRoom.players || [])].sort((a, b) => (b.score || 0) - (a.score || 0));
     const hasNext = (currentQIndex + 1 < activeQuestions.length);
     const worldId = (currentRoom.world && currentRoom.world.id) ? currentRoom.world.id : (currentRoom.worldId || 'royal');
-    const totalCount = Math.min(sorted.length, 5);
+    const theme = WORLD_RACE_THEMES[worldId] || WORLD_RACE_THEMES.royal;
+    const top5 = sorted.slice(0, 5);
 
+    // Compute rank shifts & biggest jumper
     let maxJump = 0, biggestJumperId = null;
     sorted.forEach((p, idx) => {
       const curRank = idx + 1;
-      const prevRank = previousRanks.has(p.id) ? previousRanks.get(p.id) : curRank;
-      const jump = prevRank - curRank;
+      const prev = previousRanks.has(p.id) ? previousRanks.get(p.id) : curRank;
+      const jump = prev - curRank;
       p._rankDelta = jump;
-      p._prevRank = prevRank;
+      p._prevRank = prev;
       p._currentRank = curRank;
       if (jump >= 2 && jump > maxJump) {
         maxJump = jump;
         biggestJumperId = p.id;
       }
     });
-
     sorted.forEach(p => previousRanks.set(p.id, p._currentRank));
 
     sfx('whoosh');
-    setTimeout(() => { sfx('reveal'); }, 400 + (totalCount * 260));
+    setTimeout(() => { sfx('reveal'); }, 450);
+
+    const isMuted = (global.ScoreARAudio && typeof global.ScoreARAudio.isMuted === 'function')
+      ? global.ScoreARAudio.isMuted() : false;
 
     stage.innerHTML = `
       <style>
-        @keyframes staggeredRowIn {
-          0% { opacity: 0; transform: translateY(18px) scale(0.97); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
+        @keyframes raceLaneSlideIn {
+          0% { opacity: 0; transform: translateX(-40px); }
+          100% { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes charProceduralBounce {
+          0%, 100% { transform: translateY(0) scale(1, 1); }
+          35% { transform: translateY(-9px) scale(0.96, 1.05) rotate(1deg); }
+          50% { transform: translateY(-12px) scale(1, 1.02); }
+          75% { transform: translateY(0) scale(1.05, 0.95) rotate(-1deg); }
+        }
+        @keyframes shadowScale {
+          0%, 100% { transform: scale(1); opacity: 0.6; }
+          50% { transform: scale(0.75); opacity: 0.25; }
+        }
+        @keyframes speedLinesMotion {
+          0% { transform: translateX(0); opacity: 0.3; }
+          50% { transform: translateX(-15px); opacity: 0.85; }
+          100% { transform: translateX(0); opacity: 0.3; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .scorear-leaderboard-row { animation: none !important; opacity: 1 !important; transform: none !important; }
+          .race-lane-card, .char-procedural-rig, .speed-lines-svg { animation: none !important; transform: none !important; }
         }
       </style>
+
       <div style="position:absolute;inset:0;overflow:hidden;z-index:0;background:url('assets/worlds/${worldId}/results.jpg') center/cover no-repeat;">
         <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 25%, rgba(15,23,42,0.65) 0%, rgba(10,11,24,0.94) 100%);"></div>
       </div>
-      <header style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:rgba(12,13,30,0.75);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,0.12);">
-        <button onclick="ScoreARQuizHost.closeHostSession()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 12px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;">✕ إنهاء القاعة</button>
-        <h2 style="font-size:22px;font-weight:900;color:#ffffff;margin:0;display:flex;align-items:center;gap:10px;">🏆 لوحة الصدارة بعد السؤال (${currentQIndex + 1})</h2>
-        <button onclick="${hasNext ? `ScoreARQuizHost.launchQuestion(${currentQIndex + 1})` : 'ScoreARQuizHost.renderHostPodium()'}" style="background:linear-gradient(135deg, #6366f1, #8b5cf6);border:none;color:#fff;padding:10px 22px;border-radius:12px;font-weight:900;font-size:13px;cursor:pointer;box-shadow:0 4px 16px rgba(99,102,241,0.4);">
-          ${hasNext ? 'السؤال التالي ➔' : 'تتويج الأبطال 👑'}
+
+      <header style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:12px 28px;background:rgba(12,13,30,0.8);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,0.12);">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button onclick="ScoreARQuizHost.closeHostSession()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 12px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;">✕ إنهاء القاعة</button>
+          <button id="hostAudioMuteBtn" onclick="ScoreARHostLeaderboard.toggleMuteAudio()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;">
+            ${isMuted ? '🔇 مكتوم' : '🔊 صوت'}
+          </button>
+        </div>
+        
+        <div style="text-align:center;">
+          <h2 style="font-size:20px;font-weight:900;color:#ffffff;margin:0;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <span>🏁</span>
+            <span>${theme.trackTitle} (${currentQIndex + 1} من ${activeQuestions.length})</span>
+          </h2>
+          <small style="color:${theme.speedColor};font-size:11px;font-weight:700;">أول 5 متصدرين في سباق التحدي المباشر</small>
+        </div>
+
+        <button onclick="${hasNext ? `ScoreARQuizHost.launchQuestion(${currentQIndex + 1})` : 'ScoreARQuizHost.renderHostPodium()'}" style="background:linear-gradient(135deg, #10b981, #059669);border:none;color:#fff;padding:10px 24px;border-radius:12px;font-weight:900;font-size:14px;cursor:pointer;box-shadow:0 4px 18px rgba(16,185,129,0.5);display:flex;align-items:center;gap:8px;">
+          <span>${hasNext ? 'السؤال التالي ➔' : 'تتويج الأبطال 👑'}</span>
         </button>
       </header>
-      <main style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
-        <div class="leaderboard-container" style="width:100%;max-width:780px;display:flex;flex-direction:column;gap:12px;">
-          ${sorted.slice(0, 5).map((p, idx) => {
+
+      <main style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 24px;max-width:980px;margin:0 auto;width:100%;">
+        <div style="width:100%;display:flex;flex-direction:column;gap:8px;">
+          ${top5.map((p, idx) => {
             const isTop1 = (idx === 0), isTop2 = (idx === 1), isTop3 = (idx === 2);
             const roleIcon = p.isDemo ? '🤖' : p.isRegistered ? '✓' : '✨';
             const roleTitle = p.isDemo ? 'طالب تجريبي' : p.isRegistered ? 'طالب مسجل' : 'ضيف';
+            const medal = isTop1 ? '🥇 1' : isTop2 ? '🥈 2' : isTop3 ? '🥉 3' : `#${idx + 1}`;
 
-            let arrowHtml = '<span style="color:#94a3b8;font-size:13px;font-weight:900;">—</span>';
+            let arrowHtml = '<span style="color:#94a3b8;font-size:12px;font-weight:900;">—</span>';
             if (p._rankDelta > 0) {
-              arrowHtml = `<span style="color:#34d399;font-size:13px;font-weight:900;" title="صعد ${p._rankDelta} مراكز">▲ ${p._rankDelta}</span>`;
+              arrowHtml = `<span style="color:#34d399;font-size:12px;font-weight:900;">▲ +${p._rankDelta}</span>`;
             } else if (p._rankDelta < 0) {
-              arrowHtml = `<span style="color:#f87171;font-size:13px;font-weight:900;" title="تراجع ${Math.abs(p._rankDelta)} مراكز">▼ ${Math.abs(p._rankDelta)}</span>`;
+              arrowHtml = `<span style="color:#f87171;font-size:12px;font-weight:900;">▼ ${p._rankDelta}</span>`;
             }
 
+            // Badges
             const badges = [];
-            if (p.id === biggestJumperId) badges.push('<span style="background:rgba(168,85,247,0.25);border:1px solid #a855f7;color:#d8b4fe;font-size:10px;font-weight:900;padding:2px 8px;border-radius:10px;">🚀 قفزة كبرى</span>');
-            if (p.streak >= 3) badges.push(`<span style="background:rgba(245,158,11,0.25);border:1px solid #f59e0b;color:#fcd34d;font-size:10px;font-weight:900;padding:2px 8px;border-radius:10px;">🔥 ${p.streak} متتالية</span>`);
-            if (p.lastPointsGained && p.lastPointsGained >= 850) badges.push('<span style="background:rgba(52,211,153,0.25);border:1px solid #10b981;color:#34d399;font-size:10px;font-weight:900;padding:2px 8px;border-radius:10px;">⚡ سرعة فائقة</span>');
-
-            const delaySec = ((totalCount - 1 - idx) * 0.26).toFixed(2);
-            const borderStyle = isTop1 ? '2px solid #f59e0b;box-shadow:0 0 24px rgba(245,158,11,0.45);background:linear-gradient(135deg, rgba(245,158,11,0.25), rgba(15,23,42,0.85))'
-              : isTop2 ? '2px solid #94a3b8;box-shadow:0 0 16px rgba(148,163,184,0.3);background:rgba(15,23,42,0.85)'
-              : isTop3 ? '2px solid #d97706;box-shadow:0 0 14px rgba(217,119,6,0.25);background:rgba(15,23,42,0.85)'
-              : '1px solid rgba(255,255,255,0.12);background:rgba(15,23,42,0.75)';
+            if (p.isFastest || (currentRoom.lastFastestStudent && currentRoom.lastFastestStudent.id === p.id)) {
+              badges.push('<span style="background:rgba(245,158,11,0.25);border:1px solid #f59e0b;color:#fcd34d;font-size:10px;font-weight:900;padding:2px 7px;border-radius:8px;">⚡ الأسرع</span>');
+            }
+            if (p.streak >= 3) {
+              badges.push(`<span style="background:rgba(239,68,68,0.25);border:1px solid #ef4444;color:#fca5a5;font-size:10px;font-weight:900;padding:2px 7px;border-radius:8px;">🔥 ${p.streak} متتالية</span>`);
+            }
+            if (p.id === biggestJumperId) {
+              badges.push('<span style="background:rgba(168,85,247,0.25);border:1px solid #a855f7;color:#d8b4fe;font-size:10px;font-weight:900;padding:2px 7px;border-radius:8px;">🚀 أكبر صعود</span>');
+            }
 
             const ptsGained = p.lastPointsGained || 0;
             const startScore = Math.max(0, (p.score || 0) - ptsGained);
+            const delaySec = (idx * 0.08).toFixed(2);
+
+            // Points Gap to the rank directly above
+            let gapHtml = '';
+            if (idx > 0) {
+              const abovePlayer = top5[idx - 1];
+              const gap = (abovePlayer.score || 0) - (p.score || 0);
+              gapHtml = `<div style="text-align:center;margin:-3px 0;font-size:10px;font-weight:800;color:rgba(255,255,255,0.7);"><span style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);padding:2px 10px;border-radius:10px;">تفصلك ${gap} نقطة عن المركز #${idx}</span></div>`;
+            }
 
             return `
-              <div class="scorear-leaderboard-row" style="animation:staggeredRowIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) ${delaySec}s both;border-radius:18px;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border:${borderStyle};backdrop-filter:blur(16px);transition:transform 0.25s ease;">
-                <div style="display:flex;align-items:center;gap:12px;">
-                  <div style="display:flex;flex-direction:column;align-items:center;min-width:38px;">
-                    <div style="width:34px;height:34px;border-radius:10px;background:${isTop1?'#f59e0b':isTop2?'#94a3b8':isTop3?'#d97706':'rgba(255,255,255,0.1)'};color:${isTop1?'#000':'#fff'};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;">
-                      ${isTop1 ? '🥇' : isTop2 ? '🥈' : isTop3 ? '🥉' : (idx + 1)}
+              ${gapHtml}
+              <div class="race-lane-card" style="animation:raceLaneSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${delaySec}s both;position:relative;background:${theme.bgGradient};border:1.5px solid ${isTop1 ? '#fbbf24' : theme.laneBorder};border-radius:18px;padding:8px 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px rgba(0,0,0,0.45);min-height:68px;overflow:hidden;">
+                
+                <!-- Speed Lines SVG Overlay -->
+                <svg class="speed-lines-svg" width="90" height="40" viewBox="0 0 90 40" fill="none" style="position:absolute;left:130px;opacity:0.4;animation:speedLinesMotion 1.5s infinite ease-in-out;pointer-events:none;">
+                  <line x1="0" y1="10" x2="70" y2="10" stroke="${theme.speedColor}" stroke-width="2" stroke-dasharray="8 6"/>
+                  <line x1="15" y1="20" x2="85" y2="20" stroke="${theme.speedColor}" stroke-width="2" stroke-dasharray="12 4"/>
+                  <line x1="5" y1="30" x2="65" y2="30" stroke="${theme.speedColor}" stroke-width="2" stroke-dasharray="6 8"/>
+                </svg>
+
+                <!-- Left side: Rank & Character with Procedural Motion -->
+                <div style="display:flex;align-items:center;gap:14px;position:relative;z-index:2;">
+                  <div style="display:flex;flex-direction:column;align-items:center;min-width:44px;">
+                    <span style="font-size:15px;font-weight:900;color:${isTop1 ? '#fef08a' : '#ffffff'};">${medal}</span>
+                    <span style="margin-top:1px;">${arrowHtml}</span>
+                  </div>
+
+                  <div style="position:relative;width:56px;height:58px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;">
+                    <div class="char-procedural-rig" style="animation:charProceduralBounce 1.4s infinite ease-in-out;transform-origin:bottom center;">
+                      <img src="assets/characters/animated/${p.avatarId || 'char_01'}-idle.webp" onerror="this.src='assets/characters/animated/char_01-idle.webp'" alt="${escapeHtml(p.name)}" style="height:52px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.6));display:block;">
                     </div>
-                    <div style="margin-top:2px;">${arrowHtml}</div>
+                    <div style="width:36px;height:7px;background:radial-gradient(ellipse at center, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 70%);border-radius:50%;margin-top:-3px;animation:shadowScale 1.4s infinite ease-in-out;"></div>
                   </div>
-                  <div style="width:40px;height:52px;display:flex;align-items:flex-end;justify-content:center;">
-                    <img src="assets/characters/animated/${p.avatarId || 'char_01'}-idle.webp" onerror="this.src='assets/characters/animated/char_01-idle.webp'" alt="${escapeHtml(p.name)}" style="height:48px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.5));">
-                  </div>
+
                   <div>
                     <div style="display:flex;align-items:center;gap:6px;">
                       <span title="${roleTitle}" style="color:${roleIcon==='✓'?'#34d399':roleIcon==='🤖'?'#38bdf8':'#fcd34d'};font-size:13px;">${roleIcon}</span>
-                      <span class="player-name-text" style="font-size:16px;font-weight:900;color:#ffffff;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;" title="${escapeHtml(p.name)}" onclick="this.classList.toggle('expanded');">${escapeHtml(p.name)}</span>
-                      ${isTop1 ? '<span style="font-size:16px;">👑</span>' : ''}
+                      <b style="font-size:16px;font-weight:900;color:#ffffff;max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;">${escapeHtml(p.name)}</b>
+                      ${isTop1 ? '<span>👑</span>' : ''}
                     </div>
-                    <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                    <div style="display:flex;align-items:center;gap:6px;margin-top:3px;">
                       ${badges.join('')}
                     </div>
                   </div>
                 </div>
-                <div style="text-align:left;display:flex;flex-direction:column;align-items:flex-end;">
-                  <div style="display:flex;align-items:center;gap:6px;">
-                    ${ptsGained > 0 ? `<span style="background:rgba(16,185,129,0.25);border:1px solid #10b981;color:#34d399;font-size:11px;font-weight:900;padding:2px 6px;border-radius:6px;">+${ptsGained}</span>` : ''}
-                    <span class="scorear-count-up" data-start="${startScore}" data-target="${p.score || 0}" style="font-size:22px;font-weight:900;color:${isTop1?'#fbbf24':'#34d399'};font-family:monospace;">${p.score || 0}</span>
+
+                <!-- Right side: Score count-up & Gained Points badge -->
+                <div style="text-align:left;display:flex;flex-direction:column;align-items:flex-end;position:relative;z-index:2;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    ${ptsGained > 0 ? `<span style="background:rgba(16,185,129,0.3);border:1px solid #10b981;color:#6ee7b7;font-size:11px;font-weight:900;padding:2px 8px;border-radius:8px;">+${ptsGained}</span>` : ''}
+                    <span class="scorear-count-up" data-start="${startScore}" data-target="${p.score || 0}" style="font-size:24px;font-weight:900;color:${isTop1 ? '#fef08a' : '#38bdf8'};font-family:monospace;letter-spacing:-0.5px;">${p.score || 0}</span>
                   </div>
-                  <span style="font-size:10px;color:#94a3b8;font-weight:700;">نقطة</span>
+                  <span style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:800;">نقطة</span>
                 </div>
-              </div>`;
+              </div>
+            `;
           }).join('')}
         </div>
-      </main>`;
+      </main>
+    `;
 
+    // Count-up execution
     setTimeout(() => {
       const countEls = stage.querySelectorAll('.scorear-count-up');
       countEls.forEach(el => {
@@ -136,88 +263,45 @@
         }
         requestAnimationFrame(tick);
       });
-    }, 450);
+    }, 400);
+
+    // Broadcast private ranking summary to students
+    if (global.ScoreARRealtime) {
+      global.ScoreARRealtime.publish('LEADERBOARD_UPDATE', {
+        top5: top5.map(p => ({ id: p.id, name: p.name, score: p.score })),
+        totalPlayers: sorted.length,
+        allRanks: sorted.map((p, i) => ({
+          id: p.id,
+          name: p.name,
+          rank: i + 1,
+          score: p.score,
+          delta: p._rankDelta || 0,
+          streak: p.streak || 0,
+          gapToAbove: i > 0 ? ((sorted[i - 1].score || 0) - (p.score || 0)) : 0
+        }))
+      });
+    }
   }
 
   function renderHostPodium(stage, currentRoom, onClose) {
-    const sorted = [...currentRoom.players].sort((a, b) => b.score - a.score);
-    const p1 = sorted[0] || { name: 'البطل الأول', score: 0, avatarId: 'char_01' };
-    const p2 = sorted[1] || { name: 'الوصيف الثاني', score: 0, avatarId: 'char_02' };
-    const p3 = sorted[2] || { name: 'الثالث', score: 0, avatarId: 'char_03' };
-    const worldId = (currentRoom.world && currentRoom.world.id) ? currentRoom.world.id : (currentRoom.worldId || 'royal');
-
-    sfx('reveal');
-    music('magic', 0.28);
-
-    try {
-      if (global.confetti) {
-        global.confetti({ particleCount: 140, spread: 90, origin: { y: 0.6 } });
-        setTimeout(() => global.confetti({ particleCount: 180, spread: 110, origin: { y: 0.5 } }), 800);
-      }
-    } catch(e){}
-
-    if (global.ScoreARHostEvents?.publishContestCompleted) {
-      global.ScoreARHostEvents.publishContestCompleted([p1, p2, p3].filter(Boolean), currentRoom.players.length, sorted);
+    if (global.ScoreARPodiumEffects?.renderHostPodium) {
+      global.ScoreARPodiumEffects.renderHostPodium(stage, currentRoom, onClose);
     }
+  }
 
-    const podiums = [
-      { p: p2, medal: '🥈', h: '160px', bg: 'linear-gradient(180deg, #94a3b8, #475569)', tc: '#e2e8f0', w: '160px', fs: '26px', sz: '80px' },
-      { p: p1, medal: '🥇', h: '220px', bg: 'linear-gradient(180deg, #f59e0b, #b45309)', tc: '#fef3c7', w: '190px', fs: '36px', sz: '110px', main: true },
-      { p: p3, medal: '🥉', h: '130px', bg: 'linear-gradient(180deg, #d97706, #78350f)', tc: '#fed7aa', w: '160px', fs: '24px', sz: '70px' }
-    ];
-
-    stage.innerHTML = `
-      <div style="position:absolute;inset:0;overflow:hidden;z-index:0;background:url('assets/worlds/${worldId}/podium.jpg') center/cover no-repeat;">
-        <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 15%, rgba(245,158,11,0.25) 0%, rgba(12,13,30,0.94) 100%);"></div>
-      </div>
-      <header style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:rgba(12,13,30,0.75);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,0.12);">
-        <button onclick="ScoreARQuizHost.closeHostSession()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:8px 14px;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;">✕ إغلاق التتويج والعودة</button>
-        <div style="font-size:22px;font-weight:900;color:#fef3c7;display:flex;align-items:center;gap:10px;">👑 منصة تتويج أبطال ScoreAR 👑</div>
-        <div style="font-size:13px;color:#94a3b8;font-weight:700;">إجمالي الأبطال: <b style="color:#fff;">${currentRoom.players.length}</b></div>
-      </header>
-      <main style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px;overflow-y:auto;">
-        <div style="display:flex;align-items:flex-end;justify-content:center;gap:16px;margin-bottom:20px;margin-top:10px;">
-          ${podiums.map(item => `
-            <div style="display:flex;flex-direction:column;align-items:center;animation:enterFullBody 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);">
-              <div style="height:${item.sz};display:flex;align-items:flex-end;justify-content:center;margin-bottom:6px;">
-                <img src="assets/characters/animated/${item.p.avatarId || 'char_01'}-idle.webp" onerror="this.src='assets/characters/animated/char_01-idle.webp'" alt="${escapeHtml(item.p.name)}" style="height:${item.sz};object-fit:contain;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.7));">
-              </div>
-              <div style="background:rgba(15,23,42,0.92);border:2px solid ${item.main ? '#f59e0b' : 'rgba(255,255,255,0.2)'};border-radius:12px;padding:4px 12px;color:#fff;font-size:12px;font-weight:900;margin-bottom:6px;box-shadow:0 6px 18px rgba(0,0,0,0.5);white-space:nowrap;max-width:150px;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(item.p.name)}</div>
-              <div style="width:${item.w};height:${item.h};background:${item.bg};border-top-left-radius:16px;border-top-right-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:10px;box-shadow:0 12px 30px rgba(0,0,0,0.6);border:2px solid rgba(255,255,255,0.3);border-bottom:none;">
-                <div style="font-size:${item.fs};">${item.medal}</div>
-                <div style="font-size:18px;font-weight:900;color:${item.tc};font-family:monospace;margin-top:4px;">${item.p.score || 0}</div>
-                <div style="font-size:10px;font-weight:800;color:${item.tc};opacity:0.85;">نقطة</div>
-              </div>
-            </div>`).join('')}
-        </div>
-        <div style="width:100%;max-width:780px;background:rgba(15,23,42,0.85);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,0.15);border-radius:18px;padding:14px 18px;box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-          <div style="font-size:14px;font-weight:900;color:#c9baff;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
-            <span>📋 كشف النتائج والترتيب النهائي لكافة المتسابقين (${sorted.length})</span>
-            <span style="font-size:11px;color:#94a3b8;">سكور آر الرسمية</span>
-          </div>
-          <div style="max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-right:4px;">
-            ${sorted.map((p, idx) => {
-              const roleIcon = p.isDemo ? '🤖' : p.isRegistered ? '✓' : '✨';
-              const rankMedal = idx === 0 ? '🥇 1' : idx === 1 ? '🥈 2' : idx === 2 ? '🥉 3' : `#${idx + 1}`;
-              return `
-                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;">
-                  <div style="display:flex;align-items:center;gap:10px;">
-                    <span style="font-size:12px;font-weight:900;color:${idx<3?'#fcd34d':'#94a3b8'};min-width:32px;">${rankMedal}</span>
-                    <img src="assets/characters/animated/${p.avatarId || 'char_01'}-idle.webp" onerror="this.src='assets/characters/animated/char_01-idle.webp'" alt="${escapeHtml(p.name)}" style="width:26px;height:32px;object-fit:contain;">
-                    <span style="color:${roleIcon==='✓'?'#34d399':roleIcon==='🤖'?'#38bdf8':'#fcd34d'};font-size:12px;">${roleIcon}</span>
-                    <span style="font-size:13px;font-weight:800;color:#fff;">${escapeHtml(p.name)}</span>
-                  </div>
-                  <div style="font-size:15px;font-weight:900;color:#34d399;font-family:monospace;">${p.score || 0} <span style="font-size:10px;color:#94a3b8;">نقطة</span></div>
-                </div>`;
-            }).join('')}
-          </div>
-        </div>
-      </main>`;
+  function toggleMuteAudio() {
+    if (global.ScoreARAudio?.toggleMute) {
+      const muted = global.ScoreARAudio.toggleMute();
+      const btn = document.getElementById('hostAudioMuteBtn');
+      if (btn) btn.textContent = muted ? '🔇 مكتوم' : '🔊 صوت';
+    }
   }
 
   const ScoreARHostLeaderboard = {
     renderHostLeaderboard,
-    renderHostPodium
+    renderHostPodium,
+    toggleMuteAudio,
+    WORLD_RACE_THEMES
   };
 
   global.ScoreARHostLeaderboard = ScoreARHostLeaderboard;

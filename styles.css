@@ -659,3 +659,103 @@ dialog::backdrop {
   .topbar-title { font-size: 11px; }
   .btn.small { padding: 6px 12px; font-size: 11px; }
 }
+
+/* =========================================================================
+   SCOREAR MODERN QUIZ ARENA: WORLD-THEMED TIMERS & MOTION GRAPHICS
+   ========================================================================= */
+@keyframes questionGlideToTop {
+  0% { transform: translateY(12vh) scale(1.06); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes optionEntranceSlide {
+  0% { opacity: 0; transform: translateY(35px) scale(0.96); }
+  70% { transform: translateY(-3px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes timerPulseEmergency {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.6), inset 0 0 15px rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 45px rgba(239, 68, 68, 0.95), inset 0 0 25px rgba(239, 68, 68, 0.5);
+  }
+}
+
+@keyframes correctOptionPulse {
+  0%, 100% {
+    transform: scale(1.03);
+    box-shadow: 0 0 35px rgba(16, 185, 129, 0.85), inset 0 0 20px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    transform: scale(1.055);
+    box-shadow: 0 0 55px rgba(16, 185, 129, 1), inset 0 0 25px rgba(255, 255, 255, 0.45);
+  }
+}
+
+.scorear-world-timer {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.scorear-world-timer.timer-hurry-pulse {
+  animation: timerPulseEmergency 0.65s infinite ease-in-out !important;
+  border-color: #ef4444 !important;
+}
+
+.scorear-world-timer.world-timer-royal {
+  background: radial-gradient(circle, rgba(117, 80, 239, 0.4) 0%, rgba(20, 15, 45, 0.94) 100%);
+  border-color: rgba(245, 158, 11, 0.55);
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.45), inset 0 0 15px rgba(245, 158, 11, 0.25);
+}
+.scorear-world-timer.world-timer-cosmic {
+  background: radial-gradient(circle, rgba(14, 116, 144, 0.4) 0%, rgba(10, 15, 35, 0.94) 100%);
+  border-color: rgba(6, 182, 212, 0.55);
+  box-shadow: 0 0 30px rgba(6, 182, 212, 0.5), inset 0 0 15px rgba(139, 92, 246, 0.3);
+}
+.scorear-world-timer.world-timer-oasis {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, rgba(10, 30, 20, 0.94) 100%);
+  border-color: rgba(52, 211, 153, 0.55);
+  box-shadow: 0 0 30px rgba(52, 211, 153, 0.45), inset 0 0 15px rgba(245, 158, 11, 0.25);
+}
+.scorear-world-timer.world-timer-treasure {
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.35) 0%, rgba(20, 25, 35, 0.94) 100%);
+  border-color: rgba(251, 191, 36, 0.55);
+  box-shadow: 0 0 30px rgba(251, 191, 36, 0.45), inset 0 0 15px rgba(14, 165, 233, 0.25);
+}
+.scorear-world-timer.world-timer-stadium {
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.32) 0%, rgba(12, 26, 20, 0.94) 100%);
+  border-color: rgba(34, 197, 94, 0.55);
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.5), inset 0 0 15px rgba(56, 189, 248, 0.25);
+}
+.scorear-world-timer.world-timer-magic {
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.38) 0%, rgba(28, 12, 40, 0.94) 100%);
+  border-color: rgba(236, 72, 153, 0.55);
+  box-shadow: 0 0 30px rgba(236, 72, 153, 0.5), inset 0 0 15px rgba(168, 85, 247, 0.3);
+}
+
+.host-option-card.correct-revealed {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  border: 3px solid #34d399 !important;
+  animation: correctOptionPulse 1.2s infinite ease-in-out !important;
+  z-index: 10 !important;
+}
+.host-option-card.wrong-dimmed {
+  opacity: 0.32 !important;
+  filter: grayscale(65%) brightness(0.65) !important;
+  transform: scale(0.96) !important;
+  pointer-events: none !important;
+  transition: opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.6s ease, transform 0.6s ease !important;
+}

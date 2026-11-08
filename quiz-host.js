@@ -196,7 +196,7 @@
       readingTimeRemaining--;
       const el = document.getElementById('hostReadingCountdownNum'), ring = document.getElementById('hostReadingProgressCircle');
       if (el) el.textContent = readingTimeRemaining;
-      if (ring) ring.style.strokeDashoffset = (283 - (283 * (10 - readingTimeRemaining) / 10));
+      if (ring) ring.style.strokeDashoffset = (301.6 - (301.6 * (10 - readingTimeRemaining) / 10));
       if (readingTimeRemaining <= 3 && readingTimeRemaining > 0) sfx('tick');
       if (readingTimeRemaining <= 0) {
         clearInterval(readingTimerInterval);
@@ -212,11 +212,17 @@
     timeRemaining = qData.timeLimit || 20;
     questionStartTime = Date.now(); // Authoritative host question start time (Item 2)
 
-    if (view()) view().renderHostQuestionView(getOrCreateStage(), 'answering', qData, currentQIndex, activeQuestions.length, (currentRoom?.world?.id || 'royal'), timeRemaining, 0);
+    const worldId = (currentRoom?.world?.id || 'royal');
+    const stage = getOrCreateStage();
+    if (view() && view().animateToAnswering) {
+      view().animateToAnswering(stage, qData, currentQIndex, activeQuestions.length, worldId, timeRemaining);
+    } else if (view()) {
+      view().renderHostQuestionView(stage, 'answering', qData, currentQIndex, activeQuestions.length, worldId, timeRemaining, 0);
+    }
     sfx('reveal');
     try { const d=(global.ScoreARAuth?.getDb?.())||global.firebase?.database?.(); if(d&&currentRoom?.pin) d.ref('rooms/'+currentRoom.pin).update({status:'answering'}).catch(()=>{}); } catch(e){}
 
-    if (ev()) ev().publishQuestionStart(currentQIndex, activeQuestions.length, qData, timeRemaining, (currentRoom?.world?.id || 'royal'));
+    if (ev()) ev().publishQuestionStart(currentQIndex, activeQuestions.length, qData, timeRemaining, worldId);
     if (global.ScoreARBots) global.ScoreARBots.onQuestionStart(currentQIndex, qData, timeRemaining);
     startAnsweringCountdown();
   }
@@ -231,7 +237,17 @@
       timeRemaining--;
       const el = document.getElementById('hostQuestionTimerNum');
       if (el) el.textContent = timeRemaining;
-      if (timeRemaining <= 5 && timeRemaining > 0) sfx('tick');
+      const ring = document.getElementById('hostQuestionTimerRing');
+      if (ring) {
+        const circumference = 257.6;
+        const progress = Math.max(0, timeRemaining) / totalTime;
+        ring.style.strokeDashoffset = circumference * (1 - progress);
+      }
+      const timerBox = document.getElementById('hostWorldTimerContainer');
+      if (timeRemaining <= 5 && timeRemaining > 0) {
+        if (timerBox) timerBox.classList.add('timer-hurry-pulse');
+        sfx('tick');
+      }
       if (timeRemaining <= 0) {
         clearInterval(qTimerInterval);
         finishCurrentQuestion();
@@ -274,13 +290,14 @@
       if (b) { b.textContent = c; b.style.display = 'block'; }
     });
 
-    // Reveal animation
+    // Reveal animation: wrong options dim down instead of vanishing
     for (let i = 0; i < 4; i++) {
       const card = document.getElementById(`hostOptionCard_${i}`);
       const txt = document.getElementById(`hostOptionText_${i}`);
       if (!card) continue;
       const isCorrect = correctIndices.includes(i) || (i === correctIdx);
       if (isCorrect) {
+        card.className = 'host-option-card correct-revealed';
         card.style.background = 'linear-gradient(135deg, #10b981, #059669)';
         card.style.border = '3px solid #34d399';
         card.style.boxShadow = '0 0 35px rgba(16,185,129,0.85), inset 0 0 20px rgba(255,255,255,0.3)';
@@ -288,9 +305,12 @@
         card.style.zIndex = '10';
         if (txt && !txt.innerHTML.includes('✓')) txt.innerHTML = `✓ ${txt.innerHTML}`;
       } else {
-        card.style.opacity = '0';
+        card.className = 'host-option-card wrong-dimmed';
+        card.style.opacity = '0.32';
+        card.style.filter = 'grayscale(65%) brightness(0.65)';
+        card.style.transform = 'scale(0.96)';
         card.style.pointerEvents = 'none';
-        card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        card.style.transition = 'opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.6s ease, transform 0.6s ease';
       }
     }
 

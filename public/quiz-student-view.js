@@ -1,6 +1,7 @@
 /**
  * ScoreAR Quiz Student View Module
  * Renders Student UI: Reading, Question Answering, Result Feedback, Podium, Room Closed.
+ * Features Modern World-Themed Timers and Smooth Motion Graphic Question Intro.
  * Strictly Rule 7 Compliant (<350 lines).
  */
 (function(global) {
@@ -13,29 +14,39 @@
     { bg: '#26890c', border: '#5cdb3b', shape: '■' }
   ];
 
+  const WORLD_PILL_GRADIENTS = {
+    royal: 'linear-gradient(135deg, #f59e0b, #d97706)',
+    cosmic: 'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+    oasis: 'linear-gradient(135deg, #10b981, #f59e0b)',
+    treasure: 'linear-gradient(135deg, #f59e0b, #0ea5e9)',
+    stadium: 'linear-gradient(135deg, #22c55e, #38bdf8)',
+    magic: 'linear-gradient(135deg, #ec4899, #a855f7)'
+  };
+
   function escapeHtml(str) {
     return typeof str !== 'string' ? String(str || '') : str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
   }
 
   function renderStudentReading(stage, qData, currentWorldId, timeRemaining) {
+    const pillGrad = WORLD_PILL_GRADIENTS[currentWorldId] || WORLD_PILL_GRADIENTS.royal;
     stage.innerHTML = `
       <div style="position:absolute;inset:0;background:url('assets/worlds/${currentWorldId}/question.jpg') center/cover no-repeat;filter:brightness(0.35);z-index:1;"></div>
       <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 25%, rgba(31,27,66,0.75) 0%, rgba(10,11,22,0.92) 100%);z-index:2;"></div>
       <header style="position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(15,16,33,0.92);border-bottom:1px solid rgba(142,100,239,0.3);">
         <div style="display:flex;align-items:center;gap:8px;">
-          <span style="background:#28244d;color:#52d9ed;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:900;">${qData.skill || 'سؤال'}</span>
+          <span style="background:#28244d;color:#52d9ed;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:900;">${escapeHtml(qData.skill || 'سؤال')}</span>
           <span style="color:#ffffff;font-size:12px;font-weight:800;">السؤال ${(qData.qIndex || 0) + 1} من ${qData.totalQuestions || 5}</span>
         </div>
-        <div style="background:rgba(245,158,11,0.25);border:1.5px solid #f59e0b;color:#fcd34d;font-size:13px;font-weight:900;padding:3px 12px;border-radius:12px;">
+        <div style="background:${pillGrad};color:#fff;font-size:13px;font-weight:900;padding:4px 14px;border-radius:12px;box-shadow:0 0 15px rgba(245,158,11,0.4);">
           📖 قراءة: <span id="studentReadingCountdown">${timeRemaining}</span>s
         </div>
       </header>
       <main style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px 16px;gap:20px;text-align:center;">
-        <div style="background:rgba(21,23,49,0.95);border:2px solid #8e64ef;border-radius:20px;padding:24px 18px;width:100%;max-width:360px;box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+        <div id="studentQuestionCard" style="background:rgba(21,23,49,0.95);border:2px solid #8e64ef;border-radius:22px;padding:28px 20px;width:100%;max-width:390px;box-shadow:0 12px 35px rgba(0,0,0,0.6);transition:all 0.5s ease;">
           <div style="font-size:12px;font-weight:800;color:#fcd34d;margin-bottom:8px;">👀 اقرأ السؤال وافهم المطلوب بتركيز:</div>
-          <h2 style="font-size:20px;font-weight:900;color:#ffffff;line-height:1.5;margin:0;">${qData.q || ''}</h2>
+          <h2 id="studentQuestionText" style="font-size:24px;font-weight:900;color:#ffffff;line-height:1.45;margin:0;">${qData.q || ''}</h2>
         </div>
-        <div style="background:rgba(15,16,33,0.85);border:1.5px dashed rgba(142,100,239,0.6);border-radius:16px;padding:16px 20px;width:100%;max-width:360px;text-align:center;">
+        <div style="background:rgba(15,16,33,0.85);border:1.5px dashed rgba(142,100,239,0.6);border-radius:16px;padding:16px 20px;width:100%;max-width:390px;text-align:center;">
           <div style="font-size:24px;margin-bottom:6px;">🔒</div>
           <div style="font-size:14px;font-weight:800;color:#ddd8ff;">الخيارات ستفتح تلقائياً فور انتهاء ثواني القراءة...</div>
           <div style="font-size:11px;color:#a89bff;margin-top:4px;">استعد لاختيار الإجابة الصحيحة بأسرع وقت! ⚡</div>
@@ -45,25 +56,26 @@
 
   function renderStudentQuestion(stage, qData, currentWorldId, timeRemaining) {
     const opts = qData.opts || ['الخيار 1', 'الخيار 2', 'الخيار 3', 'الخيار 4'];
+    const pillGrad = WORLD_PILL_GRADIENTS[currentWorldId] || WORLD_PILL_GRADIENTS.royal;
     stage.innerHTML = `
       <div style="position:absolute;inset:0;background:url('assets/worlds/${currentWorldId}/question.jpg') center/cover no-repeat;filter:brightness(0.35);z-index:1;"></div>
       <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 20%, rgba(23,24,56,0.75) 0%, rgba(10,11,22,0.92) 100%);z-index:2;"></div>
       <header style="position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(15,16,33,0.9);border-bottom:1px solid rgba(142,100,239,0.3);">
         <div style="display:flex;align-items:center;gap:8px;">
-          <span style="background:#28244d;color:#52d9ed;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:900;">${qData.skill || 'سؤال'}</span>
+          <span style="background:#28244d;color:#52d9ed;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:900;">${escapeHtml(qData.skill || 'سؤال')}</span>
           <span style="color:#ffffff;font-size:12px;font-weight:800;">السؤال ${(qData.qIndex || 0) + 1} من ${qData.totalQuestions || 5}</span>
           ${(qData.isDouble || qData.multiplier === 2) ? `<span style="background:linear-gradient(135deg, #f59e0b, #d97706);color:#fff;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:900;">⚡ نقاط ×2</span>` : ''}
         </div>
-        <div id="studentTimerPill" style="background:#ef4444;color:#fff;font-size:14px;font-weight:900;padding:3px 12px;border-radius:12px;">
-          <span id="studentTimerText">${timeRemaining}</span>s
+        <div id="studentTimerPill" style="background:${pillGrad};color:#fff;font-size:14px;font-weight:900;padding:4px 14px;border-radius:14px;box-shadow:0 0 16px rgba(0,0,0,0.4);border:1.5px solid rgba(255,255,255,0.25);">
+          ⏱️ <span id="studentTimerText">${timeRemaining}</span>s
         </div>
       </header>
       <div style="position:relative;z-index:10;width:100%;height:4px;background:#1b1d38;">
         <div id="studentProgressBar" style="width:100%;height:100%;background:#52d9ed;transition:width 1s linear;"></div>
       </div>
       <main style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:12px 14px;gap:10px;overflow:hidden;">
-        <div style="background:rgba(21,23,49,0.9);border:1px solid rgba(142,100,239,0.4);border-radius:14px;padding:10px 14px;text-align:center;">
-          <div style="font-size:15px;font-weight:900;color:#ffffff;line-height:1.35;">${qData.q || 'اختر الإجابة الصحيحة'}</div>
+        <div id="studentQuestionCard" style="background:rgba(21,23,49,0.92);border:1px solid rgba(142,100,239,0.4);border-radius:16px;padding:12px 16px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.4);animation:questionGlideToTop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;">
+          <div style="font-size:16px;font-weight:900;color:#ffffff;line-height:1.4;">${qData.q || 'اختر الإجابة الصحيحة'}</div>
           ${(qData.imageUrl || qData.img) ? `
             <div style="display:flex;justify-content:center;margin:6px 0;max-height:110px;">
               <img src="${qData.imageUrl || qData.img}" alt="${escapeHtml(qData.imageAlt || '')}" style="max-height:110px;max-width:100%;object-fit:contain;border-radius:8px;border:1px solid rgba(255,255,255,0.15);">
@@ -74,7 +86,7 @@
           ${opts.slice(0, 4).map((optText, idx) => {
             const theme = OPTION_THEMES[idx % 4];
             return `
-              <button id="studentOptBtn_${idx}" class="student-opt-btn" onclick="ScoreARQuizStudent.submitAnswer(${idx})" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:#181938;border:2px solid ${theme.bg};border-radius:14px;padding:12px 8px;min-height:70px;cursor:pointer;position:relative;transition:all 0.15s ease;gap:4px;">
+              <button id="studentOptBtn_${idx}" class="student-opt-btn" onclick="ScoreARQuizStudent.submitAnswer(${idx})" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:#181938;border:2px solid ${theme.bg};border-radius:14px;padding:12px 8px;min-height:72px;cursor:pointer;position:relative;transition:all 0.15s ease;gap:4px;animation:optionEntranceSlide 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;animation-delay:${idx * 0.07}s;">
                 <span style="font-size:18px;color:${theme.border};line-height:1;">${theme.shape}</span>
                 <span style="font-size:13px;font-weight:900;color:#ffffff;line-height:1.3;text-align:center;">${escapeHtml(optText)}</span>
                 <span id="studentOptIndicator_${idx}" style="font-size:10px;color:#a89bff;font-weight:700;"></span>
@@ -142,12 +154,17 @@
           </div>
           ${(!isCorrect && myChoiceIdx !== null && myChoiceIdx >= 0 && opts[myChoiceIdx]) ? `<div style="font-size:11px;color:#fca5a5;margin-top:4px;font-weight:700;">إجابتك التي اخترتها: <b style="color:#fff;">${opts[myChoiceIdx]}</b></div>` : ''}
         </div>
-        ${opts.length ? `<div style="width:100%;max-width:360px;display:flex;flex-direction:column;gap:5px;">${opts.map((opt, i) => {
+        ${opts.length ? `<div style="width:100%;max-width:360px;display:flex;flex-direction:column;gap:6px;">${opts.map((opt, i) => {
           const isThisCorrect = (i === correctIdx), isThisChosen = (i === myChoiceIdx);
-          let bg = '#161833', border = 'rgba(255,255,255,0.15)', badge = '';
-          if (isThisCorrect) { bg = 'rgba(16,185,129,0.3)'; border = '#10b981'; badge = '<span style="background:#10b981;color:#fff;font-size:10px;padding:2px 6px;border-radius:6px;font-weight:900;">✓ الصحيحة</span>'; }
-          else if (isThisChosen) { bg = 'rgba(239,68,68,0.3)'; border = '#ef4444'; badge = '<span style="background:#ef4444;color:#fff;font-size:10px;padding:2px 6px;border-radius:6px;font-weight:900;">✕ اختيارك</span>'; }
-          return `<div style="background:${bg};border:1.5px solid ${border};border-radius:10px;padding:6px 12px;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:800;color:#fff;"><span>${opt}</span>${badge}</div>`;
+          let bg = '#161833', border = 'rgba(255,255,255,0.12)', badge = '', opacity = '0.35', transform = 'scale(0.97)';
+          if (isThisCorrect) {
+            bg = 'rgba(16,185,129,0.32)'; border = '#10b981'; opacity = '1'; transform = 'scale(1.02)';
+            badge = '<span style="background:#10b981;color:#fff;font-size:10px;padding:2px 8px;border-radius:6px;font-weight:900;">✓ الصحيحة</span>';
+          } else if (isThisChosen) {
+            bg = 'rgba(239,68,68,0.32)'; border = '#ef4444'; opacity = '0.85'; transform = 'scale(1)';
+            badge = '<span style="background:#ef4444;color:#fff;font-size:10px;padding:2px 8px;border-radius:6px;font-weight:900;">✕ اختيارك</span>';
+          }
+          return `<div style="background:${bg};border:1.5px solid ${border};border-radius:10px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:800;color:#fff;opacity:${opacity};transform:${transform};transition:all 0.3s ease;"><span>${escapeHtml(opt)}</span>${badge}</div>`;
         }).join('')}</div>` : ''}
         ${resData.why ? `<div style="background:rgba(16,185,129,0.12);border:1px dashed #10b981;border-radius:10px;padding:6px 12px;width:100%;max-width:360px;text-align:right;font-size:11px;color:#d1fae5;font-weight:700;">💡 <b>التفسير:</b> ${resData.why}</div>` : ''}
         <div style="background:rgba(18,19,41,0.85);border:1px solid rgba(142,100,239,0.3);border-radius:14px;padding:10px 16px;width:100%;max-width:360px;display:flex;justify-content:space-around;align-items:center;">
@@ -213,7 +230,8 @@
     renderStudentQuestion,
     renderStudentResult,
     renderStudentFinalPodium,
-    renderStudentRoomClosed
+    renderStudentRoomClosed,
+    WORLD_PILL_GRADIENTS
   };
 
   global.ScoreARQuizStudentView = ScoreARQuizStudentView;

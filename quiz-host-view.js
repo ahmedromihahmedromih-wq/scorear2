@@ -1,7 +1,8 @@
 /**
  * ScoreAR Quiz Host View Module
  * Renders Host Projector UI: Atmosphere Video, 3D White PIN Box, Animated Fullbody Characters & Question Arena.
- * Strictly Rule 7 Compliant (<300 lines).
+ * Features Modern World-Themed Timers and Smooth Motion Graphic Question Intro.
+ * Strictly Rule 7 Compliant (<350 lines).
  */
 (function(global) {
   'use strict';
@@ -13,8 +14,61 @@
     { bg: '#26890c', border: '#5cdb3b', shape: '■' }
   ];
 
+  const WORLD_TIMER_CONFIGS = {
+    royal: {
+      name: 'القصر الملكي', icon: '👑', strokeStart: '#fbbf24', strokeEnd: '#d97706',
+      accentNum: '#fef08a', bgClass: 'world-timer-royal'
+    },
+    cosmic: {
+      name: 'محطة الفضاء', icon: '🚀', strokeStart: '#06b6d4', strokeEnd: '#8b5cf6',
+      accentNum: '#a5f3fc', bgClass: 'world-timer-cosmic'
+    },
+    oasis: {
+      name: 'واحة النخيل', icon: '🌴', strokeStart: '#34d399', strokeEnd: '#f59e0b',
+      accentNum: '#6ee7b7', bgClass: 'world-timer-oasis'
+    },
+    treasure: {
+      name: 'جزيرة الكنز', icon: '💎', strokeStart: '#fbbf24', strokeEnd: '#0ea5e9',
+      accentNum: '#fde047', bgClass: 'world-timer-treasure'
+    },
+    stadium: {
+      name: 'استاد الأبطال', icon: '⚡', strokeStart: '#22c55e', strokeEnd: '#38bdf8',
+      accentNum: '#86efac', bgClass: 'world-timer-stadium'
+    },
+    magic: {
+      name: 'المملكة السحرية', icon: '🔮', strokeStart: '#ec4899', strokeEnd: '#a855f7',
+      accentNum: '#f472b6', bgClass: 'world-timer-magic'
+    }
+  };
+
   function escapeHtml(str) {
     return typeof str !== 'string' ? String(str || '') : str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+  }
+
+  function renderWorldTimerHtml(worldId, timeRemaining) {
+    const cfg = WORLD_TIMER_CONFIGS[worldId] || WORLD_TIMER_CONFIGS.royal;
+    return `
+      <div id="hostWorldTimerContainer" class="scorear-world-timer ${cfg.bgClass}">
+        <svg width="92" height="92" viewBox="0 0 100 100" style="transform:rotate(-90deg);position:absolute;inset:0;">
+          <defs>
+            <linearGradient id="timerGrad_${worldId}" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="${cfg.strokeStart}" />
+              <stop offset="100%" stop-color="${cfg.strokeEnd}" />
+            </linearGradient>
+          </defs>
+          <circle cx="50" cy="50" r="41" stroke="rgba(255,255,255,0.12)" stroke-width="6.5" fill="none" />
+          <circle id="hostQuestionTimerRing" cx="50" cy="50" r="41"
+            stroke="url(#timerGrad_${worldId})" stroke-width="6.5" fill="none"
+            stroke-linecap="round" stroke-dasharray="257.6" stroke-dashoffset="0"
+            style="transition:stroke-dashoffset 1s linear;" />
+        </svg>
+        <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;">
+          <span style="font-size:11px;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));">${cfg.icon}</span>
+          <span id="hostQuestionTimerNum" style="font-size:26px;font-weight:900;color:${cfg.accentNum};font-family:monospace;margin:1px 0;">${timeRemaining}</span>
+          <span style="font-size:9px;font-weight:800;color:rgba(255,255,255,0.7);letter-spacing:0.5px;">ثانية</span>
+        </div>
+      </div>
+    `;
   }
 
   function renderHostLobby(stage, currentRoom, isRoomLocked) {
@@ -105,6 +159,9 @@
 
   function renderHostQuestionView(stage, phase, qData, currentQIndex, total, worldId, timeRemaining, readingTimeRemaining) {
     const isReading = (phase === 'reading'), opts = qData.options || qData.opts || [];
+    const questionText = qData.text || qData.q || '';
+    const imgUrl = qData.imageUrl || qData.img || null;
+
     stage.innerHTML = `
       <div style="position:absolute;inset:0;overflow:hidden;z-index:0;background:url('assets/worlds/${worldId}/question.jpg') center/cover no-repeat;">
         <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 30%, rgba(15,23,42,0.65) 0%, rgba(12,13,30,0.92) 100%);"></div>
@@ -126,57 +183,106 @@
           <button onclick="ScoreARQuizHost.finishCurrentQuestion()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 14px;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;">تخطي ⏭</button>
         </div>
       </header>
-      <main style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:16px 36px 24px;gap:14px;">
-        <div style="background:rgba(18,20,44,0.85);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,0.12);border-radius:22px;padding:18px 28px;text-align:center;box-shadow:0 10px 35px rgba(0,0,0,0.4);position:relative;">
-          <h2 style="font-size:24px;font-weight:900;color:#ffffff;line-height:1.4;margin:0 0 6px 0;">${qData.text || qData.q || ''}</h2>
-          ${(qData.imageUrl || qData.img) ? `
-            <div style="display:flex;justify-content:center;margin:10px 0;max-height:170px;">
-              <img src="${qData.imageUrl || qData.img}" alt="${escapeHtml(qData.imageAlt || '')}" style="max-height:170px;max-width:100%;object-fit:contain;border-radius:12px;border:1px solid rgba(255,255,255,0.2);box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+      <main id="hostQuestionArena" style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:16px 36px 24px;gap:14px;">
+        <div id="hostQuestionCard" style="background:rgba(18,20,44,0.88);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,0.15);border-radius:24px;padding:${isReading ? '28px 36px' : '14px 28px'};text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.5);margin:${isReading ? '36px auto 14px' : '0 auto 8px'};max-width:960px;width:100%;transition:all 0.75s cubic-bezier(0.16, 1, 0.3, 1);">
+          <h2 id="hostQuestionText" style="font-size:${isReading ? '32px' : '22px'};font-weight:900;color:#ffffff;line-height:1.4;margin:0 0 6px 0;transition:font-size 0.75s cubic-bezier(0.16, 1, 0.3, 1);">${questionText}</h2>
+          ${imgUrl ? `
+            <div id="hostQuestionImgBox" style="display:flex;justify-content:center;margin:8px 0;max-height:${isReading ? '210px' : '140px'};transition:max-height 0.75s ease;">
+              <img src="${imgUrl}" alt="${escapeHtml(qData.imageAlt || '')}" style="max-height:100%;max-width:100%;object-fit:contain;border-radius:12px;border:1px solid rgba(255,255,255,0.2);box-shadow:0 8px 24px rgba(0,0,0,0.5);">
             </div>
           ` : ''}
         </div>
-        ${isReading ? `
-          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">
-            <div style="position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center;">
-              <svg width="120" height="120" style="transform:rotate(-90deg);">
-                <circle cx="60" cy="60" r="45" stroke="rgba(255,255,255,0.1)" stroke-width="8" fill="none"/>
-                <circle id="hostReadingProgressCircle" cx="60" cy="60" r="45" stroke="#f59e0b" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="0" style="transition:stroke-dashoffset 1s linear;"/>
-              </svg>
-              <div id="hostReadingCountdownNum" style="position:absolute;font-size:36px;font-weight:900;color:#fcd34d;font-family:monospace;">${readingTimeRemaining}</div>
-            </div>
-            <div style="background:rgba(245,158,11,0.15);border:1px solid #f59e0b;padding:8px 22px;border-radius:14px;color:#fcd34d;font-size:14px;font-weight:900;">
-              📖 مرحلة قراءة وفهم السؤال (تفتح الخيارات تلقائياً بعد انتهاء العد)
-            </div>
+
+        <div id="hostReadingCountdownArea" style="display:${isReading ? 'flex' : 'none'};flex:1;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.4s ease, transform 0.4s ease;">
+          <div style="position:relative;width:124px;height:124px;display:flex;align-items:center;justify-content:center;">
+            <svg width="124" height="124" style="transform:rotate(-90deg);">
+              <circle cx="62" cy="62" r="48" stroke="rgba(255,255,255,0.1)" stroke-width="8" fill="none"/>
+              <circle id="hostReadingProgressCircle" cx="62" cy="62" r="48" stroke="#f59e0b" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="0" style="transition:stroke-dashoffset 1s linear;"/>
+            </svg>
+            <div id="hostReadingCountdownNum" style="position:absolute;font-size:38px;font-weight:900;color:#fcd34d;font-family:monospace;">${readingTimeRemaining}</div>
           </div>
-        ` : `
-          <div style="display:flex;align-items:center;justify-content:center;gap:18px;">
-            <div style="width:70px;height:70px;border-radius:50%;background:#ef4444;display:flex;align-items:center;justify-content:center;box-shadow:0 0 25px rgba(239,68,68,0.5);">
-              <span id="hostQuestionTimerNum" style="font-size:28px;font-weight:900;color:#fff;font-family:monospace;">${timeRemaining}</span>
-            </div>
+          <div style="background:rgba(245,158,11,0.18);border:1.5px solid #f59e0b;padding:10px 26px;border-radius:16px;color:#fcd34d;font-size:15px;font-weight:900;box-shadow:0 0 25px rgba(245,158,11,0.25);">
+            📖 مرحلة قراءة وفهم السؤال (تفتح الخيارات تلقائياً بعد انتهاء العد)
           </div>
-          <div id="hostOptionsGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:960px;margin:0 auto;width:100%;">
-            ${opts.slice(0, 4).map((optText, idx) => {
-              const theme = OPTION_THEMES[idx % 4];
-              return `
-                <div id="hostOptionCard_${idx}" class="host-option-card" style="background:${theme.bg};border:2px solid ${theme.border};border-radius:18px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 8px 24px rgba(0,0,0,0.3);min-height:76px;transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);position:relative;">
-                  <div style="display:flex;align-items:center;gap:14px;">
-                    <span style="font-size:24px;color:#ffffff;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));">${theme.shape}</span>
-                    <span id="hostOptionText_${idx}" style="font-size:17px;font-weight:900;color:#ffffff;line-height:1.35;">${escapeHtml(optText)}</span>
-                  </div>
-                  <div id="hostOptionCountBadge_${idx}" style="display:none;background:rgba(0,0,0,0.45);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,0.3);border-radius:12px;padding:4px 12px;font-size:15px;font-weight:900;color:#fff;">0</div>
+        </div>
+
+        <div id="hostTimerArea" style="display:${isReading ? 'none' : 'flex'};align-items:center;justify-content:center;margin:2px 0;">
+          ${renderWorldTimerHtml(worldId, timeRemaining)}
+        </div>
+
+        <div id="hostOptionsGrid" style="display:${isReading ? 'none' : 'grid'};grid-template-columns:1fr 1fr;gap:14px;max-width:960px;margin:0 auto;width:100%;">
+          ${opts.slice(0, 4).map((optText, idx) => {
+            const theme = OPTION_THEMES[idx % 4];
+            return `
+              <div id="hostOptionCard_${idx}" class="host-option-card" style="background:${theme.bg};border:2px solid ${theme.border};border-radius:18px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 8px 24px rgba(0,0,0,0.3);min-height:76px;transition:all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);position:relative;animation:optionEntranceSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;animation-delay:${idx * 0.08}s;">
+                <div style="display:flex;align-items:center;gap:14px;">
+                  <span style="font-size:24px;color:#ffffff;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));">${theme.shape}</span>
+                  <span id="hostOptionText_${idx}" style="font-size:17px;font-weight:900;color:#ffffff;line-height:1.35;">${escapeHtml(optText)}</span>
                 </div>
-              `;
-            }).join('')}
-          </div>
-        `}
+                <div id="hostOptionCountBadge_${idx}" style="display:none;background:rgba(0,0,0,0.45);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,0.3);border-radius:12px;padding:4px 12px;font-size:15px;font-weight:900;color:#fff;">0</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
       </main>`;
+  }
+
+  function animateToAnswering(stage, qData, currentQIndex, total, worldId, timeRemaining) {
+    const card = document.getElementById('hostQuestionCard');
+    const textEl = document.getElementById('hostQuestionText');
+    const readingArea = document.getElementById('hostReadingCountdownArea');
+    const timerArea = document.getElementById('hostTimerArea');
+    const optionsGrid = document.getElementById('hostOptionsGrid');
+    const liveStats = document.getElementById('hostLiveAnswerStats');
+
+    if (!card || !readingArea || !timerArea || !optionsGrid) {
+      renderHostQuestionView(stage, 'answering', qData, currentQIndex, total, worldId, timeRemaining, 0);
+      return;
+    }
+
+    // Motion graphic transition: glide reading area away
+    readingArea.style.opacity = '0';
+    readingArea.style.transform = 'scale(0.85)';
+    setTimeout(() => { readingArea.style.display = 'none'; }, 250);
+
+    // Question card glides to top smoothly with reduced font
+    card.style.margin = '0 auto 8px';
+    card.style.padding = '14px 28px';
+    if (textEl) textEl.style.fontSize = '22px';
+
+    // Image box adapts
+    const imgBox = document.getElementById('hostQuestionImgBox');
+    if (imgBox) imgBox.style.maxHeight = '140px';
+
+    // Show modern world timer
+    timerArea.innerHTML = renderWorldTimerHtml(worldId, timeRemaining);
+    timerArea.style.display = 'flex';
+    timerArea.style.animation = 'optionEntranceSlide 0.5s ease both';
+
+    // Show live stats
+    if (liveStats) liveStats.style.display = 'flex';
+
+    // Reveal options grid with staggered motion entrance
+    optionsGrid.style.display = 'grid';
+    const opts = qData.options || qData.opts || [];
+    opts.slice(0, 4).forEach((_, idx) => {
+      const optCard = document.getElementById(`hostOptionCard_${idx}`);
+      if (optCard) {
+        optCard.style.animation = 'none';
+        void optCard.offsetWidth; // trigger reflow
+        optCard.style.animation = `optionEntranceSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) both ${idx * 0.08}s`;
+      }
+    });
   }
 
   const ScoreARQuizHostView = {
     renderHostLobby,
     refreshLobbyUi,
     renderFullbodyCharactersHtml,
-    renderHostQuestionView
+    renderHostQuestionView,
+    renderWorldTimerHtml,
+    animateToAnswering,
+    WORLD_TIMER_CONFIGS
   };
 
   global.ScoreARQuizHostView = ScoreARQuizHostView;

@@ -1,15 +1,17 @@
 /**
- * ScoreAR AI Studio (Gemini Cloud Engine Integration)
- * Item 4: AI Question Generator, ID Token Auth, 20/day Quota, Multimodal Input, Review before Save.
+ * ScoreAR AI Studio Coordinator (quiz-ai.js)
+ * Item 4: Teacher AI Studio, In-browser streaming orchestration,
+ * Controls (count, range, difficulty, format, instructions), pre-flight estimation,
+ * Honest progress bar with cancellation, and review hand-off.
+ * Strictly Rule 7 Compliant (<500 lines).
  */
 (function (global) {
   'use strict';
 
   let currentContext = { mode: 'hub', onImport: null };
-  let selectedFileBase64 = null;
-  let selectedFileMime = null;
-  let selectedFileName = '';
+  let selectedFile = null;
   let activeTab = 'text'; // 'text' | 'file'
+  let activeCancellationToken = null;
 
   function getDb() {
     return (global.firebase && global.firebase.database) ? global.firebase.database() : null;
@@ -54,10 +56,9 @@
 
   async function openAiStudio(options = {}) {
     currentContext = { mode: options.mode || 'hub', onImport: options.onImport || null };
-    selectedFileBase64 = null;
-    selectedFileMime = null;
-    selectedFileName = '';
+    selectedFile = null;
     activeTab = 'text';
+    activeCancellationToken = null;
 
     const m = getOrCreateAiModal();
     m.style.display = 'flex';
@@ -66,6 +67,7 @@
   }
 
   function closeAiStudio() {
+    if (activeCancellationToken) activeCancellationToken.cancel();
     const m = document.getElementById('scorearAiStudioModal');
     if (m) m.style.display = 'none';
   }
@@ -74,16 +76,19 @@
   function renderAiModalView(quota = { used: 0, limit: 20, remaining: 20 }) {
     const m = getOrCreateAiModal();
     const isExhausted = (quota.remaining <= 0);
+    const fileName = selectedFile ? selectedFile.name : '';
+    const fileSizeMb = selectedFile ? (selectedFile.size / (1024 * 1024)).toFixed(1) : 0;
+    const isLargeFile = selectedFile && selectedFile.size > 8 * 1024 * 1024;
 
     m.innerHTML = `
-      <div style="background:#101124;border:2px solid #7550ef;box-shadow:0 0 50px rgba(117,80,239,0.4);border-radius:24px;width:100%;max-width:780px;overflow:hidden;display:flex;flex-direction:column;max-height:94vh;">
+      <div style="background:#101124;border:2px solid #7550ef;box-shadow:0 0 50px rgba(117,80,239,0.4);border-radius:24px;width:100%;max-width:820px;overflow:hidden;display:flex;flex-direction:column;max-height:94vh;">
         <!-- Header -->
         <header style="background:#171836;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(142,100,239,0.3);">
           <div style="display:flex;align-items:center;gap:12px;">
             <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg, #7550ef, #a855f7);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 15px rgba(168,85,247,0.4);">✨</div>
             <div>
-              <h2 style="color:#ffffff;font-size:18px;font-weight:900;margin:0;">توليد الأسئلة بالذكاء الاصطناعي (Gemini Server)</h2>
-              <p style="color:#a1a4be;font-size:12px;margin:2px 0 0 0;">صياغة تربوية حقيقية وفق معايير بلوم، مع مراجعة المعلم قبل الاعتماد.</p>
+              <h2 style="color:#ffffff;font-size:18px;font-weight:900;margin:0;">توليد الأسئلة الذكي من المستندات (Gemini Engine)</h2>
+              <p style="color:#a1a4be;font-size:12px;margin:2px 0 0 0;">استخراج محلي سريع، تصنيف ضد الحشو، ومطابقة اقتباسات موثقة من المصدر.</p>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:12px;">
@@ -99,14 +104,14 @@
           ${isExhausted ? `
             <div style="background:rgba(239,68,68,0.15);border:1px solid #ef4444;border-radius:12px;padding:12px 16px;color:#fca5a5;font-size:13px;font-weight:800;display:flex;align-items:center;gap:10px;">
               <span>⚠️ تنبيه الحصة:</span>
-              <span>لقد استنفدت حصتك اليومية المحددة (${quota.limit}/${quota.limit} طلباً). تتجدد الحصة تلقائياً عند منتصف الليل.</span>
+              <span>لقد استنفدت حصتك اليومية (${quota.limit}/${quota.limit}). تتجدد الحصة تلقائياً منتصف الليل.</span>
             </div>
           ` : ''}
 
           <!-- Source Tabs -->
           <div style="display:flex;background:#16183a;padding:4px;border-radius:12px;border:1px solid rgba(142,100,239,0.3);width:fit-content;">
             <button onclick="ScoreARQuizAI.switchTab('text')" style="background:${activeTab==='text'?'#7550ef':'transparent'};color:${activeTab==='text'?'#fff':'#a1a4be'};border:none;padding:6px 16px;border-radius:8px;font-weight:900;font-size:12px;cursor:pointer;">✍️ كتابة نص / درس</button>
-            <button onclick="ScoreARQuizAI.switchTab('file')" style="background:${activeTab==='file'?'#7550ef':'transparent'};color:${activeTab==='file'?'#fff':'#a1a4be'};border:none;padding:6px 16px;border-radius:8px;font-weight:900;font-size:12px;cursor:pointer;">📎 رفع مستند أو صورة (OCR)</button>
+            <button onclick="ScoreARQuizAI.switchTab('file')" style="background:${activeTab==='file'?'#7550ef':'transparent'};color:${activeTab==='file'?'#fff':'#a1a4be'};border:none;padding:6px 16px;border-radius:8px;font-weight:900;font-size:12px;cursor:pointer;">📎 رفع مستند (PDF / Word / PPTX / صورة)</button>
           </div>
 
           <!-- Input Mode Content -->
@@ -119,22 +124,37 @@
                   <button onclick="ScoreARQuizAI.loadSampleText('balagha')" style="background:rgba(142,100,239,0.2);color:#c4b5fd;border:1px solid rgba(142,100,239,0.3);border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer;">مثال بلاغة</button>
                 </div>
               </div>
-              <textarea id="aiTextInput" placeholder="الصق نص الدرس أو القواعد النحوية أو الشرح هنا (20 حرفاً على الأقل)..." style="width:100%;height:130px;background:#14152e;border:1px solid rgba(142,100,239,0.4);border-radius:14px;color:#fff;font-size:13px;font-family:inherit;padding:12px;box-sizing:border-box;resize:vertical;line-height:1.5;"></textarea>
+              <textarea id="aiTextInput" placeholder="الصق نص الدرس أو القواعد النحوية أو الشرح هنا (20 حرفاً على الأقل)..." style="width:100%;height:120px;background:#14152e;border:1px solid rgba(142,100,239,0.4);border-radius:14px;color:#fff;font-size:13px;font-family:inherit;padding:12px;box-sizing:border-box;resize:vertical;line-height:1.5;"></textarea>
             </div>
           ` : `
             <div>
-              <label style="display:block;color:#ddd8ff;font-size:13px;font-weight:800;margin-bottom:6px;">رفع ملف مستند أو صورة (OCR وقراءة بصرية):</label>
-              <div id="aiFileDropZone" onclick="document.getElementById('aiFileInput').click()" style="border:2px dashed rgba(142,100,239,0.5);border-radius:16px;padding:30px 16px;text-align:center;background:#14152e;cursor:pointer;">
-                <input type="file" id="aiFileInput" accept=".docx, .pptx, .xlsx, .pdf, .png, .jpg, .jpeg, .webp" style="display:none;" onchange="ScoreARQuizAI.handleFileUpload(this.files[0])">
-                <div style="font-size:36px;margin-bottom:8px;">📎</div>
-                <div style="color:#fff;font-size:14px;font-weight:800;">${selectedFileName ? `ملف مختار: ${selectedFileName}` : 'اضغط لاختيار ملف Word أو PDF أو صورة'}</div>
-                <p style="color:#94a3b8;font-size:11px;margin:4px 0 0 0;">يدعم Word (.docx)، PowerPoint (.pptx)، PDF، وصور المستندات مع قراءة بصرية للغة العربية.</p>
+              <label style="display:block;color:#ddd8ff;font-size:13px;font-weight:800;margin-bottom:6px;">رفع المستند (استخراج محلي سريع دون تخزين الملف في الخادم):</label>
+              <div id="aiFileDropZone" onclick="document.getElementById('aiFileInput').click()" style="border:2px dashed rgba(142,100,239,0.5);border-radius:16px;padding:24px 16px;text-align:center;background:#14152e;cursor:pointer;">
+                <input type="file" id="aiFileInput" accept=".docx, .pptx, .pdf, .png, .jpg, .jpeg, .webp, .txt, .md" style="display:none;" onchange="ScoreARQuizAI.handleFileUpload(this.files[0])">
+                <div style="font-size:32px;margin-bottom:6px;">📂</div>
+                <div style="color:#fff;font-size:14px;font-weight:800;">${selectedFile ? `الملف المختار: ${fileName} (${fileSizeMb} MB)` : 'اضغط لاختيار ملف PDF أو Word أو PowerPoint أو صورة'}</div>
+                <p style="color:#94a3b8;font-size:11px;margin:4px 0 0 0;">المعالجة تتم محلياً صفحة بصفحة حتى 100MB دون إجهاد الذاكرة.</p>
+              </div>
+
+              ${isLargeFile ? `
+                <div style="margin-top:8px;background:rgba(245,158,11,0.12);border:1px solid #f59e0b;border-radius:10px;padding:8px 12px;color:#fbbf24;font-size:11px;display:flex;align-items:center;gap:8px;">
+                  <span>💡 تقدير مسبق:</span>
+                  <span>ملف كبير (${fileSizeMb} MB). يقدر زمن الاستخراج بنحو 15-30 ثانية. يوصى بتحديد نطاق صفحات مخصص أدناه لتسريع المعالجة.</span>
+                </div>
+              ` : ''}
+
+              <!-- Page Range Controls -->
+              <div style="display:flex;gap:12px;align-items:center;margin-top:10px;background:#17193b;padding:8px 14px;border-radius:10px;">
+                <span style="color:#c4b5fd;font-size:11px;font-weight:800;">نطاق الصفحات / الشرائح (اختياري):</span>
+                <input type="number" id="aiStartPage" placeholder="من صفحة (1)" min="1" style="width:90px;background:#14152e;border:1px solid rgba(142,100,239,0.4);color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;">
+                <span style="color:#94a3b8;font-size:11px;">إلى:</span>
+                <input type="number" id="aiEndPage" placeholder="إلى صفحة" min="1" style="width:90px;background:#14152e;border:1px solid rgba(142,100,239,0.4);color:#fff;padding:4px 8px;border-radius:6px;font-size:11px;">
               </div>
             </div>
           `}
 
           <!-- Settings Grid -->
-          <div style="background:#14152e;border-radius:16px;padding:14px;border:1px solid rgba(255,255,255,0.06);display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:12px;">
+          <div style="background:#14152e;border-radius:16px;padding:14px;border:1px solid rgba(255,255,255,0.06);display:grid;grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));gap:10px;">
             <div>
               <label style="display:block;color:#a89bff;font-size:11px;font-weight:800;margin-bottom:4px;">عدد الأسئلة:</label>
               <select id="aiOptCount" style="width:100%;background:#1c1e42;border:1px solid rgba(142,100,239,0.3);color:#fff;padding:6px;border-radius:8px;font-size:11px;font-family:inherit;">
@@ -150,47 +170,53 @@
               <select id="aiOptDiff" style="width:100%;background:#1c1e42;border:1px solid rgba(142,100,239,0.3);color:#fff;padding:6px;border-radius:8px;font-size:11px;font-family:inherit;">
                 <option value="سهل">سهل (تذكر وفهم مباشر)</option>
                 <option value="متوسط" selected>متوسط (فهم وتطبيق)</option>
-                <option value="متقدم">متقدم (تحليل وتقويم)</option>
+                <option value="متقدم">متقدم (تحليل واستنتاج)</option>
                 <option value="تحدي">تحدي المتميزين ⚡</option>
               </select>
             </div>
             <div>
-              <label style="display:block;color:#a89bff;font-size:11px;font-weight:800;margin-bottom:4px;">المرحلة الدراسية:</label>
-              <select id="aiOptGrade" style="width:100%;background:#1c1e42;border:1px solid rgba(142,100,239,0.3);color:#fff;padding:6px;border-radius:8px;font-size:11px;font-family:inherit;">
-                <option value="الصف الأول الإعدادي">الصف الأول الإعدادي</option>
-                <option value="الصف الثاني الإعدادي">الصف الثاني الإعدادي</option>
-                <option value="الصف الثالث الإعدادي" selected>الصف الثالث الإعدادي</option>
-                <option value="المرحلة الثانوية">المرحلة الثانوية</option>
+              <label style="display:block;color:#a89bff;font-size:11px;font-weight:800;margin-bottom:4px;">مزيج الأنواع:</label>
+              <select id="aiOptFormat" style="width:100%;background:#1c1e42;border:1px solid rgba(142,100,239,0.3);color:#fff;padding:6px;border-radius:8px;font-size:11px;font-family:inherit;">
+                <option value="mcq" selected>اختيار من متعدد فقط (4 خيارات)</option>
+                <option value="tf">صح أو خطأ فقط</option>
+                <option value="mixed">مزيج (اختيار متعدد + صح وخطأ)</option>
               </select>
             </div>
             <div>
-              <label style="display:block;color:#a89bff;font-size:11px;font-weight:800;margin-bottom:4px;">المادة / التخصص:</label>
-              <select id="aiOptSubject" style="width:100%;background:#1c1e42;border:1px solid rgba(142,100,239,0.3);color:#fff;padding:6px;border-radius:8px;font-size:11px;font-family:inherit;">
-                <option value="لغة عربية - نحو" selected>لغة عربية - نحو</option>
-                <option value="لغة عربية - بلاغة">لغة عربية - بلاغة</option>
-                <option value="لغة عربية - نصوص">لغة عربية - نصوص</option>
-                <option value="تربية إسلامية">تربية إسلامية</option>
+              <label style="display:block;color:#a89bff;font-size:11px;font-weight:800;margin-bottom:4px;">لغة التوليد:</label>
+              <select id="aiOptLang" style="width:100%;background:#1c1e42;border:1px solid rgba(142,100,239,0.3);color:#fff;padding:6px;border-radius:8px;font-size:11px;font-family:inherit;">
+                <option value="العربية الفصحى" selected>العربية الفصحى</option>
+                <option value="English">English</option>
               </select>
             </div>
           </div>
 
-          <!-- Progress Box (Hidden by default) -->
-          <div id="aiProgressBox" style="display:none;background:#161938;border:1px solid #7550ef;border-radius:14px;padding:14px;text-align:center;">
-            <div style="font-size:24px;margin-bottom:6px;" class="animate-spin">⏳</div>
-            <div id="aiProgressText" style="color:#52d9ed;font-size:13px;font-weight:800;">جارٍ تحضير الطلب والتحقق من الحصة...</div>
-            <div style="background:#101124;border-radius:6px;height:6px;margin-top:10px;overflow:hidden;">
-              <div id="aiProgressBar" style="background:linear-gradient(90deg, #7550ef, #10b981);height:100%;width:25%;transition:width 0.4s;"></div>
+          <!-- Free Teacher Instructions -->
+          <div>
+            <label style="display:block;color:#cbd5e1;font-size:11px;font-weight:800;margin-bottom:4px;">تعليمات وتوجيهات خاصة للمعلم (اختياري):</label>
+            <input type="text" id="aiOptInstructions" placeholder="مثال: ركّز على إعراب الفاعل والمفعول به، تجنب الأسئلة المباشرة..." style="width:100%;background:#14152e;border:1px solid rgba(142,100,239,0.3);border-radius:8px;color:#fff;font-size:12px;padding:8px 12px;box-sizing:border-box;">
+          </div>
+
+          <!-- Honest Progress Box (Hidden by default) -->
+          <div id="aiProgressBox" style="display:none;background:#161938;border:1px solid #7550ef;border-radius:14px;padding:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <span id="aiProgressStageText" style="color:#52d9ed;font-size:13px;font-weight:800;">جارٍ تحضير البيانات... ⏳</span>
+              <button onclick="ScoreARQuizAI.cancelGeneration()" style="background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid #ef4444;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;">إلغاء ✕</button>
             </div>
+            <div style="background:#101124;border-radius:6px;height:8px;overflow:hidden;">
+              <div id="aiProgressBar" style="background:linear-gradient(90deg, #7550ef, #10b981);height:100%;width:5%;transition:width 0.3s;"></div>
+            </div>
+            <div id="aiProgressDetail" style="color:#94a3b8;font-size:11px;margin-top:6px;">جاهز للبدء</div>
           </div>
         </div>
 
         <!-- Footer Actions -->
         <footer style="background:#171836;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(142,100,239,0.3);">
-          <span style="color:#94a3b8;font-size:11px;">⚠️ المسودة تمر بمراجعتك وتعديلك في جدول المعاينة قبل الحفظ النهائي.</span>
+          <span style="color:#94a3b8;font-size:11px;">⚠️ المسودة تُعرض في جدول مراجعة مفصل لاعتمادها أو تعديلها قبل الحفظ.</span>
           <div style="display:flex;gap:12px;">
             <button onclick="ScoreARQuizAI.closeAiStudio()" style="background:rgba(255,255,255,0.08);color:#d1d5db;border:1px solid rgba(255,255,255,0.15);padding:8px 16px;border-radius:10px;font-size:12px;cursor:pointer;">إلغاء</button>
             <button id="btnTriggerAiGen" onclick="ScoreARQuizAI.triggerGeneration()" ${isExhausted ? 'disabled' : ''} style="background:${isExhausted ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #7550ef, #582cd1)'};color:#fff;border:none;padding:10px 22px;border-radius:12px;font-size:13px;font-weight:900;cursor:${isExhausted ? 'not-allowed' : 'pointer'};box-shadow:0 0 20px rgba(117,80,239,0.4);">
-              توليد الأسئلة بالذكاء الاصطناعي 🚀
+              بدء التحليل والتوليد الذكي 🚀
             </button>
           </div>
         </footer>
@@ -198,7 +224,7 @@
     `;
   }
 
-  // --- 4. Handlers & Multimodal File Reader ---
+  // --- 4. Handlers ---
   function switchTab(t) {
     activeTab = t;
     fetchTodayQuota().then(renderAiModalView);
@@ -227,136 +253,119 @@
 
   function handleFileUpload(file) {
     if (!file) return;
-    selectedFileName = file.name;
-    selectedFileMime = file.type || 'application/octet-stream';
-
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const raw = e.target.result;
-      const base64Index = raw.indexOf(';base64,');
-      selectedFileBase64 = base64Index >= 0 ? raw.substring(base64Index + 8) : btoa(raw);
-      fetchTodayQuota().then(renderAiModalView);
-      if (global.toast) global.toast(`تم تجهيز ملف (${file.name}) للتوليد ✓`);
-    };
-
-    if (file.type.startsWith('image/') || file.type === 'application/pdf') {
-      reader.readAsDataURL(file);
-    } else {
-      // For text or docx, read as ArrayBuffer or text
-      reader.readAsDataURL(file);
-    }
+    selectedFile = file;
+    fetchTodayQuota().then(renderAiModalView);
+    if (global.toast) global.toast(`تم اختيار (${file.name}) ✓`);
   }
 
-  // --- 5. Execution Pipeline ---
+  function cancelGeneration() {
+    if (activeCancellationToken) {
+      activeCancellationToken.cancel();
+      if (global.toast) global.toast('تم إيقاف العملية بواسطة المعلم.');
+    }
+    const pBox = document.getElementById('aiProgressBox');
+    const btn = document.getElementById('btnTriggerAiGen');
+    if (pBox) pBox.style.display = 'none';
+    if (btn) btn.disabled = false;
+  }
+
+  // --- 5. Main Execution Orchestrator ---
   async function triggerGeneration() {
     const user = getCurrentUser();
     if (!user) {
-      alert('عفواً، يجب تسجيل الدخول بحساب المعلم أولاً لاستخدام الذكاء الاصطناعي.');
+      alert('عفواً، يجب تسجيل دخول المعلم أولاً لاستخدام الذكاء الاصطناعي.');
       return;
     }
 
     const textContent = (document.getElementById('aiTextInput')?.value || '').trim();
     if (activeTab === 'text' && textContent.length < 20) {
-      alert('يرجى إدخال نص كافٍ من الدرس (20 حرفاً على الأقل) لتتمكن الخوارزمية من صياغة أسئلة دقيقة.');
+      alert('يرجى إدخال نص كافٍ من الدرس (20 حرفاً على الأقل).');
       return;
     }
-    if (activeTab === 'file' && !selectedFileBase64) {
-      alert('يرجى اختيار ملف أو صورة أولاً.');
+    if (activeTab === 'file' && !selectedFile) {
+      alert('يرجى اختيار ملف مستند أو صورة أولاً.');
       return;
     }
 
     const pBox = document.getElementById('aiProgressBox');
-    const pText = document.getElementById('aiProgressText');
+    const pStage = document.getElementById('aiProgressStageText');
     const pBar = document.getElementById('aiProgressBar');
+    const pDetail = document.getElementById('aiProgressDetail');
     const btn = document.getElementById('btnTriggerAiGen');
+
     if (btn) btn.disabled = true;
     if (pBox) pBox.style.display = 'block';
 
+    activeCancellationToken = global.ScoreARDocExtractor ? global.ScoreARDocExtractor.createCancellationToken() : { isCancelled: false };
+
     try {
-      // Step 1: ID Token
-      if (pText) pText.innerText = '1/3 التحقق من الجلسة والحصة اليومية... ⏳';
-      if (pBar) pBar.style.width = '35%';
-      const idToken = await user.getIdToken(true);
+      const startPage = parseInt(document.getElementById('aiStartPage')?.value, 10) || 1;
+      const endPage = parseInt(document.getElementById('aiEndPage')?.value, 10) || 0;
 
-      // Step 2: Request Payload
-      if (pText) pText.innerText = '2/3 توليد الأسئلة التربوية عبر خادم الذكاء الاصطناعي... 🧠';
-      if (pBar) pBar.style.width = '70%';
+      // Stage 1: Document Extraction (Client-Side Streaming)
+      if (pStage) pStage.innerText = '1/4 استخراج المحتوى صفحة بصفحة محلياً... ⏳';
+      if (pBar) pBar.style.width = '15%';
 
-      const payload = {
-        content: activeTab === 'text' ? textContent : '',
-        fileBase64: activeTab === 'file' ? selectedFileBase64 : null,
-        mimeType: activeTab === 'file' ? selectedFileMime : null,
+      let extractedDoc = null;
+      if (activeTab === 'text') {
+        extractedDoc = await global.ScoreARDocExtractor.extractText(textContent, {}, activeCancellationToken);
+      } else {
+        extractedDoc = await global.ScoreARDocExtractor.extractDocument(
+          selectedFile,
+          { startPage, endPage: endPage > 0 ? endPage : undefined },
+          activeCancellationToken,
+          (prog) => {
+            if (pBar) pBar.style.width = `${Math.min(30, Math.round(prog.percent * 0.3))}%`;
+            if (pDetail) pDetail.innerText = prog.statusText || '';
+          }
+        );
+      }
+
+      if (activeCancellationToken.isCancelled) return;
+
+      // Stage 2, 3, 4: Execute 3-Stage Pipeline (Classify, Generate micro-chunks, Verify)
+      const options = {
         count: Number(document.getElementById('aiOptCount')?.value || 5),
         difficulty: document.getElementById('aiOptDiff')?.value || 'متوسط',
-        grade: document.getElementById('aiOptGrade')?.value || 'الصف الثالث الإعدادي',
-        subject: document.getElementById('aiOptSubject')?.value || 'لغة عربية - نحو',
-        format: 'mcq'
+        format: document.getElementById('aiOptFormat')?.value || 'mcq',
+        language: document.getElementById('aiOptLang')?.value || 'العربية الفصحى',
+        instructions: (document.getElementById('aiOptInstructions')?.value || '').trim()
       };
 
-      // Server endpoint call (Direct secure server route)
-      const resp = await fetch('/api/generate-questions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + idToken
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (pText) pText.innerText = '3/3 مراجعة وتدقيق جودة الخيارات والإجابات... 🔍';
-      if (pBar) pBar.style.width = '95%';
-
-      if (!resp.ok) {
-        let errData = {};
-        try { errData = await resp.json(); } catch(e){}
-        const errMsg = errData.error || `خطأ في الخادم (رمز ${resp.status})`;
-        throw new Error(errMsg);
-      }
-
-      const resJson = await resp.json();
-      const rawQuestions = resJson.questions || [];
-
-      // Canonical Normalization & Validation at AI Boundary
-      const evaluator = global.ScoreAREvaluator;
-      const questions = [];
-      rawQuestions.forEach((raw, idx) => {
-        try {
-          const canonical = evaluator ? evaluator.normalizeQuestion(raw, { fallbackId: `q_ai_${Date.now()}_${idx}` }) : raw;
-          const val = evaluator ? evaluator.validateQuestion(canonical) : { valid: true };
-          if (val.valid) questions.push(canonical);
-          else console.warn(`[ScoreAR QuizAI] Skipped invalid AI question: ${val.error}`, raw);
-        } catch(e) {
-          console.warn('[ScoreAR QuizAI] Normalization error:', e.message);
-        }
-      });
-
-      if (!questions.length) {
-        throw new Error('لم يقم النموذج بتوليد أي أسئلة صالحة. يرجى تجربة فقرة أكثر تركيزاً.');
-      }
-
-      // Step 3: Success -> Hand off to Interactive Preview Table
-      closeAiStudio();
-      if (global.toast) global.toast(`تم توليد (${questions.length}) سؤالاً بنجاح! راجعها الآن قبل الحفظ ✓`);
-
-      if (currentContext.mode === 'builder' && typeof currentContext.onImport === 'function') {
-        currentContext.onImport(questions);
-      } else if (global.ScoreARQuizImporter && global.ScoreARQuizImporter.openImporter) {
-        // Open the interactive preview table for teacher review before saving
-        global.ScoreARQuizImporter.openImporter({
-          mode: currentContext.mode,
-          onImport: currentContext.onImport
-        });
-        // Inject questions into the importer table model
-        setTimeout(() => {
-          if (global.ScoreARQuizImporter.handlePreloadedQuestions) {
-            global.ScoreARQuizImporter.handlePreloadedQuestions(questions, 'توليد ذكي (AI)');
+      const result = await global.ScoreARQuizAIPipeline.executePipeline(
+        extractedDoc.pages,
+        options,
+        user,
+        {
+          onProgress: (pct) => {
+            if (pBar) pBar.style.width = `${pct}%`;
+          },
+          onStatus: (statusText) => {
+            if (pDetail) pDetail.innerText = statusText;
           }
-        }, 100);
+        }
+      );
+
+      if (activeCancellationToken.isCancelled) return;
+
+      // Stage 5: Hand off to Editable Review Table
+      closeAiStudio();
+
+      if (global.ScoreARQuizAIReview && global.ScoreARQuizAIReview.openReviewTable) {
+        global.ScoreARQuizAIReview.openReviewTable(result.questions, {
+          mode: currentContext.mode,
+          onCommit: currentContext.onImport
+        });
+      } else if (typeof currentContext.onImport === 'function') {
+        currentContext.onImport(result.questions);
       }
 
     } catch (err) {
-      console.error('AI Generation Failed:', err);
-      alert('تنبيه: ' + (err.message || 'فشل توليد الأسئلة.'));
+      if (err.message === 'CANCELED_BY_USER' || activeCancellationToken?.isCancelled) {
+        return;
+      }
+      console.error('[ScoreAR AI Studio] Pipeline Failed:', err);
+      alert('تنبيه: ' + (err.message || 'فشلت معالجة وتوليد الأسئلة.'));
       if (pBox) pBox.style.display = 'none';
       if (btn) btn.disabled = false;
     }
@@ -368,7 +377,8 @@
     switchTab,
     loadSampleText,
     handleFileUpload,
+    cancelGeneration,
     triggerGeneration
   };
 
-})(typeof window !== 'undefined' ? window : this);
+})(typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : this));

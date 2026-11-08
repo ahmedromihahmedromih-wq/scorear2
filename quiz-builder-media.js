@@ -240,11 +240,43 @@
     }
   }
 
+  async function deleteImageFromBlob(imageUrl) {
+    if (!imageUrl || typeof imageUrl !== 'string') return;
+    if (!imageUrl.includes('blob.vercel-storage.com') && !imageUrl.includes('scorear-cdn.vercel.app')) return;
+    try {
+      let idToken = '';
+      const auth = window.firebase && window.firebase.auth ? window.firebase.auth() : null;
+      if (auth && auth.currentUser) idToken = await auth.currentUser.getIdToken(false);
+      if (!idToken) {
+        const sess = localStorage.getItem('scorear_teacher_session');
+        if (sess) {
+          const parsed = JSON.parse(sess);
+          if (parsed.idToken) idToken = parsed.idToken;
+        }
+      }
+      if (!idToken) return;
+      await fetch('/api/upload-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+        body: JSON.stringify({ action: 'delete', url: imageUrl })
+      });
+      console.log('[ScoreAR Media] Deleted orphan image from blob:', imageUrl);
+    } catch(e) {
+      console.warn('[ScoreAR Media] Orphan deletion error:', e);
+    }
+  }
+
   function removeQuestionImage(qIndex) {
+    let oldUrl = null;
+    if (global.ScoreARQuizBuilder && global.ScoreARQuizBuilder.getQuiz) {
+      const q = global.ScoreARQuizBuilder.getQuiz()?.questions?.[qIndex];
+      oldUrl = q?.imageUrl;
+    }
     if (global.ScoreARQuizBuilder && global.ScoreARQuizBuilder.setQuestionImage) {
       global.ScoreARQuizBuilder.setQuestionImage(qIndex, null);
     }
-    if (global.toast) global.toast('تمت إزالة صورة السؤال.');
+    if (oldUrl) deleteImageFromBlob(oldUrl);
+    if (global.toast) global.toast('تمت إزالة صورة السؤال وتنظيفها من التخزين.');
   }
 
   function updateImageAlt(qIndex, altText) {
@@ -256,6 +288,7 @@
   const ScoreARQuizBuilderMedia = {
     compressImageToWebP,
     uploadImageToVercelBlob,
+    deleteImageFromBlob,
     renderMediaZone,
     handleDragOver,
     handleDragLeave,
@@ -263,6 +296,7 @@
     handleFileSelect,
     removeQuestionImage,
     updateImageAlt
+  };
   };
 
   global.ScoreARQuizBuilderMedia = ScoreARQuizBuilderMedia;

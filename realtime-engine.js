@@ -139,9 +139,21 @@
       return;
     }
 
+    // Strict wire defense: Never broadcast student choice/optionIndex over public room bus
+    const cleanPayload = { ...payload };
+    let cleanType = type;
+    if (currentRole === 'student') {
+      delete cleanPayload.optionIndex;
+      delete cleanPayload.chosenIndices;
+      delete cleanPayload.optionOrder;
+      delete cleanPayload.answer;
+      delete cleanPayload.correct;
+      if (cleanType === 'STUDENT_ANSWER') cleanType = 'STUDENT_ANSWERED';
+    }
+
     const message = {
-      ...payload,
-      type: type,
+      ...cleanPayload,
+      type: cleanType,
       _msgId: 'm_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
       _timestamp: Date.now(),
       _senderRole: currentRole

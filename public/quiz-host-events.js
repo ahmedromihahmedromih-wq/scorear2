@@ -227,19 +227,20 @@
           currentQIndex: ctx.currentQIndex
         });
       }
-    } else if (msg.type === 'STUDENT_ANSWER') {
+    } else if (msg.type === 'STUDENT_ANSWER' || msg.type === 'STUDENT_ANSWERED') {
       const qIndex = ctx.currentQIndex;
       if (!room.answers[qIndex]) room.answers[qIndex] = {};
       const senderKey = String(msg.playerId || msg.playerName || Math.random());
-      if (room.answers[qIndex][senderKey]) return;
+      if (room.answers[qIndex][senderKey] && msg.optionIndex === undefined) return;
 
+      const existing = room.answers[qIndex][senderKey] || {};
       room.answers[qIndex][senderKey] = {
-        playerId: String(msg.playerId || ''),
-        playerName: msg.playerName || '',
-        optionIndex: Number(msg.optionIndex),
-        chosenIndices: Array.isArray(msg.chosenIndices) ? msg.chosenIndices : [Number(msg.optionIndex)],
-        optionOrder: Array.isArray(msg.optionOrder) ? msg.optionOrder : null,
-        timeRemaining: Number(msg.timeRemaining) || 0,
+        playerId: String(msg.playerId || existing.playerId || senderKey),
+        playerName: msg.playerName || existing.playerName || '',
+        optionIndex: msg.optionIndex !== undefined ? Number(msg.optionIndex) : (existing.optionIndex !== undefined ? existing.optionIndex : -1),
+        chosenIndices: Array.isArray(msg.chosenIndices) ? msg.chosenIndices : (msg.optionIndex !== undefined ? [Number(msg.optionIndex)] : existing.chosenIndices || []),
+        optionOrder: Array.isArray(msg.optionOrder) ? msg.optionOrder : existing.optionOrder || null,
+        timeRemaining: Number(msg.timeRemaining) || existing.timeRemaining || 0,
         answeredAt: Date.now()
       };
 

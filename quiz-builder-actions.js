@@ -97,6 +97,9 @@
 
   function finalizeDelete() {
     if (lastDeletedInfo) {
+      if (lastDeletedInfo.question?.imageUrl && global.ScoreARQuizBuilderMedia?.deleteImageFromBlob) {
+        global.ScoreARQuizBuilderMedia.deleteImageFromBlob(lastDeletedInfo.question.imageUrl);
+      }
       if (lastDeletedInfo.element && lastDeletedInfo.element.parentNode) {
         lastDeletedInfo.element.remove();
       }

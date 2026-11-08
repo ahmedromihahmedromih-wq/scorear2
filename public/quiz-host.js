@@ -21,7 +21,6 @@
   function sfx(t) { if (global.ScoreARAudio) global.ScoreARAudio.playSfx(t); }
   function music(tr, vol) { if (global.ScoreARAudio) global.ScoreARAudio.playMusic(tr, vol); }
   function ev() { return global.ScoreARHostEvents || null; }
-
   function getOrCreateStage() {
     let stage = document.getElementById('scorearHostStage');
     if (!stage) {
@@ -36,17 +35,16 @@
 
   function closeHostSession() {
     [qTimerInterval, readingTimerInterval, lobbyTimerInterval, autoAdvanceTimer].forEach(t => { if (t) clearInterval(t); });
-    if (currentRoom && currentRoom.pin && ev()) ev().publishRoomClosed(currentRoom.pin, 'انتهت المسابقة بواسطة المعلم');
+    if (currentRoom?.pin && ev()) ev().publishRoomClosed(currentRoom.pin, 'انتهت المسابقة بواسطة المعلم');
     if (global.ScoreARAudio) global.ScoreARAudio.stopMusic();
     const stage = document.getElementById('scorearHostStage');
     if (stage) stage.style.display = 'none';
     currentRoom = null;
     setTimeout(() => { if (global.ScoreARRealtime) global.ScoreARRealtime.cleanup(); }, 150);
   }
-
   if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
     window.addEventListener('beforeunload', () => {
-      if (currentRoom && currentRoom.pin && ev()) ev().publishRoomClosed(currentRoom.pin, 'انتهت المسابقة بسبب خروج المعلم');
+      if (currentRoom?.pin && ev()) ev().publishRoomClosed(currentRoom.pin, 'انتهت المسابقة بسبب خروج المعلم');
     });
   }
 
@@ -81,12 +79,7 @@
         return;
       }
     }
-    if (!migrated.length) {
-      const errMsg = 'لا يمكن بدء القاعة: لا توجد أسئلة صالحة في المسابقة.';
-      if (global.toast) global.toast(errMsg);
-      alert(errMsg);
-      return;
-    }
+    if (!migrated.length) { if (global.toast) global.toast('لا توجد أسئلة صالحة'); alert('لا توجد أسئلة صالحة'); return; }
 
     activeQuestions = migrated;
     currentRoom = { pin, world: w, players: [], answers: {}, isLocked: false, status: 'lobby' };
@@ -108,10 +101,7 @@
     lobbyTimerInterval = setInterval(() => {
       lobbyElapsedSeconds++;
       const el = document.getElementById('hostLobbyTimerText');
-      if (el) {
-        const m = Math.floor(lobbyElapsedSeconds / 60), s = lobbyElapsedSeconds % 60;
-        el.textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
-      }
+      if (el) { const m = Math.floor(lobbyElapsedSeconds / 60), s = lobbyElapsedSeconds % 60; el.textContent = `${m}:${s < 10 ? '0' : ''}${s}`; }
     }, 1000);
   }
 
@@ -239,11 +229,7 @@
     const ctx = {
       currentRoom, currentQIndex, isRoomLocked,
       onPlayerJoined: () => { sfx('pop'); if (currentRoom.status === 'lobby') refreshLobbyUi(); },
-      onPlayerReconnected: () => {
-        if (currentRoom.status === 'question' && activeQuestions[currentQIndex] && ev()) {
-          ev().publishQuestionStart(currentQIndex, activeQuestions.length, activeQuestions[currentQIndex], timeRemaining, (currentRoom?.world?.id || 'royal'));
-        }
-      },
+      onPlayerReconnected: () => { if (currentRoom.status === 'question' && activeQuestions[currentQIndex] && ev()) ev().publishQuestionStart(currentQIndex, activeQuestions.length, activeQuestions[currentQIndex], timeRemaining, (currentRoom?.world?.id || 'royal')); },
       onPlayerAnswered: () => { sfx('pop'); updateLiveAnswerStats(); },
       onAllAnswered: () => { finishCurrentQuestion(); }
     };
@@ -264,7 +250,25 @@
     readingTimeRemaining = 10;
     renderHostQuestionView('reading');
     sfx('reveal');
-    try { const d=(global.ScoreARAuth?.getDb?.())||global.firebase?.database?.(); if(d&&currentRoom?.pin) d.ref('rooms/'+currentRoom.pin).update({status:'question',currentQuestion:idx}).catch(()=>{}); } catch(e){}
+    try {
+      const d = (global.ScoreARAuth?.getDb?.()) || global.firebase?.database?.();
+      if (d && currentRoom?.pin) {
+        d.ref('rooms/' + currentRoom.pin).update({ status: 'question', currentQuestion: idx }).catch(()=>{});
+        const ansRef = d.ref(`rooms/${currentRoom.pin}/answers/${idx}`);
+        ansRef.off('child_added');
+        ansRef.on('child_added', (snap) => {
+          const pId = snap.key, val = snap.val() || {};
+          if (currentRoom?.answers) {
+            if (!currentRoom.answers[idx]) currentRoom.answers[idx] = {};
+            const p = currentRoom.players.find(x => x.id === pId);
+            currentRoom.answers[idx][pId] = { playerId: pId, playerName: p?.name || val.playerName || '', optionIndex: Number(val.optionIndex), timeRemaining: Number(val.timeRemaining) || 0, answeredAt: val.ts || Date.now() };
+            sfx('pop');
+            updateLiveAnswerStats();
+            if (currentRoom.players.length > 0 && Object.keys(currentRoom.answers[idx]).length >= currentRoom.players.length) finishCurrentQuestion();
+          }
+        });
+      }
+    } catch(e){}
 
     if (ev()) ev().publishQuestionReading(idx, activeQuestions.length, qData, (currentRoom?.world?.id || 'royal'));
 
@@ -383,6 +387,7 @@
   // PHASE 3: Answer Reveal & Feedback (Mark Correct Answer on Host)
   function finishCurrentQuestion() {
     [qTimerInterval, readingTimerInterval, autoAdvanceTimer].forEach(t => { if (t) clearInterval(t); });
+    try { const d=(global.ScoreARAuth?.getDb?.())||global.firebase?.database?.(); if(d&&currentRoom?.pin) d.ref(`rooms/${currentRoom.pin}/answers/${currentQIndex}`).off('child_added'); } catch(e){}
     if (global.ScoreARBots) global.ScoreARBots.clearPendingAnswers();
     const qIndex = currentQIndex, qData = activeQuestions[qIndex];
     if (!qData) return;
@@ -458,10 +463,7 @@
     }
   }
 
-  function toggleExplanation() {
-    const box = document.getElementById('hostExplanationBox');
-    if (box) box.style.display = (box.style.display === 'none' || !box.style.display) ? 'block' : 'none';
-  }
+  function toggleExplanation() { const b = document.getElementById('hostExplanationBox'); if (b) b.style.display = (b.style.display === 'none' || !b.style.display) ? 'block' : 'none'; }
   function toggleRoomLock() {
     isRoomLocked = !isRoomLocked;
     const btn = document.getElementById('hostLockBtn');
@@ -470,14 +472,12 @@
   }
   function renderHostLeaderboard() {
     if (autoAdvanceTimer) clearInterval(autoAdvanceTimer);
-    const stage = getOrCreateStage();
-    if (ev()) ev().renderHostLeaderboard(stage, currentRoom, activeQuestions, currentQIndex, launchQuestion, renderHostPodium, closeHostSession);
+    if (ev()) ev().renderHostLeaderboard(getOrCreateStage(), currentRoom, activeQuestions, currentQIndex, launchQuestion, renderHostPodium, closeHostSession);
   }
   function renderHostPodium() {
-    const stage = getOrCreateStage();
-    if (global.ScoreARPodiumEffects?.renderHostPodium) {
-      global.ScoreARPodiumEffects.renderHostPodium(stage, currentRoom, closeHostSession);
-    } else if (ev()) ev().renderHostPodium(stage, currentRoom, closeHostSession);
+    const s = getOrCreateStage();
+    if (global.ScoreARPodiumEffects?.renderHostPodium) global.ScoreARPodiumEffects.renderHostPodium(s, currentRoom, closeHostSession);
+    else if (ev()) ev().renderHostPodium(s, currentRoom, closeHostSession);
   }
 
   const ScoreARQuizHost = {

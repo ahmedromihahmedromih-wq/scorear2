@@ -27,7 +27,8 @@
           ".read": "auth != null"
         },
         "questionData": {
-          ".read": "auth != null && (auth.token.role === 'teacher' || auth.token.role === 'admin')"
+          ".read": false,
+          ".write": false
         },
         "players": {
           ".read": "auth != null",
@@ -53,6 +54,7 @@
               ".validate": "newData.hasChildren(['optionIndex', 'ts'])",
               "optionIndex": { ".validate": "newData.isNumber()" },
               "ts": { ".validate": "newData.isNumber()" },
+              "timeRemaining": { ".validate": "newData.isNumber()" },
               "$other": { ".validate": false }
             }
           }

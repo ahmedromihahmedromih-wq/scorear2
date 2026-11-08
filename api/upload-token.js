@@ -1,10 +1,39 @@
 /**
  * ScoreAR Serverless API: /api/upload-token
- * Item 8 & 9: Vercel Blob client upload token generation & direct upload with teacher role verification.
+ * Item 8 & 9 & Review Item 3 & 7: Vercel Blob client upload token generation,
+ * direct upload, orphan image deletion with firebase-admin verifyIdToken(token, true).
  * Strictly Rule 7 Compliant (<500 lines).
  */
-import { put } from '@vercel/blob';
+import { getApps, initializeApp, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import { put, del } from '@vercel/blob';
 import { handleUpload } from '@vercel/blob/client';
+
+// Initialize firebase-admin singleton
+function getAdminAuth() {
+  try {
+    if (!getApps().length) {
+      if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        initializeApp({ credential: cert(sa) });
+      } else if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+        initializeApp({
+          credential: cert({
+            projectId: process.env.FIREBASE_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n')
+          })
+        });
+      } else {
+        initializeApp();
+      }
+    }
+    return getAuth();
+  } catch(e) {
+    console.warn('[firebase-admin] Init notice:', e.message);
+    return null;
+  }
+}
 
 export default async function handler(req, res) {
   // 1. Strict CORS for authorized ScoreAR origins
@@ -31,7 +60,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'طريقة غير مدعومة. يرجى استخدام POST.' });
 
   try {
-    // 2. Authentication: Teacher ID Token verification
+    // 2. Authentication: Teacher/Admin ID Token verification via firebase-admin
     const authHeader = req.headers.authorization || '';
     if (!authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'عفواً، يجب تسجيل دخول المعلم أولاً لرفع صور الأسئلة.' });
@@ -41,38 +70,55 @@ export default async function handler(req, res) {
     let teacherUid = null;
     let isTeacher = false;
 
-    // Verify token with Google OAuth2 / Firebase Identity endpoint
+    // Direct Firebase Admin SDK Token Verification with revocation check (checkRevoked = true)
     try {
-      const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
-      if (verifyRes.ok) {
-        const info = await verifyRes.json();
-        teacherUid = info.user_id || info.sub;
-        isTeacher = (info.role === 'teacher' || info.role === 'admin' || (info.email && !info.email.includes('student')));
+      const auth = getAdminAuth();
+      if (auth) {
+        const decoded = await auth.verifyIdToken(idToken, true);
+        teacherUid = decoded.uid;
+        isTeacher = (decoded.role === 'teacher' || decoded.role === 'admin');
       }
     } catch (e) {
-      console.warn('[upload-token] Token verification error:', e);
+      console.warn('[upload-token] verifyIdToken error:', e.message);
     }
 
-    // Mock bypass only for verified localhost automated tests
-    if (!teacherUid && idToken.startsWith('test_teacher_token_')) {
-      teacherUid = 'test_teacher_uid';
-      isTeacher = true;
-    } else if (!teacherUid && idToken.startsWith('test_student_token_')) {
-      teacherUid = 'test_student_uid';
-      isTeacher = false;
+    // Fallback verification for test harness & local offline simulation
+    if (!teacherUid) {
+      if (idToken.startsWith('test_teacher_token_')) {
+        teacherUid = 'test_teacher_uid';
+        isTeacher = true;
+      } else if (idToken.startsWith('test_student_token_')) {
+        teacherUid = 'test_student_uid';
+        isTeacher = false;
+      }
     }
 
     if (!teacherUid) {
-      return res.status(401).json({ error: 'رمز الجلسة غير صالح أو منتهي الصلاحية. يرجى إعادة تسجيل الدخول.' });
+      return res.status(401).json({ error: 'رمز الجلسة غير صالح أو ملغي. يرجى إعادة تسجيل الدخول.' });
     }
 
     if (!isTeacher) {
-      return res.status(403).json({ error: 'غير مصرح: رفع صور الأسئلة مخصص لحسابات المعلمين فقط.' });
+      return res.status(403).json({ error: 'غير مصرح: إدارة ورفع صور الأسئلة مخصص لحسابات المعلمين والأدمن فقط.' });
     }
 
-    const contentType = req.headers['content-type'] || '';
+    // 3. Orphan image deletion (Item 7)
+    if (req.body && req.body.action === 'delete') {
+      const targetUrl = req.body.url;
+      if (!targetUrl || typeof targetUrl !== 'string') {
+        return res.status(400).json({ error: 'رابط الصورة المطلوب حذفها مفقود.' });
+      }
+      try {
+        if (process.env.BLOB_READ_WRITE_TOKEN) {
+          await del(targetUrl);
+        }
+        return res.status(200).json({ success: true, deletedUrl: targetUrl });
+      } catch (err) {
+        console.warn('[upload-token] Error deleting blob:', err.message);
+        return res.status(500).json({ error: 'تعذر حذف الصورة من التخزين السحابي: ' + err.message });
+      }
+    }
 
-    // 3. Direct base64 / binary upload support via Vercel Blob put()
+    // 4. Direct base64 / binary upload support via Vercel Blob put()
     if (req.body && (req.body.imageBase64 || req.body.fileBase64)) {
       const rawBase64 = req.body.imageBase64 || req.body.fileBase64;
       const mimeMatch = rawBase64.match(/^data:([^;]+);base64,/);
@@ -100,13 +146,12 @@ export default async function handler(req, res) {
         });
         return res.status(200).json({ url: blob.url, size: buffer.length, contentType: mime });
       } else {
-        // Fallback for local dev or staging without BLOB token
         const mockUrl = `https://scorear-cdn.vercel.app/${filename}`;
         return res.status(200).json({ url: mockUrl, size: buffer.length, contentType: mime, notice: 'dev_mock_blob' });
       }
     }
 
-    // 4. Vercel Blob client upload handleUpload protocol
+    // 5. Vercel Blob client upload handleUpload protocol
     const jsonResponse = await handleUpload({
       body: req.body,
       request: req,

@@ -29,7 +29,6 @@
     stage.style.display = 'flex';
     return stage;
   }
-
   function saveActiveSession() {
     try {
       if (currentPin && currentStudent) {
@@ -37,9 +36,7 @@
       }
     } catch(e){}
   }
-
   function clearActiveSession() { try { sessionStorage.removeItem('scorear_active_quiz_session'); } catch(e){} }
-
   function closeStudentSession() {
     clearActiveSession();
     if (qTimerInterval) clearInterval(qTimerInterval);
@@ -288,24 +285,27 @@
       chosenBtn.style.background = '#252148';
       chosenBtn.style.opacity = '1';
     }
-
     const ind = document.getElementById(`studentOptIndicator_${idx}`);
     if (ind) ind.textContent = '🔒 تم قفل اختيارك';
-
     const fb = document.getElementById('studentFeedbackBox');
     if (fb) fb.innerHTML = '🔒 <strong style="color:#a89bff;">تم قفل اختيارك بنجاح!</strong> بانتظار انتهاء الوقت وإعلان النتيجة...';
 
     try {
       const db = (window.ScoreARAuth?.getDb?.()) || (window.firebase?.database?.());
       if (db && currentPin && currentStudent?.uid) {
-        db.ref(`rooms/${currentPin}/answers/${currentQIndex}/${currentStudent.uid}`).set({ optionIndex: idx, ts: Date.now() }).catch(()=>{});
+        db.ref(`rooms/${currentPin}/answers/${currentQIndex}/${currentStudent.uid}`).set({
+          optionIndex: idx,
+          timeRemaining: Math.max(0, timeRemaining),
+          ts: Date.now()
+        }).catch(()=>{});
       }
     } catch(e) {}
 
     if (global.ScoreARRealtime) {
-      global.ScoreARRealtime.publish('STUDENT_ANSWER', {
-        playerId: currentStudent.uid, playerName: currentStudent.name,
-        optionIndex: idx, timeRemaining: Math.max(0, timeRemaining), answeredAt: Date.now()
+      global.ScoreARRealtime.publish('STUDENT_ANSWERED', {
+        playerId: currentStudent.uid,
+        timeRemaining: Math.max(0, timeRemaining),
+        answeredAt: Date.now()
       });
     }
   }
@@ -476,7 +476,6 @@
         </div>
       </main>`;
   }
-
   if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
     window.addEventListener('online', () => {
       if (currentPin && currentStudent && global.ScoreARRealtime) {

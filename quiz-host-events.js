@@ -117,11 +117,15 @@
         ? evaluator.isCorrect(qData, chosen, optionOrder)
         : (ans && Array.isArray(qData.correct) && qData.correct.includes(Number(ans.optionIndex)));
 
-      let earned = 0, respTime = null;
+      let earned = 0, respTime = null, scoreFormula = '';
       if (isAnsCorrect) {
         const timeRemaining = (ans && typeof ans.timeRemaining === 'number') ? ans.timeRemaining : 0;
         respTime = Math.max(0, totalTime - timeRemaining).toFixed(1);
-        earned = Math.round(500 + (500 * (Math.max(0, timeRemaining) / totalTime)));
+        const base = Number(qData.points) || 1000;
+        const mult = (qData.isDouble || qData.multiplier === 2) ? 2 : (Number(qData.multiplier) || 1);
+        const tf = (0.5 + 0.5 * (Math.max(0, timeRemaining) / (totalTime || 20)));
+        earned = Math.round(base * tf * mult);
+        scoreFormula = `${base} × ${tf.toFixed(2)} × ${mult} = ${earned}`;
         p.score = (p.score || 0) + earned;
         p.streak = (p.streak || 0) + 1;
         p.lastPointsGained = earned;
@@ -146,7 +150,8 @@
         streak: p.streak,
         chosenIndex: chosenIdx,
         chosenIndices: Array.isArray(chosen) ? chosen : (chosenIdx >= 0 ? [chosenIdx] : []),
-        respTime: respTime
+        respTime: respTime,
+        scoreFormula: scoreFormula || '0 (إجابة خاطئة)'
       };
     });
 

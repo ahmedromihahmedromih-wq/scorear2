@@ -13,16 +13,10 @@
   let currentQData = null, currentWorldId = 'royal';
 
   const OPTION_THEMES = [
-    { bg: '#e21b3c', border: '#ff5c77', shape: '▲' },
-    { bg: '#1368ce', border: '#4f9fff', shape: '◆' },
-    { bg: '#d89e00', border: '#ffd24d', shape: '●' },
-    { bg: '#26890c', border: '#5cdb3b', shape: '■' }
+    { bg: '#e21b3c', border: '#ff5c77', shape: '▲' }, { bg: '#1368ce', border: '#4f9fff', shape: '◆' },
+    { bg: '#d89e00', border: '#ffd24d', shape: '●' }, { bg: '#26890c', border: '#5cdb3b', shape: '■' }
   ];
-
-  function escapeHtml(str) {
-    if (typeof str !== 'string') return String(str || '');
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-  }
+  function escapeHtml(str) { return typeof str !== 'string' ? String(str || '') : str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
 
   function getOrCreateStudentStage() {
     let stage = document.getElementById('scorearStudentStage');
@@ -54,8 +48,7 @@
     if (global.ScoreARRealtime) global.ScoreARRealtime.cleanup();
     const stage = document.getElementById('scorearStudentStage');
     if (stage) stage.style.display = 'none';
-    currentPin = null;
-    currentStudent = null;
+    currentPin = null; currentStudent = null;
   }
 
   function startStudentSession(pin, student, optionalAvatar) {
@@ -157,23 +150,17 @@
           statusEl.style.background = 'rgba(16,185,129,0.25)'; statusEl.style.color = '#34d399'; statusEl.style.borderColor = '#10b981';
         }
       }
-    } else if (msg.type === 'QUESTION_READING') {
-      currentQData = msg;
-      renderStudentReading(msg);
-    } else if (msg.type === 'QUESTION_START') {
-      currentQData = msg;
-      renderStudentQuestion(msg);
-    } else if (msg.type === 'QUESTION_RESULT') {
-      renderStudentResult(msg);
+    } else if (msg.type === 'QUESTION_READING') { currentQData = msg; renderStudentReading(msg);
+    } else if (msg.type === 'QUESTION_START') { currentQData = msg; renderStudentQuestion(msg);
+    } else if (msg.type === 'QUESTION_RESULT') { renderStudentResult(msg);
     } else if (msg.type === 'QUESTION_SKIPPED') {
       if (qTimerInterval) clearInterval(qTimerInterval);
       const infoBox = document.getElementById('studentFeedbackBox');
-      if (infoBox) infoBox.innerHTML = '⏭️ قام المعلم بتخطي هذا السؤال. في انتظار الترتيب...';
+      if (infoBox) infoBox.innerHTML = '⏭️ قام المعلم بتخطي هذا السؤال.';
     } else if (msg.type === 'ROOM_LOCKED') {
       disableAllOptionButtons('🔒 تم قفل استقبال الإجابات');
     } else if (msg.type === 'STUDENT_KICKED' && String(msg.studentId) === String(currentStudent.uid)) {
       if (global.toast) global.toast('تم إخراجك من القاعة بواسطة المعلم.');
-      else alert('تم إخراجك من القاعة بواسطة المعلم.');
       closeStudentSession();
     } else if (msg.type === 'CONTEST_COMPLETED') {
       renderStudentFinalPodium(msg);
@@ -243,6 +230,7 @@
         <div style="display:flex;align-items:center;gap:8px;">
           <span style="background:#28244d;color:#52d9ed;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:900;">${qData.skill || 'سؤال'}</span>
           <span style="color:#ffffff;font-size:12px;font-weight:800;">السؤال ${(qData.qIndex || 0) + 1} من ${qData.totalQuestions || 5}</span>
+          ${(qData.isDouble || qData.multiplier === 2) ? `<span style="background:linear-gradient(135deg, #f59e0b, #d97706);color:#fff;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:900;">⚡ نقاط ×2</span>` : ''}
         </div>
         <div id="studentTimerPill" style="background:#ef4444;color:#fff;font-size:14px;font-weight:900;padding:3px 12px;border-radius:12px;">
           <span id="studentTimerText">${timeRemaining}</span>s
@@ -254,6 +242,11 @@
       <main style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:12px 14px;gap:10px;overflow:hidden;">
         <div style="background:rgba(21,23,49,0.9);border:1px solid rgba(142,100,239,0.4);border-radius:14px;padding:10px 14px;text-align:center;">
           <div style="font-size:15px;font-weight:900;color:#ffffff;line-height:1.35;">${qData.q || 'اختر الإجابة الصحيحة'}</div>
+          ${(qData.imageUrl || qData.img) ? `
+            <div style="display:flex;justify-content:center;margin:6px 0;max-height:110px;">
+              <img src="${qData.imageUrl || qData.img}" alt="${escapeHtml(qData.imageAlt || '')}" style="max-height:110px;max-width:100%;object-fit:contain;border-radius:8px;border:1px solid rgba(255,255,255,0.15);">
+            </div>
+          ` : ''}
         </div>
         <div id="studentOptionsContainer" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:390px;margin:0 auto;flex:1;align-content:center;">
           ${opts.slice(0, 4).map((optText, idx) => {
@@ -290,15 +283,24 @@
     const chosenBtn = document.getElementById(`studentOptBtn_${idx}`);
     if (chosenBtn) {
       chosenBtn.style.transform = 'scale(1.02)';
-      chosenBtn.style.border = '3px solid #fcd34d';
-      chosenBtn.style.boxShadow = '0 0 16px rgba(252,211,77,0.6)';
+      chosenBtn.style.border = '2.5px solid #a89bff';
+      chosenBtn.style.boxShadow = '0 0 16px rgba(168,155,255,0.45)';
+      chosenBtn.style.background = '#252148';
+      chosenBtn.style.opacity = '1';
     }
 
     const ind = document.getElementById(`studentOptIndicator_${idx}`);
-    if (ind) ind.textContent = '📌 تم اختيارك';
+    if (ind) ind.textContent = '🔒 تم قفل اختيارك';
 
     const fb = document.getElementById('studentFeedbackBox');
-    if (fb) fb.innerHTML = '⏳ <strong style="color:#fcd34d;">تم تسجيل اختيارك!</strong> بانتظار انتهاء الوقت والتصحيح...';
+    if (fb) fb.innerHTML = '🔒 <strong style="color:#a89bff;">تم قفل اختيارك بنجاح!</strong> بانتظار انتهاء الوقت وإعلان النتيجة...';
+
+    try {
+      const db = (window.ScoreARAuth?.getDb?.()) || (window.firebase?.database?.());
+      if (db && currentPin && currentStudent?.uid) {
+        db.ref(`rooms/${currentPin}/answers/${currentQIndex}/${currentStudent.uid}`).set({ optionIndex: idx, ts: Date.now() }).catch(()=>{});
+      }
+    } catch(e) {}
 
     if (global.ScoreARRealtime) {
       global.ScoreARRealtime.publish('STUDENT_ANSWER', {
@@ -491,8 +493,7 @@
   global.ScoreARQuizStudent = {
     startStudentSession, submitAnswer, renderStudentQuestion, renderStudentResult,
     closeStudentSession, renderStudentRoomClosed, saveActiveSession, clearActiveSession,
-    sendReaction,
-    getPin: () => currentPin, get state() { return currentStudent; }
+    sendReaction, getPin: () => currentPin, get state() { return currentStudent; }
   };
   global.ScoreARStudent = global.ScoreARQuizStudent;
 })(typeof window !== 'undefined' ? window : this);

@@ -17,11 +17,7 @@
     { bg: '#d89e00', border: '#ffd24d', shape: '●' }, { bg: '#26890c', border: '#5cdb3b', shape: '■' }
   ];
 
-  function escapeHtml(str) {
-    if (typeof str !== 'string') return String(str || '');
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-  }
-
+  function escapeHtml(str) { return typeof str !== 'string' ? String(str || '') : str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
   function sfx(t) { if (global.ScoreARAudio) global.ScoreARAudio.playSfx(t); }
   function music(tr, vol) { if (global.ScoreARAudio) global.ScoreARAudio.playMusic(tr, vol); }
   function ev() { return global.ScoreARHostEvents || null; }
@@ -313,10 +309,11 @@
         <div style="display:flex;align-items:center;gap:12px;">
           <button onclick="ScoreARQuizHost.closeHostSession()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 12px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;">✕ إنهاء</button>
           <div style="background:rgba(99,102,241,0.25);border:1px solid rgba(99,102,241,0.4);color:#c7d2fe;padding:4px 12px;border-radius:16px;font-size:12px;font-weight:800;">السؤال ${currentQIndex + 1} من ${total} • ${qData.skill || 'لغة عربية'}</div>
+          ${(qData.isDouble || qData.multiplier === 2) ? `<span style="background:linear-gradient(135deg, #f59e0b, #d97706);color:#fff;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:900;box-shadow:0 0 12px rgba(245,158,11,0.5);">⚡ نقاط ×2</span>` : ''}
         </div>
         <div style="background:#ffffff;border:2px solid #6366f1;border-radius:10px;padding:4px 20px;font-size:20px;font-weight:900;letter-spacing:6px;color:#0f172a;font-family:monospace;">${currentRoom.pin}</div>
         <div style="display:flex;align-items:center;gap:12px;">
-          <div style="font-size:12px;color:#94a3b8;font-weight:700;">إجابات الطلاب: <b id="hostAnsweredCount" style="color:#34d399;font-size:16px;">0</b> / <b>${currentRoom.players.length}</b></div>
+          <div style="font-size:12px;color:#94a3b8;font-weight:700;">حالة الإجابات: <span style="background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.3);color:#34d399;padding:3px 10px;border-radius:12px;font-size:13px;font-weight:900;">أجاب <b id="hostAnsweredCount">0</b> من <b>${currentRoom.players.length}</b></span></div>
           <button onclick="ScoreARQuizHost.toggleExplanation()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fbbf24;padding:6px 12px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;">💡 التفسير</button>
         </div>
       </header>
@@ -324,6 +321,11 @@
         <div style="width:100%;max-width:960px;background:rgba(15,23,42,0.85);backdrop-filter:blur(20px);border:2px solid rgba(255,255,255,0.15);border-radius:20px;padding:20px 28px;text-align:center;box-shadow:0 12px 36px rgba(0,0,0,0.5);margin-top:4px;">
           <div style="font-size:11px;font-weight:800;color:#818cf8;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">${isReading ? '📖 اقرأ السؤال بتأمل (مرحلة الاستيعاب)' : '⚡ اختر الإجابة الصحيحة الآن!'}</div>
           <h1 style="font-size:25px;font-weight:900;color:#ffffff;line-height:1.45;margin:0;">${qData.text || qData.q}</h1>
+          ${(qData.imageUrl || qData.img) ? `
+            <div style="display:flex;justify-content:center;margin:8px 0;max-height:160px;">
+              <img src="${qData.imageUrl || qData.img}" alt="${escapeHtml(qData.imageAlt || '')}" style="max-height:160px;max-width:100%;object-fit:contain;border-radius:12px;border:1px solid rgba(255,255,255,0.2);">
+            </div>
+          ` : ''}
         </div>
         ${isReading ? `
           <div style="display:flex;flex-direction:column;align-items:center;margin:24px 0;">
@@ -347,7 +349,7 @@
             const theme = OPTION_THEMES[i % 4];
             return `<div id="hostOptCard_${i}" style="background:${theme.bg};border:2px solid ${theme.border};border-radius:14px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 8px 20px rgba(0,0,0,0.35);transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);position:relative;">
               <div style="display:flex;align-items:center;gap:12px;flex:1;"><span style="font-size:22px;font-weight:900;color:rgba(255,255,255,0.9);">${theme.shape}</span><span style="font-size:18px;font-weight:900;color:#ffffff;line-height:1.3;">${opt}</span></div>
-              <div style="display:flex;align-items:center;gap:8px;"><span id="hostOptBadge_${i}" style="display:none;background:#ffffff;color:#065f46;font-size:12px;font-weight:900;padding:3px 10px;border-radius:10px;">الإجابة النموذجية ✓</span><span id="hostOptCount_${i}" style="background:rgba(0,0,0,0.3);color:#fff;font-size:14px;font-weight:900;padding:4px 10px;border-radius:10px;font-family:monospace;">0</span></div>
+              <div style="display:flex;align-items:center;gap:8px;"><span id="hostOptBadge_${i}" style="display:none;background:#ffffff;color:#065f46;font-size:12px;font-weight:900;padding:3px 10px;border-radius:10px;">الإجابة النموذجية ✓</span><span id="hostOptCount_${i}" style="display:none;background:rgba(0,0,0,0.5);color:#fff;font-size:14px;font-weight:900;padding:4px 10px;border-radius:10px;font-family:monospace;">0</span></div>
             </div>`;
           }).join('')}
         </div>
@@ -376,15 +378,6 @@
     const qIndex = currentQIndex, answers = currentRoom.answers[qIndex] || {};
     const countEl = document.getElementById('hostAnsweredCount');
     if (countEl) countEl.textContent = Object.keys(answers).length;
-
-    const counts = [0, 0, 0, 0];
-    Object.values(answers).forEach(a => {
-      if (a.optionIndex >= 0 && a.optionIndex < 4) counts[a.optionIndex]++;
-    });
-    counts.forEach((c, i) => {
-      const el = document.getElementById(`hostOptCount_${i}`);
-      if (el) el.textContent = c;
-    });
   }
 
   // PHASE 3: Answer Reveal & Feedback (Mark Correct Answer on Host)
@@ -403,14 +396,32 @@
     lastFastestStudent = fastest;
     sfx('correct');
 
+    // Reveal option distribution counts ONLY after answering concludes
+    const counts = [0, 0, 0, 0];
+    Object.values(answers).forEach(a => {
+      if (a.optionIndex >= 0 && a.optionIndex < 4) counts[a.optionIndex]++;
+    });
+    counts.forEach((c, i) => {
+      const el = document.getElementById(`hostOptCount_${i}`);
+      if (el) { el.textContent = `${c} طالب`; el.style.display = 'inline-block'; }
+    });
+
     for (let i = 0; i < 4; i++) {
       const card = document.getElementById(`hostOptCard_${i}`), badge = document.getElementById(`hostOptBadge_${i}`);
       if (card) {
         if (correctIndices.includes(i)) {
-          card.style.transform = 'scale(1.02)'; card.style.boxShadow = '0 0 25px #10b981';
-          card.style.border = '3px solid #ffffff'; card.style.background = '#10b981'; card.style.opacity = '1';
-          if (badge) badge.style.display = 'inline-block';
-        } else { card.style.opacity = '0.28'; card.style.filter = 'grayscale(0.6)'; }
+          card.style.transform = 'scale(1.03)';
+          card.style.boxShadow = '0 0 35px #10b981, 0 0 70px rgba(16,185,129,0.5)';
+          card.style.border = '3px solid #34d399';
+          card.style.background = '#059669';
+          card.style.opacity = '1';
+          if (badge) { badge.style.display = 'inline-block'; badge.innerHTML = 'الإجابة النموذجية ✓'; }
+        } else {
+          card.style.opacity = '0';
+          card.style.transform = 'scale(0.92)';
+          card.style.pointerEvents = 'none';
+          card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+        }
       }
     }
 
@@ -420,7 +431,7 @@
       revealBanner = document.createElement('div');
       revealBanner.id = 'hostRevealBanner';
       revealBanner.style.cssText = 'width:100%;max-width:820px;background:rgba(16,185,129,0.95);border:2px solid #34d399;border-radius:14px;padding:10px 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 8px 24px rgba(16,185,129,0.45);margin-bottom:6px;color:#fff;animation:enterFullBody 0.35s ease;z-index:25;';
-      revealBanner.innerHTML = `<div style="display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">✅</span><div><div style="font-size:15px;font-weight:900;">الإجابة النموذجية الصحيحة: <u>${evalResult.correctAnswerText}</u></div>${fastest ? `<div style="font-size:11px;color:#ecfdf5;font-weight:800;margin-top:2px;">⚡ الأسرع بالإجابة الصح: <b>${fastest.name}</b> خلال <b>${fastest.timeSec} ثانية</b> (+${fastest.points} نقطة)</div>` : '<div style="font-size:11px;color:#ecfdf5;">انتهى وقت الإجابة لهذا السؤال</div>'}</div></div>
+      revealBanner.innerHTML = `<div style="display:flex;align-items:center;gap:12px;"><span style="font-size:24px;">✓</span><div><div style="font-size:15px;font-weight:900;">انتهى وقت الإجابة</div>${fastest ? `<div style="font-size:12px;color:#ecfdf5;font-weight:800;margin-top:2px;">⚡ الأسرع: <b>${fastest.name}</b> خلال <b>${fastest.timeSec} ثانية</b> (+${fastest.points} نقطة)</div>` : ''}</div></div>
         <button id="hostGoLeaderboardBtn" onclick="ScoreARQuizHost.renderHostLeaderboard()" style="background:#ffffff;color:#065f46;border:none;padding:8px 16px;border-radius:10px;font-weight:900;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;"><span>عرض لوحة الصدارة</span><span id="hostAutoCountdownPill" style="background:#10b981;color:#fff;padding:2px 6px;border-radius:6px;font-size:11px;">4s</span><span>➔</span></button>`;
       mainEl.insertBefore(revealBanner, mainEl.children[1]);
     }
@@ -451,34 +462,22 @@
     const box = document.getElementById('hostExplanationBox');
     if (box) box.style.display = (box.style.display === 'none' || !box.style.display) ? 'block' : 'none';
   }
-
   function toggleRoomLock() {
     isRoomLocked = !isRoomLocked;
     const btn = document.getElementById('hostLockBtn');
-    if (btn) {
-      btn.innerHTML = isRoomLocked ? '🔒 القاعة مقفلة' : '🔓 القاعة مفتوحة';
-      btn.style.color = isRoomLocked ? '#ef4444' : '#10b981';
-    }
+    if (btn) { btn.innerHTML = isRoomLocked ? '🔒 القاعة مقفلة' : '🔓 القاعة مفتوحة'; btn.style.color = isRoomLocked ? '#ef4444' : '#10b981'; }
     if (ev()) ev().publishRoomLockState(isRoomLocked);
   }
-
-  // PHASE 4: Leaderboard with World Background & Polished Cards
   function renderHostLeaderboard() {
     if (autoAdvanceTimer) clearInterval(autoAdvanceTimer);
     const stage = getOrCreateStage();
-    if (ev()) {
-      ev().renderHostLeaderboard(stage, currentRoom, activeQuestions, currentQIndex, launchQuestion, renderHostPodium, closeHostSession);
-    }
+    if (ev()) ev().renderHostLeaderboard(stage, currentRoom, activeQuestions, currentQIndex, launchQuestion, renderHostPodium, closeHostSession);
   }
-
-  // PHASE 5: Crowning Ceremony & 3D Champions Podium
   function renderHostPodium() {
     const stage = getOrCreateStage();
-    if (global.ScoreARPodiumEffects && typeof global.ScoreARPodiumEffects.renderHostPodium === 'function') {
+    if (global.ScoreARPodiumEffects?.renderHostPodium) {
       global.ScoreARPodiumEffects.renderHostPodium(stage, currentRoom, closeHostSession);
-    } else if (ev()) {
-      ev().renderHostPodium(stage, currentRoom, closeHostSession);
-    }
+    } else if (ev()) ev().renderHostPodium(stage, currentRoom, closeHostSession);
   }
 
   const ScoreARQuizHost = {

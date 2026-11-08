@@ -21,6 +21,11 @@
   function dispatchIncoming(msg) {
     if (!msg || typeof msg !== 'object') return;
     
+    // Strict leak prevention: Students must NEVER receive or process answers from other students
+    if (currentRole === 'student' && (msg.type === 'STUDENT_ANSWER' || msg._senderRole === 'student' || msg.optionIndex !== undefined)) {
+      return;
+    }
+
     // Ignore messages sent by self
     const isSelf = msg._senderRole && (
       msg._senderRole === currentRole ||

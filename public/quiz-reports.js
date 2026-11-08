@@ -158,6 +158,13 @@
           </div>
         </div>
 
+        <!-- Formula Documentation Banner -->
+        <div style="background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);border-radius:12px;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#c7d2fe;flex-wrap:wrap;gap:8px;">
+          <span style="font-weight:800;">📐 معادلة احتساب النقاط المعتمدة:</span>
+          <code style="background:rgba(0,0,0,0.35);padding:3px 10px;border-radius:6px;color:#fcd34d;font-family:monospace;font-weight:900;">نقاط = الأساس × عامل الزمن × المضاعف</code>
+          <span style="font-size:11px;color:#94a3b8;">(عامل الزمن يتراوح بين 0.5 و 1.0 حسب سرعة الإجابة)</span>
+        </div>
+
         <!-- Sessions List -->
         <div style="display:flex;flex-direction:column;gap:14px;">
           ${cachedSessions.map((s, sIdx) => {

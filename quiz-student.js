@@ -140,11 +140,7 @@
       const txt = document.getElementById('studentTimerText'), bar = document.getElementById('studentProgressBar');
       if (txt) txt.textContent = timeRemaining;
       if (bar) bar.style.width = ((timeRemaining / totalTime) * 100) + '%';
-      if (timeRemaining <= 5 && timeRemaining > 0) {
-        const pill = document.getElementById('studentTimerPill');
-        if (pill) pill.classList.add('timer-hurry-pulse');
-        if (global.ScoreARAudio) global.ScoreARAudio.playSfx('tick');
-      }
+      if (timeRemaining <= 5 && timeRemaining > 0 && global.ScoreARAudio) global.ScoreARAudio.playSfx('tick');
       if (timeRemaining <= 0) {
         clearInterval(qTimerInterval);
         if (!hasAnsweredCurrentQ) disableAllOptionButtons('⏳ انتهى وقت الإجابة! في انتظار نتيجة المعلم...');

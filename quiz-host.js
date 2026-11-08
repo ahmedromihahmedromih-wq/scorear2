@@ -196,7 +196,7 @@
       readingTimeRemaining--;
       const el = document.getElementById('hostReadingCountdownNum'), ring = document.getElementById('hostReadingProgressCircle');
       if (el) el.textContent = readingTimeRemaining;
-      if (ring) ring.style.strokeDashoffset = (301.6 - (301.6 * (10 - readingTimeRemaining) / 10));
+      if (ring) ring.style.strokeDashoffset = (314.16 - (314.16 * (10 - readingTimeRemaining) / 10));
       if (readingTimeRemaining <= 3 && readingTimeRemaining > 0) sfx('tick');
       if (readingTimeRemaining <= 0) {
         clearInterval(readingTimerInterval);

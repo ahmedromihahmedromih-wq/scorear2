@@ -196,6 +196,10 @@
               gapHtml = `<div style="text-align:center;margin:-3px 0;font-size:10px;font-weight:800;color:rgba(255,255,255,0.7);"><span style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);padding:2px 10px;border-radius:10px;">تفصلك ${gap} نقطة عن المركز #${idx}</span></div>`;
             }
 
+            const cleanCode = p.avatarId ? (p.avatarId.startsWith('char_') ? p.avatarId : 'char_' + String(p.avatarId).padStart(2, '0')) : 'char_01';
+            const actionType = (worldId === 'treasure') ? 'climb' : (worldId === 'magic') ? 'fly' : 'run';
+            const actionAtlas = `assets/characters/animated/${cleanCode}-${actionType}.webp`;
+
             return `
               ${gapHtml}
               <div class="race-lane-card" style="animation:raceLaneSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${delaySec}s both;position:relative;background:${theme.bgGradient};border:1.5px solid ${isTop1 ? '#fbbf24' : theme.laneBorder};border-radius:18px;padding:8px 18px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px rgba(0,0,0,0.45);min-height:68px;overflow:hidden;">
@@ -215,8 +219,9 @@
                   </div>
 
                   <div style="position:relative;width:56px;height:58px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;">
-                    <div class="char-procedural-rig" style="animation:charProceduralBounce 1.4s infinite ease-in-out;transform-origin:bottom center;">
-                      <img src="assets/characters/animated/${p.avatarId || 'char_01'}-idle.webp" onerror="this.src='assets/characters/animated/char_01-idle.webp'" alt="${escapeHtml(p.name)}" style="height:52px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.6));display:block;">
+                    <div class="char-procedural-rig scorear-character character-${actionType}" style="--character-action-atlas:url('${actionAtlas}');--character-atlas:url('assets/characters/animated/${cleanCode}-atlas.webp');width:52px;height:52px;animation:charProceduralBounce 1.4s infinite ease-in-out;transform-origin:bottom center;">
+                      <div class="character-frames"></div>
+                      <img src="assets/characters/animated/${cleanCode}-idle.webp" onerror="this.src='assets/characters/animated/char_01-idle.webp'" alt="${escapeHtml(p.name)}" style="height:52px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.6));display:block;">
                     </div>
                     <div style="width:36px;height:7px;background:radial-gradient(ellipse at center, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 70%);border-radius:50%;margin-top:-3px;animation:shadowScale 1.4s infinite ease-in-out;"></div>
                   </div>

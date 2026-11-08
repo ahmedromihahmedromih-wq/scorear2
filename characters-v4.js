@@ -15,7 +15,20 @@
   ];
   const list = rows.map(([name,title,category,accent],i)=>{
     const id=i+1,code='char_'+String(id).padStart(2,'0');
-    return {id,code,name,title,category,accent,image:base+code+'-idle.webp',avatarUrl:base+code+'-idle.webp',fullUrl:base+code+'-idle.webp',atlas:base+code+'-atlas.webp',world:'royal',worldName:'عالم المعرفة',stats:{iq:90,speed:90,focus:90,luck:90},ability:'مظهر اختياري؛ لا يغيّر النقاط أو فرص الفوز',lore:'رفيقك في رحلة التعلم والمنافسة. اختر الشخصية التي تعبّر عنك.',color:'bg-purple-500/20 text-purple-300 border-purple-400'};
+    return {
+      id,code,name,title,category,accent,
+      image:base+code+'-idle.webp',
+      avatarUrl:base+code+'-idle.webp',
+      fullUrl:'assets/characters/'+code+'_full.webp',
+      atlas:base+code+'-atlas.webp',
+      runAtlas:base+code+'-run.webp',
+      climbAtlas:base+code+'-climb.webp',
+      flyAtlas:base+code+'-fly.webp',
+      world:'royal',worldName:'عالم المعرفة',stats:{iq:90,speed:90,focus:90,luck:90},
+      ability:'مظهر اختياري؛ لا يغيّر النقاط أو فرص الفوز',
+      lore:'رفيقك في رحلة التعلم والمنافسة. اختر الشخصية التي تعبّر عنك.',
+      color:'bg-purple-500/20 text-purple-300 border-purple-400'
+    };
   });
   function get(id){
     if (!id && id !== 0) return list[0];

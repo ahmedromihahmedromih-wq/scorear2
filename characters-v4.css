@@ -1,10 +1,16 @@
 .scorear-character{position:relative;display:block;width:100%;height:100%;min-height:24px;aspect-ratio:4/5;isolation:isolate}
 .scorear-character>img,.character-frames{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .character-frames{display:none;background-image:var(--character-atlas);background-size:400% 100%;background-repeat:no-repeat}
-.character-walk>img,.character-celebrate>img{visibility:hidden}
+.character-walk>img,.character-celebrate>img,.character-run>img,.character-climb>img,.character-fly>img{visibility:hidden}
 .character-podium-hero img,.podium-pedestal .scorear-character>img,.podium-pedestal img{visibility:visible!important;display:block!important}
 .character-walk>.character-frames{display:block;animation:character-walk-frames .85s steps(1,end) infinite}
 .character-celebrate>.character-frames{display:block;background-position:100% 0;animation:character-joy 1.1s ease-in-out infinite}
+.character-run>.character-frames{display:block;background-image:var(--character-action-atlas, var(--character-atlas));animation:character-run-frames .65s steps(1,end) infinite}
+.character-climb>.character-frames{display:block;background-image:var(--character-action-atlas, var(--character-atlas));animation:character-climb-frames .95s steps(1,end) infinite}
+.character-fly>.character-frames{display:block;background-image:var(--character-action-atlas, var(--character-atlas));animation:character-fly-frames 1.15s steps(1,end) infinite}
+@keyframes character-run-frames{0%{background-position:0% 0}25%{background-position:33.333333% 0}50%{background-position:66.666667% 0}75%{background-position:100% 0}}
+@keyframes character-climb-frames{0%{background-position:0% 0}25%{background-position:33.333333% 0}50%{background-position:66.666667% 0}75%{background-position:100% 0}}
+@keyframes character-fly-frames{0%{background-position:0% 0}25%{background-position:33.333333% 0}50%{background-position:66.666667% 0}75%{background-position:100% 0}}
 @keyframes character-walk-frames{0%,100%{background-position:33.333333% 0}50%{background-position:66.666667% 0}}
 @keyframes character-joy{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-7px) rotate(2deg)}}
 .characters-background .character-frames{animation-play-state:paused}

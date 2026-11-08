@@ -49,8 +49,14 @@
     return list[0];
   }
   function render(id,state='idle'){
-    const c=get(id);state=['idle','walk','celebrate'].includes(state)?state:'idle';
-    return '<span class="scorear-character character-'+state+'" role="img" aria-label="'+c.name+'" style="--character-atlas:url(\''+c.atlas+'\')"><img src="'+c.image+'" alt="" loading="lazy" decoding="async"><span class="character-frames" aria-hidden="true"></span></span>';
+    const c=get(id);
+    const valid=['idle','walk','celebrate','run','climb','fly'];
+    state=valid.includes(state)?state:'idle';
+    let actAtlas = c.atlas;
+    if (state === 'run') actAtlas = c.runAtlas || c.atlas;
+    else if (state === 'climb') actAtlas = c.climbAtlas || c.atlas;
+    else if (state === 'fly') actAtlas = c.flyAtlas || c.atlas;
+    return '<span class="scorear-character character-'+state+'" role="img" aria-label="'+c.name+'" style="--character-atlas:url(\''+c.atlas+'\');--character-action-atlas:url(\''+actAtlas+'\')"><img src="'+c.image+'" alt="" loading="lazy" decoding="async"><span class="character-frames" aria-hidden="true"></span></span>';
   }
   list.forEach(c=>{c.svg=render(c.id);c.fullSvg=render(c.id,'walk');});
   let paused=false;

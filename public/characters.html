@@ -9,9 +9,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261106_c2">
-<link rel="stylesheet" href="characters-v4.css?v=20261106_c2">
-<script src="characters-v4.js?v=20261106_c2"></script>
+<link rel="stylesheet" href="styles.css?v=20261108_b4_motion">
+<link rel="stylesheet" href="characters-v4.css?v=20261108_b4_motion">
+<script src="characters-v4.js?v=20261108_b4_motion"></script>
 <script src="nav.js?v=20261107_c16" defer></script>
 <style>
   body {
@@ -251,7 +251,7 @@
   <div class="gallery-title-area">
     <div class="eyebrow" style="margin-bottom:8px;">قاعة الأبطال الكرتونية</div>
     <h1>لكل بطل حكاية.. وهنا تبدأ مغامرتك.</h1>
-    <p>٢٠ شخصية كرتونية أصلية بجسم كامل وتفاعل حي. جرّب أوضاع الوقوف، المشي، والاحتفال، واختر رفيقك لتحديات الفصل القادمة.</p>
+    <p>٢٠ شخصية كرتونية أصلية بجسم كامل وتفاعل حي. جرّب أوضاع الوقوف، المشي، الاحتفال، الجري، التسلق، والطيران، واختر رفيقك لتحديات الفصل القادمة.</p>
   </div>
 
   <div class="character-picker">
@@ -265,6 +265,9 @@
         <button type="button" data-character-pose="idle" onclick="ScoreARCharacters.preview(window.gallerySelected,'idle')">🧍 وقوف</button>
         <button type="button" data-character-pose="walk" onclick="ScoreARCharacters.preview(window.gallerySelected,'walk')">🚶 مشي</button>
         <button type="button" data-character-pose="celebrate" onclick="ScoreARCharacters.preview(window.gallerySelected,'celebrate')">🎉 احتفال</button>
+        <button type="button" data-character-pose="run" onclick="ScoreARCharacters.preview(window.gallerySelected,'run')">🏃‍♂️ جري</button>
+        <button type="button" data-character-pose="climb" onclick="ScoreARCharacters.preview(window.gallerySelected,'climb')">🧗‍♂️ تسلق</button>
+        <button type="button" data-character-pose="fly" onclick="ScoreARCharacters.preview(window.gallerySelected,'fly')">🦅 طيران</button>
       </div>
       <button type="button" class="character-motion" data-character-motion onclick="ScoreARCharacters.toggleMotion()" style="margin-top:14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);padding:8px 16px;border-radius:10px;color:#ddd8ff;cursor:pointer;">إيقاف الحركة</button>
     </aside>

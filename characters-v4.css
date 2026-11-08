@@ -2,7 +2,8 @@
 .scorear-character>img,.character-frames{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .character-frames{display:none;background-image:var(--character-atlas);background-size:400% 100%;background-repeat:no-repeat}
 .character-walk>img,.character-celebrate>img,.character-run>img,.character-climb>img,.character-fly>img{visibility:hidden}
-.character-podium-hero img,.podium-pedestal .scorear-character>img,.podium-pedestal img{visibility:visible!important;display:block!important}
+.character-podium-hero .character-celebrate>img,.character-podium-hero .character-run>img,.character-podium-hero .character-climb>img,.character-podium-hero .character-fly>img{visibility:hidden!important}
+.character-podium-hero .character-celebrate>.character-frames,.character-podium-hero .character-run>.character-frames,.character-podium-hero .character-climb>.character-frames,.character-podium-hero .character-fly>.character-frames{display:block!important}
 .character-walk>.character-frames{display:block;animation:character-walk-frames .85s steps(1,end) infinite}
 .character-celebrate>.character-frames{display:block;background-position:100% 0;animation:character-joy 1.1s ease-in-out infinite}
 .character-run>.character-frames{display:block;background-image:var(--character-action-atlas, var(--character-atlas));animation:character-run-frames .65s steps(1,end) infinite}

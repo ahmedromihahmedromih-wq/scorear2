@@ -718,10 +718,13 @@ function renderHeroesPage(){
         <div id="studentCustomPreviewBox" style="width:220px;height:280px;margin:8px auto;display:flex;align-items:center;justify-content:center;"></div>
         <div id="studentCustomPreviewTitle" aria-live="polite" style="margin-top:10px;"></div>
         
-        <div class="character-controls" aria-label="تجربة الحركة" style="margin-top:16px;display:flex;gap:6px;justify-content:center;">
+        <div class="character-controls" aria-label="تجربة الحركة" style="margin-top:16px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
           <button type="button" class="btn light small" data-character-pose="idle" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'idle')">🧍 وقوف</button>
           <button type="button" class="btn light small" data-character-pose="walk" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'walk')">🚶 مشي</button>
           <button type="button" class="btn light small" data-character-pose="celebrate" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'celebrate')">🎉 احتفال</button>
+          <button type="button" class="btn light small" data-character-pose="run" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'run')">🏃‍♂️ جري</button>
+          <button type="button" class="btn light small" data-character-pose="climb" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'climb')">🧗‍♂️ تسلق</button>
+          <button type="button" class="btn light small" data-character-pose="fly" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'fly')">🦅 طيران</button>
         </div>
       </aside>
 

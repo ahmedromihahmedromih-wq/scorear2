@@ -20,6 +20,7 @@
   let revealStep = 0; // 0: hidden, 1: 3rd, 2: 2nd, 3: 1st, 4: full roster
   let currentPodiumPlayers = [], currentPodiumRoom = null;
   let activeAnimationId = null, activeCanvas = null;
+  let currentHeroPose = 'celebrate';
 
   // --- 1. World Canvas Particles Engine ---
   function initWorldCanvas(canvasEl, worldId) {
@@ -85,11 +86,20 @@
     magic: `<div id="climaxMagicCircle" style="position:absolute;top:60%;left:50%;transform:translate(-50%,-50%);z-index:5;pointer-events:none;opacity:0;transition:opacity 0.6s;"><svg width="280" height="280" viewBox="0 0 280 280" style="animation:spellCircleSpin 8s linear infinite;"><circle cx="140" cy="140" r="120" stroke="#c084fc" stroke-width="2" stroke-dasharray="8 6"/><polygon points="140,30 240,200 40,200" stroke="#fef08a" stroke-width="2" fill="none"/><polygon points="140,250 40,80 240,80" stroke="#38bdf8" stroke-width="2" fill="none"/></svg></div>`
   };
 
-  function renderHero(avatarId, name) {
+  function renderHero(avatarId, name, pose = 'celebrate') {
     const num = Math.max(1, Math.min(20, parseInt(String(avatarId || '1').replace(/\D/g, '') || '1', 10)));
     const code = 'char_' + String(num).padStart(2, '0');
-    return `<div class="character-podium-hero" style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;filter:drop-shadow(0 14px 24px rgba(0,0,0,0.7));">
-      <img src="assets/characters/animated/${code}-idle.webp" onerror="this.src='assets/characters/animated/char_01-idle.webp'" alt="${escapeHtml(name||'البطل')}" style="max-height:100%;max-width:100%;object-fit:contain;animation:character-joy 1.1s ease-in-out infinite;">
+    const atlas = `assets/characters/animated/${code}-atlas.webp`;
+    const actionAtlas = pose === 'climb' ? `assets/characters/animated/${code}-climb.webp`
+      : pose === 'fly' ? `assets/characters/animated/${code}-fly.webp`
+      : pose === 'run' ? `assets/characters/animated/${code}-run.webp`
+      : atlas;
+    const charName = (global.ScoreARCharacters && global.ScoreARCharacters.get) ? global.ScoreARCharacters.get(num)?.name : (name || 'البطل');
+    return `<div class="character-podium-hero" style="width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;filter:drop-shadow(0 16px 28px rgba(0,0,0,0.75));">
+      <div class="scorear-character character-${pose}" role="img" aria-label="${escapeHtml(charName)}" style="--character-atlas:url('${atlas}');--character-action-atlas:url('${actionAtlas}');width:100%;height:100%;">
+        <span class="character-frames" aria-hidden="true"></span>
+        <img src="assets/characters/animated/${code}-idle.webp" onerror="this.src='assets/characters/animated/char_01-idle.webp'" alt="${escapeHtml(charName)}" style="max-height:100%;max-width:100%;object-fit:contain;">
+      </div>
     </div>`;
   }
 
@@ -134,32 +144,37 @@
             <!-- 2nd (Silver) -->
             <div id="podiumCol_2" style="display:flex;flex-direction:column;align-items:center;">
               <div id="podiumHeroArea_2" style="display:none;opacity:0;transform:translateY(35px) scale(0.7);transition:all 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);flex-direction:column;align-items:center;">
-                <div style="height:195px;width:155px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:8px;">${renderHero(p2.avatarId, p2.name)}</div>
+                <div style="height:195px;width:155px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:8px;">${renderHero(p2.avatarId, p2.name, currentHeroPose)}</div>
                 <div style="background:rgba(15,23,42,0.95);border:2px solid #cbd5e1;border-radius:14px;padding:6px 16px;color:#fff;font-size:14px;font-weight:900;margin-bottom:8px;max-width:155px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🥈 ${escapeHtml(p2.name)}</div>
               </div>
-              <div id="podiumPedestal_2" style="width:155px;height:95px;background:linear-gradient(180deg, #94a3b8, #475569);border-top-left-radius:18px;border-top-right-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.3);border-bottom:none;box-shadow:0 10px 24px rgba(0,0,0,0.6);">
-                <div style="font-size:28px;">🥈</div><div id="podiumMystery_2" style="font-size:12px;font-weight:900;color:#e2e8f0;background:rgba(0,0,0,0.35);padding:3px 10px;border-radius:10px;margin-top:4px;">❓ من البطل؟</div>
+              <div id="podiumPedestal_2" style="width:165px;height:105px;background:linear-gradient(180deg, #94a3b8, #334155);border-top-left-radius:20px;border-top-right-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2.5px solid #e2e8f0;border-bottom:none;box-shadow:0 0 25px rgba(148,163,184,0.4), 0 14px 30px rgba(0,0,0,0.8);position:relative;">
+                <div style="position:absolute;top:-10px;width:75%;height:8px;background:radial-gradient(ellipse, #ffffff, transparent);border-radius:50%;filter:blur(2px);"></div>
+                <div style="font-size:30px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.5));">🥈</div><div id="podiumMystery_2" style="font-size:12px;font-weight:900;color:#e2e8f0;background:rgba(0,0,0,0.35);padding:3px 10px;border-radius:10px;margin-top:4px;">❓ من البطل؟</div>
               </div>
             </div>
             <!-- 1st (Gold) -->
             <div id="podiumCol_1" style="display:flex;flex-direction:column;align-items:center;">
               <div id="podiumHeroArea_1" style="display:none;opacity:0;transform:translateY(45px) scale(0.7);transition:all 0.75s cubic-bezier(0.34, 1.56, 0.64, 1);flex-direction:column;align-items:center;">
-                <div id="championCrownEl" style="font-size:36px;margin-bottom:-10px;z-index:2;animation:crownDescend 0.8s ease-out;">👑</div>
-                <div style="height:225px;width:175px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:8px;">${renderHero(p1.avatarId, p1.name)}</div>
-                <div style="background:rgba(15,23,42,0.95);border:2px solid #f59e0b;border-radius:14px;padding:8px 18px;color:#fff;font-size:16px;font-weight:900;margin-bottom:8px;max-width:175px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🥇 ${escapeHtml(p1.name)}</div>
+                <div style="height:250px;width:190px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:8px;position:relative;">
+                  <div id="championCrownEl" style="position:absolute;top:-25px;font-size:38px;z-index:2;visibility:hidden;filter:drop-shadow(0 0 16px #fef08a);animation:crownDescend 0.8s ease-out;">👑</div>
+                  ${renderHero(p1.avatarId, p1.name, currentHeroPose)}
+                </div>
+                <div style="background:rgba(15,23,42,0.95);border:2px solid #f59e0b;border-radius:14px;padding:8px 18px;color:#fff;font-size:16px;font-weight:900;margin-bottom:8px;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🥇 ${escapeHtml(p1.name)}</div>
               </div>
-              <div id="podiumPedestal_1" style="width:175px;height:125px;background:linear-gradient(180deg, #f59e0b, #b45309);border-top-left-radius:20px;border-top-right-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2.5px solid #fef08a;border-bottom:none;box-shadow:0 12px 30px rgba(0,0,0,0.7);">
-                <div style="font-size:34px;">🥇</div><div id="podiumMystery_1" style="font-size:13px;font-weight:900;color:#fef3c7;background:rgba(0,0,0,0.35);padding:4px 12px;border-radius:10px;margin-top:4px;">❓ بطل الأبطال</div>
+              <div id="podiumPedestal_1" style="width:190px;height:135px;background:linear-gradient(180deg, #f59e0b, #92400e);border-top-left-radius:22px;border-top-right-radius:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:3px solid #fef08a;border-bottom:none;box-shadow:0 0 35px rgba(245,158,11,0.5), 0 16px 36px rgba(0,0,0,0.8);position:relative;">
+                <div style="position:absolute;top:-12px;width:75%;height:10px;background:radial-gradient(ellipse, #fef08a, transparent);border-radius:50%;filter:blur(2px);"></div>
+                <div style="font-size:36px;filter:drop-shadow(0 4px 10px rgba(0,0,0,0.5));">🥇</div><div id="podiumMystery_1" style="font-size:13px;font-weight:900;color:#fef3c7;background:rgba(0,0,0,0.35);padding:4px 12px;border-radius:10px;margin-top:4px;">❓ بطل الأبطال</div>
               </div>
             </div>
             <!-- 3rd (Bronze) -->
             <div id="podiumCol_3" style="display:flex;flex-direction:column;align-items:center;">
               <div id="podiumHeroArea_3" style="display:none;opacity:0;transform:translateY(35px) scale(0.7);transition:all 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);flex-direction:column;align-items:center;">
-                <div style="height:175px;width:145px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:8px;">${renderHero(p3.avatarId, p3.name)}</div>
+                <div style="height:175px;width:145px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:8px;">${renderHero(p3.avatarId, p3.name, currentHeroPose)}</div>
                 <div style="background:rgba(15,23,42,0.95);border:2px solid #d97706;border-radius:14px;padding:6px 14px;color:#fff;font-size:14px;font-weight:900;margin-bottom:8px;max-width:145px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🥉 ${escapeHtml(p3.name)}</div>
               </div>
-              <div id="podiumPedestal_3" style="width:145px;height:75px;background:linear-gradient(180deg, #d97706, #78350f);border-top-left-radius:18px;border-top-right-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.3);border-bottom:none;box-shadow:0 10px 24px rgba(0,0,0,0.6);">
-                <div style="font-size:26px;">🥉</div><div id="podiumMystery_3" style="font-size:12px;font-weight:900;color:#fed7aa;background:rgba(0,0,0,0.35);padding:3px 10px;border-radius:10px;margin-top:4px;">❓ من البطل؟</div>
+              <div id="podiumPedestal_3" style="width:155px;height:85px;background:linear-gradient(180deg, #d97706, #451a03);border-top-left-radius:20px;border-top-right-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2.5px solid #fed7aa;border-bottom:none;box-shadow:0 0 25px rgba(217,119,6,0.4), 0 14px 30px rgba(0,0,0,0.8);position:relative;">
+                <div style="position:absolute;top:-10px;width:75%;height:8px;background:radial-gradient(ellipse, #fed7aa, transparent);border-radius:50%;filter:blur(2px);"></div>
+                <div style="font-size:28px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.5));">🥉</div><div id="podiumMystery_3" style="font-size:12px;font-weight:900;color:#fed7aa;background:rgba(0,0,0,0.35);padding:3px 10px;border-radius:10px;margin-top:4px;">❓ من البطل؟</div>
               </div>
             </div>
           </div>
@@ -167,13 +182,22 @@
 
         <div style="display:flex;flex-direction:column;align-items:center;gap:10px;margin:12px 0;z-index:30;">
           <div id="podiumPromptText" style="font-size:13px;color:#fcd34d;font-weight:800;">👇 اضغط هنا لكشف الأبطال وتتويج الفائزين بالترتيب</div>
-          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center;">
             <button id="podiumRevealBtn" type="button" onclick="ScoreARPodiumEffects.advanceReveal()" style="background:linear-gradient(135deg, #f59e0b, #d97706);color:#fff;font-size:15px;font-weight:900;border:none;border-radius:16px;padding:12px 28px;cursor:pointer;box-shadow:0 6px 24px rgba(245,158,11,0.5);"><span>🥉 كشف صاحب المركز الثالث</span></button>
             <button id="podiumRevealAllBtn" type="button" onclick="ScoreARPodiumEffects.revealAll()" style="background:rgba(255,255,255,0.12);color:#f1f5f9;font-size:13px;font-weight:800;border:1px solid rgba(255,255,255,0.25);border-radius:14px;padding:10px 18px;cursor:pointer;">⚡ كشف وتتويج الجميع فوراً</button>
             <div id="podiumExportButtonsGroup" style="display:none;gap:10px;">
               <button onclick="ScoreARPodiumEffects.triggerSnapshot()" style="background:linear-gradient(135deg, #0ea5e9, #0284c7);color:#fff;font-size:13px;font-weight:900;border:none;border-radius:14px;padding:10px 16px;cursor:pointer;">📸 التقط الصورة</button>
               <button onclick="ScoreARPodiumEffects.triggerCertificates()" style="background:linear-gradient(135deg, #8b5cf6, #7c3aed);color:#fff;font-size:13px;font-weight:900;border:none;border-radius:14px;padding:10px 16px;cursor:pointer;">🎓 شهادات التقدير</button>
             </div>
+            <div id="podiumMotionGroup" style="display:flex;gap:6px;align-items:center;background:rgba(15,23,42,0.85);padding:6px 12px;border-radius:14px;border:1px solid rgba(255,255,255,0.18);">
+              <span style="font-size:11px;font-weight:900;color:#c9baff;">الحركة:</span>
+              <button type="button" data-podium-motion="celebrate" aria-pressed="true" onclick="ScoreARPodiumEffects.setHeroPose('celebrate')" style="background:rgba(82,217,237,0.25);border:1px solid #52d9ed;color:#fff;padding:4px 8px;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;">🎉 احتفال</button>
+              <button type="button" data-podium-motion="run" aria-pressed="false" onclick="ScoreARPodiumEffects.setHeroPose('run')" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:4px 8px;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;">🏃‍♂️ جري</button>
+              <button type="button" data-podium-motion="climb" aria-pressed="false" onclick="ScoreARPodiumEffects.setHeroPose('climb')" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:4px 8px;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;">🧗‍♂️ تسلق</button>
+              <button type="button" data-podium-motion="fly" aria-pressed="false" onclick="ScoreARPodiumEffects.setHeroPose('fly')" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:4px 8px;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;">🦅 طيران</button>
+            </div>
+          </div>
+        </div>
           </div>
         </div>
 
@@ -222,37 +246,32 @@
 
     if (revealStep === 1) {
       if (rig && !isRed) rig.style.transform = 'scale(1.15) translate(-10%, 4%)';
-      playTicking(() => {
-        sfx('reveal');
-        const h3 = document.getElementById('podiumHeroArea_3'), m3 = document.getElementById('podiumMystery_3');
-        if (h3) { h3.style.display = 'flex'; h3.offsetHeight; h3.style.opacity = '1'; h3.style.transform = 'translateY(0) scale(1)'; }
-        if (m3) { m3.innerHTML = `<b style="font-size:17px;color:#fed7aa;font-family:monospace;">${currentPodiumPlayers[2]?.score || 0}</b> <span style="font-size:10px;">نقطة</span>`; m3.style.background = 'rgba(217,119,6,0.45)'; }
-        if (btn) btn.innerHTML = `<span>🥈 كشف صاحب المركز الثاني</span>`;
-      });
+      sfx('tick'); setTimeout(() => sfx('reveal'), 50);
+      const h3 = document.getElementById('podiumHeroArea_3'), m3 = document.getElementById('podiumMystery_3');
+      if (h3) { h3.style.display = 'flex'; h3.offsetHeight; h3.style.opacity = '1'; h3.style.transform = 'translateY(0) scale(1)'; }
+      if (m3) { m3.innerHTML = `<b style="font-size:17px;color:#fed7aa;font-family:monospace;">${currentPodiumPlayers[2]?.score || 0}</b> <span style="font-size:10px;">نقطة</span>`; m3.style.background = 'rgba(217,119,6,0.45)'; }
+      if (btn) btn.innerHTML = `<span>🥈 كشف صاحب المركز الثاني</span>`;
     } else if (revealStep === 2) {
       if (rig && !isRed) rig.style.transform = 'scale(1.15) translate(10%, 4%)';
-      playTicking(() => {
-        sfx('reveal');
-        const h2 = document.getElementById('podiumHeroArea_2'), m2 = document.getElementById('podiumMystery_2');
-        if (h2) { h2.style.display = 'flex'; h2.offsetHeight; h2.style.opacity = '1'; h2.style.transform = 'translateY(0) scale(1)'; }
-        if (m2) { m2.innerHTML = `<b style="font-size:19px;color:#f1f5f9;font-family:monospace;">${currentPodiumPlayers[1]?.score || 0}</b> <span style="font-size:10px;">نقطة</span>`; m2.style.background = 'rgba(148,163,184,0.45)'; }
-        if (btn) { btn.innerHTML = `<span>👑 كشف بطل القاعة المتوج (المركز الأول) 🏆</span>`; btn.style.background = 'linear-gradient(135deg, #10b981, #059669)'; }
-      });
+      sfx('tick'); setTimeout(() => sfx('reveal'), 50);
+      const h2 = document.getElementById('podiumHeroArea_2'), m2 = document.getElementById('podiumMystery_2');
+      if (h2) { h2.style.display = 'flex'; h2.offsetHeight; h2.style.opacity = '1'; h2.style.transform = 'translateY(0) scale(1)'; }
+      if (m2) { m2.innerHTML = `<b style="font-size:19px;color:#f1f5f9;font-family:monospace;">${currentPodiumPlayers[1]?.score || 0}</b> <span style="font-size:10px;">نقطة</span>`; m2.style.background = 'rgba(148,163,184,0.45)'; }
+      if (btn) { btn.innerHTML = `<span>👑 كشف بطل القاعة المتوج (المركز الأول) 🏆</span>`; btn.style.background = 'linear-gradient(135deg, #10b981, #059669)'; }
     } else if (revealStep === 3) {
       if (rig && !isRed) rig.style.transform = 'scale(1.22) translate(0, -3%)';
-      playTicking(() => {
-        sfx('fanfare'); setTimeout(() => sfx('reveal'), 200);
-        const h1 = document.getElementById('podiumHeroArea_1'), m1 = document.getElementById('podiumMystery_1');
-        if (h1) { h1.style.display = 'flex'; h1.offsetHeight; h1.style.opacity = '1'; h1.style.transform = 'translateY(0) scale(1)'; }
-        if (m1) { m1.innerHTML = `<b style="font-size:24px;color:#fef3c7;font-family:monospace;">${currentPodiumPlayers[0]?.score || 0}</b> <span style="font-size:11px;">نقطة</span>`; m1.style.background = 'rgba(245,158,11,0.55)'; }
-        const worldId = currentPodiumRoom?.world?.id || currentPodiumRoom?.worldId || 'royal';
-        triggerWorldClimax(worldId);
-        if (global.confetti) global.confetti({ particleCount: 180, spread: 120, origin: { y: 0.55 } });
-        document.getElementById('podiumExportButtonsGroup')?.style.setProperty('display', 'flex');
-        document.getElementById('podiumRevealAllBtn')?.style.setProperty('display', 'none');
-        document.getElementById('podiumPromptText')?.style.setProperty('display', 'none');
-        if (btn) { btn.innerHTML = `<span>📋 كشف الترتيب النهائي</span>`; btn.style.background = 'linear-gradient(135deg, #6366f1, #4f46e5)'; }
-      });
+      sfx('fanfare'); setTimeout(() => sfx('reveal'), 80);
+      const h1 = document.getElementById('podiumHeroArea_1'), m1 = document.getElementById('podiumMystery_1'), crown = document.getElementById('championCrownEl');
+      if (h1) { h1.style.display = 'flex'; h1.offsetHeight; h1.style.opacity = '1'; h1.style.transform = 'translateY(0) scale(1)'; }
+      if (crown) crown.style.visibility = 'visible';
+      if (m1) { m1.innerHTML = `<b style="font-size:24px;color:#fef3c7;font-family:monospace;">${currentPodiumPlayers[0]?.score || 0}</b> <span style="font-size:11px;">نقطة</span>`; m1.style.background = 'rgba(245,158,11,0.55)'; }
+      const worldId = currentPodiumRoom?.world?.id || currentPodiumRoom?.worldId || 'royal';
+      triggerWorldClimax(worldId);
+      if (global.confetti) global.confetti({ particleCount: 180, spread: 120, origin: { y: 0.55 } });
+      document.getElementById('podiumExportButtonsGroup')?.style.setProperty('display', 'flex');
+      document.getElementById('podiumRevealAllBtn')?.style.setProperty('display', 'none');
+      document.getElementById('podiumPromptText')?.style.setProperty('display', 'none');
+      if (btn) { btn.innerHTML = `<span>📋 كشف الترتيب النهائي</span>`; btn.style.background = 'linear-gradient(135deg, #6366f1, #4f46e5)'; }
     } else if (revealStep >= 4) {
       if (rig) rig.style.transform = 'scale(1) translate(0, 0)';
       const roster = document.getElementById('podiumFullRosterSection');
@@ -278,8 +297,54 @@
     }
   }
 
+  function setHeroPose(pose) {
+    const valid = ['celebrate', 'run', 'climb', 'fly', 'idle'];
+    const p = valid.includes(pose) ? pose : 'celebrate';
+    currentHeroPose = p;
+    [1, 2, 3].forEach(rank => {
+      const heroArea = document.getElementById(`podiumHeroArea_${rank}`);
+      if (!heroArea) return;
+      const player = currentPodiumPlayers[rank === 1 ? 0 : rank === 2 ? 1 : 2];
+      if (player) {
+        const box = heroArea.firstElementChild;
+        if (box) box.innerHTML = renderHero(player.avatarId, player.name, p);
+      }
+    });
+    document.querySelectorAll('[data-podium-motion]').forEach(b => {
+      const active = (b.dataset.podiumMotion === p);
+      b.setAttribute('aria-pressed', String(active));
+      b.style.background = active ? 'rgba(82, 217, 237, 0.25)' : 'rgba(255,255,255,0.08)';
+      b.style.borderColor = active ? '#52d9ed' : 'rgba(255,255,255,0.2)';
+    });
+    if (global.ScoreARAudio?.playSfx) global.ScoreARAudio.playSfx(p === 'celebrate' ? 'fanfare' : 'tick');
+  }
+
   function revealAll() {
-    while (revealStep < 3) advanceReveal();
+    revealStep = 3;
+    const rig = document.getElementById('podiumCameraRig');
+    if (rig) rig.style.transform = 'scale(1) translate(0, 0)';
+    sfx('fanfare');
+    const h3 = document.getElementById('podiumHeroArea_3'), m3 = document.getElementById('podiumMystery_3');
+    if (h3) { h3.style.display = 'flex'; h3.style.opacity = '1'; h3.style.transform = 'translateY(0) scale(1)'; }
+    if (m3) { m3.innerHTML = `<b style="font-size:17px;color:#fed7aa;font-family:monospace;">${currentPodiumPlayers[2]?.score || 0}</b> <span style="font-size:10px;">نقطة</span>`; m3.style.background = 'rgba(217,119,6,0.45)'; }
+    const h2 = document.getElementById('podiumHeroArea_2'), m2 = document.getElementById('podiumMystery_2');
+    if (h2) { h2.style.display = 'flex'; h2.style.opacity = '1'; h2.style.transform = 'translateY(0) scale(1)'; }
+    if (m2) { m2.innerHTML = `<b style="font-size:19px;color:#f1f5f9;font-family:monospace;">${currentPodiumPlayers[1]?.score || 0}</b> <span style="font-size:10px;">نقطة</span>`; m2.style.background = 'rgba(148,163,184,0.45)'; }
+    const h1 = document.getElementById('podiumHeroArea_1'), m1 = document.getElementById('podiumMystery_1'), crown = document.getElementById('championCrownEl');
+    if (h1) { h1.style.display = 'flex'; h1.style.opacity = '1'; h1.style.transform = 'translateY(0) scale(1)'; }
+    if (crown) crown.style.visibility = 'visible';
+    if (m1) { m1.innerHTML = `<b style="font-size:24px;color:#fef3c7;font-family:monospace;">${currentPodiumPlayers[0]?.score || 0}</b> <span style="font-size:11px;">نقطة</span>`; m1.style.background = 'rgba(245,158,11,0.55)'; }
+    const worldId = currentPodiumRoom?.world?.id || currentPodiumRoom?.worldId || 'royal';
+    triggerWorldClimax(worldId);
+    if (global.confetti) global.confetti({ particleCount: 200, spread: 130, origin: { y: 0.55 } });
+    document.getElementById('podiumExportButtonsGroup')?.style.setProperty('display', 'flex');
+    document.getElementById('podiumRevealAllBtn')?.style.setProperty('display', 'none');
+    document.getElementById('podiumPromptText')?.style.setProperty('display', 'none');
+    const btn = document.getElementById('podiumRevealBtn');
+    if (btn) {
+      btn.innerHTML = `<span>📋 كشف الترتيب النهائي</span>`;
+      btn.style.background = 'linear-gradient(135deg, #6366f1, #4f46e5)';
+    }
   }
 
   function toggleAudioMute() {
@@ -315,7 +380,7 @@
   }
 
   const ScoreARPodiumEffects = {
-    renderHostPodium, advanceReveal, revealAll, toggleAudioMute, triggerSnapshot, triggerCertificates, handleStudentReaction, initWorldCanvas
+    renderHostPodium, advanceReveal, revealAll, setHeroPose, toggleAudioMute, triggerSnapshot, triggerCertificates, handleStudentReaction, initWorldCanvas
   };
 
   global.ScoreARPodiumEffects = ScoreARPodiumEffects;

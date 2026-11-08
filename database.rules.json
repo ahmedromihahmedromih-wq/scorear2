@@ -53,8 +53,7 @@
               ".write": "auth != null && !data.exists() && auth.uid === $playerId",
               ".validate": "newData.hasChildren(['optionIndex', 'ts'])",
               "optionIndex": { ".validate": "newData.isNumber()" },
-              "ts": { ".validate": "newData.isNumber()" },
-              "timeRemaining": { ".validate": "newData.isNumber()" },
+              "ts": { ".validate": "newData.val() === now" },
               "$other": { ".validate": false }
             }
           }

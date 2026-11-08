@@ -297,7 +297,6 @@
     removeQuestionImage,
     updateImageAlt
   };
-  };
 
   global.ScoreARQuizBuilderMedia = ScoreARQuizBuilderMedia;
   try { if (typeof globalThis !== 'undefined') globalThis.ScoreARQuizBuilderMedia = ScoreARQuizBuilderMedia; } catch(e){}

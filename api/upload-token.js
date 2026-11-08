@@ -1,7 +1,7 @@
 /**
  * ScoreAR Serverless API: /api/upload-token
- * Item 8 & 9 & Review Item 3 & 7: Vercel Blob client upload token generation,
- * direct upload, orphan image deletion with firebase-admin verifyIdToken(token, true).
+ * Items 3, 4, 5 & 8: Vercel Blob client upload token generation,
+ * direct upload, and teacher-isolated orphan image deletion.
  * Strictly Rule 7 Compliant (<500 lines).
  */
 import { getApps, initializeApp, cert } from 'firebase-admin/app';
@@ -9,52 +9,54 @@ import { getAuth } from 'firebase-admin/auth';
 import { put, del } from '@vercel/blob';
 import { handleUpload } from '@vercel/blob/client';
 
-// Initialize firebase-admin singleton
+// Initialize firebase-admin singleton using FIREBASE_ADMIN_SERVICE_ACCOUNT
 function getAdminAuth() {
+  if (getApps().length) return getAuth();
+
+  const rawSa = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT;
+  if (!rawSa) {
+    return null; // Fail closed if missing
+  }
+
   try {
-    if (!getApps().length) {
-      if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-        const sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-        initializeApp({ credential: cert(sa) });
-      } else if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
-        initializeApp({
-          credential: cert({
-            projectId: process.env.FIREBASE_PROJECT_ID,
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n')
-          })
-        });
-      } else {
-        initializeApp();
-      }
-    }
+    const sa = typeof rawSa === 'string' ? JSON.parse(rawSa) : rawSa;
+    initializeApp({ credential: cert(sa) });
     return getAuth();
-  } catch(e) {
-    console.warn('[firebase-admin] Init notice:', e.message);
+  } catch (e) {
+    console.error('[firebase-admin] Failed to parse FIREBASE_ADMIN_SERVICE_ACCOUNT:', e.message);
     return null;
   }
 }
 
 export default async function handler(req, res) {
-  // 1. Strict CORS for authorized ScoreAR origins
+  // 1. Strict Explicit CORS (Item 3)
   const origin = req.headers.origin || '';
-  const allowedOrigins = [
-    'https://scorear-e4186.web.app',
-    'https://scorear-e4186.firebaseapp.com',
-    'https://scorear2.web.app',
-    'https://scorear2.firebaseapp.com',
+  const explicitAllowedOrigins = new Set([
     'https://socerar2.vercel.app',
-    'https://scorear2.vercel.app'
-  ];
+    'https://scorear2.vercel.app',
+    'https://scorear2.web.app',
+    'https://scorear2.firebaseapp.com'
+  ]);
 
-  const isAllowed = allowedOrigins.includes(origin) ||
-                    origin.endsWith('.vercel.app') ||
-                    origin.startsWith('http://localhost:') ||
-                    origin.startsWith('http://127.0.0.1:');
+  if (process.env.VERCEL_URL) {
+    explicitAllowedOrigins.add(`https://${process.env.VERCEL_URL}`);
+  }
+  if (process.env.VERCEL_BRANCH_URL) {
+    explicitAllowedOrigins.add(`https://${process.env.VERCEL_BRANCH_URL}`);
+  }
 
-  res.setHeader('Access-Control-Allow-Origin', isAllowed ? origin : allowedOrigins[0]);
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  const isLocalDev = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
+  const isAllowed = explicitAllowedOrigins.has(origin) || (isLocalDev && process.env.NODE_ENV !== 'production');
+
+  if (origin && !isAllowed) {
+    return res.status(403).json({ error: 'رفض CORS: النطاق غير مصرح به.' });
+  }
+
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  }
 
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'طريقة غير مدعومة. يرجى استخدام POST.' });
@@ -63,29 +65,31 @@ export default async function handler(req, res) {
     // 2. Authentication: Teacher/Admin ID Token verification via firebase-admin
     const authHeader = req.headers.authorization || '';
     if (!authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'عفواً، يجب تسجيل دخول المعلم أولاً لرفع صور الأسئلة.' });
+      return res.status(401).json({ error: 'عفواً، يجب تسجيل دخول المعلم أولاً لرفع أو حذف صور الأسئلة.' });
     }
     const idToken = authHeader.substring(7).trim();
 
     let teacherUid = null;
     let isTeacher = false;
 
-    // Direct Firebase Admin SDK Token Verification with revocation check (checkRevoked = true)
-    try {
-      const auth = getAdminAuth();
-      if (auth) {
+    const auth = getAdminAuth();
+    if (auth) {
+      try {
         const decoded = await auth.verifyIdToken(idToken, true);
         teacherUid = decoded.uid;
         isTeacher = (decoded.role === 'teacher' || decoded.role === 'admin');
+      } catch (e) {
+        console.warn('[upload-token] verifyIdToken error:', e.message);
       }
-    } catch (e) {
-      console.warn('[upload-token] verifyIdToken error:', e.message);
+    } else if (!idToken.startsWith('test_') && process.env.NODE_ENV !== 'test') {
+      // Fail closed when service account is not configured in runtime
+      return res.status(401).json({ error: 'فشل التحقق: مفتاح الخدمة FIREBASE_ADMIN_SERVICE_ACCOUNT غير مهيأ في الخادم.' });
     }
 
-    // Fallback verification for test harness & local offline simulation
-    if (!teacherUid) {
+    // Local automated test harness support
+    if (!teacherUid && process.env.NODE_ENV === 'test') {
       if (idToken.startsWith('test_teacher_token_')) {
-        teacherUid = 'test_teacher_uid';
+        teacherUid = idToken.replace('test_teacher_token_', 'teacher_');
         isTeacher = true;
       } else if (idToken.startsWith('test_student_token_')) {
         teacherUid = 'test_student_uid';
@@ -101,12 +105,19 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'غير مصرح: إدارة ورفع صور الأسئلة مخصص لحسابات المعلمين والأدمن فقط.' });
     }
 
-    // 3. Orphan image deletion (Item 7)
+    // 3. Isolated Image Deletion with Cross-Teacher Check (Item 5)
     if (req.body && req.body.action === 'delete') {
       const targetUrl = req.body.url;
       if (!targetUrl || typeof targetUrl !== 'string') {
         return res.status(400).json({ error: 'رابط الصورة المطلوب حذفها مفقود.' });
       }
+
+      // Security Check: Path MUST contain /quiz-images/{teacherUid}/
+      const expectedPathPrefix = `/quiz-images/${teacherUid}/`;
+      if (!targetUrl.includes(expectedPathPrefix)) {
+        return res.status(403).json({ error: 'غير مصرح: لا يمكنك حذف صور تخص معلماً آخر.' });
+      }
+
       try {
         if (process.env.BLOB_READ_WRITE_TOKEN) {
           await del(targetUrl);
@@ -118,7 +129,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // 4. Direct base64 / binary upload support via Vercel Blob put()
+    // 4. Direct Upload Support via put() (Path prefix: quiz-images/{uid}/)
     if (req.body && (req.body.imageBase64 || req.body.fileBase64)) {
       const rawBase64 = req.body.imageBase64 || req.body.fileBase64;
       const mimeMatch = rawBase64.match(/^data:([^;]+);base64,/);
@@ -137,7 +148,8 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: `حجم الصورة (${(buffer.length / 1024).toFixed(1)}KB) يتجاوز الحد المسموح (500KB).` });
       }
 
-      const filename = `questions/${teacherUid}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.webp`;
+      // Path strictly isolated to quiz-images/{uid}/
+      const filename = `quiz-images/${teacherUid}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.webp`;
 
       if (process.env.BLOB_READ_WRITE_TOKEN) {
         const blob = await put(filename, buffer, {
@@ -151,7 +163,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // 5. Vercel Blob client upload handleUpload protocol
+    // 5. Vercel Blob client upload handleUpload protocol (Path prefix: quiz-images/{uid}/)
     const jsonResponse = await handleUpload({
       body: req.body,
       request: req,
@@ -159,7 +171,7 @@ export default async function handler(req, res) {
         return {
           allowedContentTypes: ['image/webp', 'image/jpeg', 'image/png'],
           maximumSizeInBytes: 500 * 1024,
-          pathname: `questions/${teacherUid}/${pathname || (Date.now() + '.webp')}`,
+          pathname: `quiz-images/${teacherUid}/${pathname || (Date.now() + '.webp')}`,
           tokenPayload: JSON.stringify({ teacherUid })
         };
       },

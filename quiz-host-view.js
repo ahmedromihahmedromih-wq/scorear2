@@ -163,6 +163,7 @@
   }
 
   function renderHostQuestionView(stage, phase, qData, currentQIndex, total, worldId, timeRemaining, readingTimeRemaining) {
+    const activeGameMode = (global.ScoreARGameModes && typeof global.ScoreARGameModes.getMode === 'function') ? global.ScoreARGameModes.getMode() : 'SOLO';
     const isReading = (phase === 'reading'), opts = qData.options || qData.opts || [];
     const questionText = qData.text || qData.q || '';
     const imgUrl = qData.imageUrl || qData.img || null;
@@ -177,6 +178,7 @@
           <span style="background:rgba(117,80,239,0.3);border:1px solid #8e64ef;color:#d8b4fe;padding:4px 12px;border-radius:10px;font-size:12px;font-weight:900;">${escapeHtml(qData.skill || 'سؤال')}</span>
           <span style="font-size:14px;color:#fff;font-weight:900;">السؤال ${currentQIndex + 1} من ${total}</span>
           ${(qData.isDouble || qData.multiplier === 2) ? `<span style="background:linear-gradient(135deg, #f59e0b, #d97706);color:#fff;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;box-shadow:0 0 12px rgba(245,158,11,0.5);">⚡ نقاط ×2</span>` : ''}
+          ${activeGameMode === 'CARD_ARENA' ? `<span style="background:rgba(245,158,11,0.22);border:1.5px solid #f59e0b;color:#fcd34d;padding:4px 12px;border-radius:10px;font-size:12px;font-weight:900;display:inline-flex;align-items:center;gap:6px;"><span>🃏 حرب الكروت نشطة</span><button onclick="ScoreARCardArena&&ScoreARCardArena.simulateCardAction&&ScoreARCardArena.simulateCardAction()" style="background:#f59e0b;color:#000;border:none;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:900;cursor:pointer;" title="محاكاة سريعة لإطلاق كارت بالقاعة">تجربة كارت ⚡</button></span>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:16px;">
           <div id="hostLiveAnswerStats" style="display:${isReading ? 'none' : 'flex'};align-items:center;gap:8px;background:rgba(255,255,255,0.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.15);padding:6px 16px;border-radius:14px;font-size:13px;font-weight:800;color:#fff;">

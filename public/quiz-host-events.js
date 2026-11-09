@@ -8,14 +8,20 @@
 
   function rt() { return global.ScoreARRealtime || null; }
   function lb() { return global.ScoreARHostLeaderboard || null; }
+  function getModeInfo() {
+    const mode = (global.ScoreARGameModes && typeof global.ScoreARGameModes.getMode === 'function') ? global.ScoreARGameModes.getMode() : (global.currentLobbyGameMode || 'SOLO');
+    const aiEnabled = (global.ScoreARGameModes && typeof global.ScoreARGameModes.isAIEnabled === 'function') ? global.ScoreARGameModes.isAIEnabled() : (global.currentLobbyAIEnabled ?? true);
+    return { mode, gameMode: mode, aiEnabled };
+  }
 
   function publishRoomOpen(pin, worldId = 'royal') {
     const pStr = String(pin).padStart(6, '0');
-    if (rt()) rt().publish('ROOM_OPEN', { pin: pStr, worldId, timestamp: Date.now() });
+    const { mode, gameMode, aiEnabled } = getModeInfo();
+    if (rt()) rt().publish('ROOM_OPEN', { pin: pStr, worldId, mode, gameMode, aiEnabled, timestamp: Date.now() });
     try {
       const db = (global.ScoreARAuth?.getDb?.()) || global.firebase?.database?.();
       if (db && pStr) {
-        db.ref('rooms/' + pStr).update({ status: 'open', isLocked: false, openedAt: Date.now() }).catch(()=>{});
+        db.ref('rooms/' + pStr).update({ status: 'open', isLocked: false, openedAt: Date.now(), mode, gameMode, aiEnabled }).catch(()=>{});
         db.ref('rooms/' + pStr).onDisconnect().update({ status: 'closed', closedAt: Date.now() });
       }
     } catch(e){}
@@ -32,13 +38,14 @@
 
   function publishQuestionReading(qIndex, total, qData, worldId = 'royal') {
     if (rt()) {
-      rt().publish('QUESTION_READING', { qIndex, totalQuestions: total, q: qData.text || qData.q, skill: qData.skill || 'سؤال', readingDuration: 10, worldId });
+      const { mode, gameMode, aiEnabled } = getModeInfo();
+      rt().publish('QUESTION_READING', { qIndex, totalQuestions: total, q: qData.text || qData.q, skill: qData.skill || 'سؤال', readingDuration: 10, worldId, mode, gameMode, aiEnabled });
     }
   }
 
   function publishQuestionStart(qIndex, total, qData, timeRemaining, worldId = 'royal') {
     if (rt()) {
-      // Strictly sanitized: never send correct, ans, why, or explanation
+      const { mode, gameMode, aiEnabled } = getModeInfo();
       rt().publish('QUESTION_START', {
         qIndex,
         totalQuestions: total,
@@ -47,6 +54,9 @@
         timeLimit: timeRemaining,
         skill: qData.skill || 'سؤال',
         worldId,
+        mode,
+        gameMode,
+        aiEnabled,
         imageUrl: qData.imageUrl || null,
         isDouble: !!(qData.isDouble || qData.multiplier === 2)
       });
@@ -158,6 +168,8 @@
     if (!room) return;
 
     if (msg.type === 'STUDENT_JOIN') {
+      const { mode: jMode, gameMode: jGMode, aiEnabled: jAi } = getModeInfo();
+      if (rt() && room.pin) rt().publish('ROOM_MODE_UPDATE', { pin: room.pin, mode: jMode, gameMode: jGMode, aiEnabled: jAi });
       const p = msg.player || {};
       const exists = room.players.find(x => x.id === p.id || x.name === p.name);
       if (!exists && p.id && p.name) {

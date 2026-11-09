@@ -15,6 +15,8 @@ window.renderTeacherStudio = function(){
       </div>
       <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
         <button class="btn launch-primary" onclick="renderLiveLobby('royal', currentLobbyPin)" style="padding:12px 24px;font-weight:900;font-size:14px;">قاعة المنافسات الحية 🚀</button>
+        <a href="characters.html" class="btn launch-outline" style="text-decoration:none;padding:12px 18px;font-weight:800;font-size:13px;display:inline-flex;align-items:center;gap:6px;">✨ قاعة الأبطال (٢٠)</a>
+        <a href="cards.html" class="btn launch-outline" style="text-decoration:none;padding:12px 18px;font-weight:800;font-size:13px;border-color:#f59e0b;color:#fcd34d;display:inline-flex;align-items:center;gap:6px;">🃏 قاعة الكروت (٢٠)</a>
       </div>
     </div>
 

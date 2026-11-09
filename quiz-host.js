@@ -123,10 +123,19 @@
     const demoNames = ['فريق النسور', 'فريق الفرسان', 'أبطال المستقبل', 'صقور المعرفة', 'نجوم التحدي'];
     const pName = name || (demoNames[(count - 1) % demoNames.length] + ' ' + count);
     const chars = ['char_01', 'char_02', 'char_03', 'char_04', 'char_05', 'char_06'];
+    const botId = 'demo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
     currentRoom.players.push({
-      id: 'demo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      id: botId,
       name: pName, avatarId: avatarId || chars[(count - 1) % chars.length], score: 0, streak: 0, isDemo: true, isBot: true, accuracy: 0.65, speed: 'medium', isRegistered: false
     });
+    if (global.ScoreARCardArena && typeof global.ScoreARCardArena.getManager === 'function') {
+      const mgr = global.ScoreARCardArena.getManager();
+      if (mgr) {
+        mgr.registerPlayer(botId, pName, true);
+        mgr.grantRandomCard(botId);
+        mgr.grantRandomCard(botId);
+      }
+    }
     sfx('pop');
     if (currentRoom.status === 'lobby') refreshLobbyUi();
     if (global.toast) global.toast(`تم انضمام: ${pName} 🤖`);

@@ -527,6 +527,18 @@ function renderActiveQuestionStage(worldId='royal'){
     </div>
   `;
 
+  // Card Arena integration for Solo Test Mode
+  if (window.ScoreARCardArena && typeof window.ScoreARCardArena.mountStudentDeck === 'function') {
+    const curMode = (window.ScoreARGameModes && typeof window.ScoreARGameModes.getMode === 'function') ? window.ScoreARGameModes.getMode() : 'CARD_ARENA';
+    if (curMode === 'CARD_ARENA') {
+      window.ScoreARCardArena.initArena('000000', 'solo_player', false);
+      window.ScoreARCardArena.mountStudentDeck(stage);
+      if (typeof window.ScoreARCardArena.grantStarterCardIfEmpty === 'function') {
+        window.ScoreARCardArena.grantStarterCardIfEmpty('solo_player');
+      }
+    }
+  }
+
   // Start Live Countdown
   const bar = document.getElementById('contestProgressBar');
   contestTimerInterval = setInterval(() => {
@@ -567,6 +579,9 @@ window.handleContestAnswer = function(selectedIndex, correctIndex, worldId){
 
     title.style.color = '#34d399';
     title.innerHTML = '✨ أحسنت! إجابة صحيحة مبهرة (+100 نقطة)';
+    if (window.ScoreARCardArena && typeof window.ScoreARCardArena.onCorrectAnswerGranted === 'function') {
+      window.ScoreARCardArena.onCorrectAnswerGranted('solo_player');
+    }
   } else {
     if (selectedIndex >= 0) btns[selectedIndex]?.classList.add('wrong');
     correctIndices.forEach(idx => btns[idx]?.classList.add('correct'));
@@ -626,6 +641,8 @@ function closeActiveContest(){
   clearInterval(contestTimerInterval);
   const stage = document.getElementById('activeContestStage');
   if(stage) stage.remove();
+  const deck = document.getElementById('studentMobileDeckWrap');
+  if(deck) deck.style.display = 'none';
 }
 
 // =========================================================================

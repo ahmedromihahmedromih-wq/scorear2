@@ -43,6 +43,8 @@
     if (global.ScoreARRealtime) global.ScoreARRealtime.cleanup();
     const stage = document.getElementById('scorearStudentStage');
     if (stage) stage.style.display = 'none';
+    const deck = document.getElementById('studentMobileDeckWrap');
+    if (deck) deck.style.display = 'none';
     currentPin = null; currentStudent = null;
   }
 
@@ -63,6 +65,9 @@
     }
     if (global.ScoreARCardArena && typeof global.ScoreARCardArena.initArena === 'function') {
       global.ScoreARCardArena.initArena(currentPin, currentStudent.uid, false);
+      if (typeof global.ScoreARCardArena.grantStarterCardIfEmpty === 'function') {
+        global.ScoreARCardArena.grantStarterCardIfEmpty(currentStudent.uid);
+      }
     }
 
     renderStudentLobby(currentWorldId, currentStudent);
@@ -89,6 +94,16 @@
 
   function handleStudentIncomingMessage(msg) {
     if (!msg || typeof msg !== 'object') return;
+    if (msg.gameMode || msg.mode) {
+      const gMode = msg.gameMode || msg.mode;
+      if (global.ScoreARGameModes && typeof global.ScoreARGameModes.setMode === 'function') {
+        global.ScoreARGameModes.setMode(gMode, msg.aiEnabled ?? true);
+      }
+      if (global.ScoreARCardArena && typeof global.ScoreARCardArena.getManager === 'function') {
+        const mgr = global.ScoreARCardArena.getManager();
+        if (mgr) mgr.setGameMode(gMode, msg.aiEnabled ?? true);
+      }
+    }
     if (msg.type === 'QUESTION_READING') {
       currentQData = msg;
       currentQIndex = msg.qIndex || 0;
@@ -144,6 +159,9 @@
     if (view()) view().renderStudentQuestion(getOrCreateStudentStage(), qData, currentWorldId, timeRemaining);
     if (global.ScoreARCardArena && typeof global.ScoreARCardArena.mountStudentDeck === 'function') {
       global.ScoreARCardArena.mountStudentDeck(getOrCreateStudentStage());
+      if (typeof global.ScoreARCardArena.grantStarterCardIfEmpty === 'function') {
+        global.ScoreARCardArena.grantStarterCardIfEmpty(currentStudent.uid);
+      }
     }
 
     qTimerInterval = setInterval(() => {
@@ -159,7 +177,7 @@
     }, 1000);
   }
 
-  // Anti-Cheat Submission: Uses ServerValue.TIMESTAMP (Item 2) and removes client timeRemaining
+  // Anti-Cheat Submission: Uses ServerValue.TIMESTAMP and removes client timeRemaining
   function submitAnswer(idx) {
     if (hasAnsweredCurrentQ) return;
     hasAnsweredCurrentQ = true;
@@ -180,7 +198,6 @@
     const fb = document.getElementById('studentFeedbackBox');
     if (fb) fb.innerHTML = '🔒 <strong style="color:#a89bff;">تم قفل اختيارك بنجاح!</strong> بانتظار انتهاء الوقت وإعلان النتيجة...';
 
-    // 1. Write answer EXCLUSIVELY to locked node with server timestamp (now)
     try {
       const db = (window.ScoreARAuth?.getDb?.()) || (window.firebase?.database?.());
       if (db && currentPin && currentStudent?.uid) {
@@ -192,7 +209,6 @@
       }
     } catch(e) {}
 
-    // 2. Public wire transmission carries ZERO choice payload
     if (global.ScoreARRealtime) {
       global.ScoreARRealtime.publish('STUDENT_ANSWERED', {
         playerId: currentStudent.uid,

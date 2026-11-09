@@ -9,37 +9,37 @@
 
   // 6 Animation states: duration (ms), loop flag, and 4-frame cartoon physics keyframes
   const ACTIONS = {
-    idle: { duration: 1200, loop: true, physics: [
+    idle: { duration: 2000, loop: true, physics: [
       { y: 0, sx: 1.0, sy: 1.0, tilt: 0, sScale: 1.0, sAlpha: 0.65 },
       { y: -2, sx: 0.98, sy: 1.02, tilt: 0.5, sScale: 0.95, sAlpha: 0.6 },
       { y: -3, sx: 0.98, sy: 1.03, tilt: 0, sScale: 0.92, sAlpha: 0.58 },
       { y: 0, sx: 1.01, sy: 0.99, tilt: -0.5, sScale: 1.02, sAlpha: 0.68 }
     ]},
-    walk: { duration: 750, loop: true, physics: [
+    walk: { duration: 1200, loop: true, physics: [
       { y: 0, sx: 1.0, sy: 1.0, tilt: 2, sScale: 1.0, sAlpha: 0.6, fx: 'dust' },
       { y: 4, sx: 1.04, sy: 0.96, tilt: -1, sScale: 1.1, sAlpha: 0.75 },
       { y: -6, sx: 0.97, sy: 1.03, tilt: 1, sScale: 0.9, sAlpha: 0.5 },
       { y: 0, sx: 1.0, sy: 1.0, tilt: -2, sScale: 1.0, sAlpha: 0.6, fx: 'dust' }
     ]},
-    run: { duration: 420, loop: true, physics: [
+    run: { duration: 850, loop: true, physics: [
       { y: 3, sx: 1.08, sy: 0.92, tilt: 22, sScale: 1.2, sAlpha: 0.8, fx: 'dust' },
       { y: -16, sx: 0.92, sy: 1.08, tilt: 20, sScale: 0.7, sAlpha: 0.35 },
       { y: 2, sx: 1.08, sy: 0.92, tilt: 22, sScale: 1.2, sAlpha: 0.8, fx: 'dust' },
       { y: -12, sx: 0.94, sy: 1.06, tilt: 24, sScale: 0.75, sAlpha: 0.4 }
     ]},
-    climb: { duration: 800, loop: true, physics: [
+    climb: { duration: 1450, loop: true, physics: [
       { y: -4, sx: 0.96, sy: 1.04, tilt: -4, sScale: 0.55, sAlpha: 0.3 },
       { y: -14, sx: 1.04, sy: 0.96, tilt: 2, sScale: 0.45, sAlpha: 0.22, fx: 'rock' },
       { y: -8, sx: 0.97, sy: 1.03, tilt: -2, sScale: 0.48, sAlpha: 0.25, fx: 'rock' },
       { y: -20, sx: 1.02, sy: 1.02, tilt: 1, sScale: 0.4, sAlpha: 0.18 }
     ]},
-    fly: { duration: 550, loop: true, physics: [
+    fly: { duration: 1300, loop: true, physics: [
       { y: -14, sx: 1.08, sy: 0.92, tilt: 75, sScale: 0.5, sAlpha: 0.2, fx: 'sparkle' },
       { y: -22, sx: 1.02, sy: 0.98, tilt: 68, sScale: 0.45, sAlpha: 0.18, fx: 'sparkle' },
       { y: -30, sx: 0.96, sy: 1.06, tilt: 62, sScale: 0.38, sAlpha: 0.14, fx: 'sparkle' },
       { y: -20, sx: 1.1, sy: 0.92, tilt: 72, sScale: 0.46, sAlpha: 0.18, fx: 'sparkle' }
     ]},
-    celebrate: { duration: 900, loop: true, physics: [
+    celebrate: { duration: 1600, loop: true, physics: [
       { y: 12, sx: 1.16, sy: 0.84, tilt: 0, sScale: 1.25, sAlpha: 0.9 },
       { y: -26, sx: 0.88, sy: 1.15, tilt: -2, sScale: 0.55, sAlpha: 0.3, fx: 'confetti' },
       { y: -38, sx: 0.95, sy: 1.05, tilt: 3, sScale: 0.4, sAlpha: 0.2, fx: 'star' },

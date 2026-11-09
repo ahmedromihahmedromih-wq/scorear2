@@ -533,9 +533,7 @@ function renderActiveQuestionStage(worldId='royal'){
     if (curMode === 'CARD_ARENA') {
       window.ScoreARCardArena.initArena('000000', 'solo_player', false);
       window.ScoreARCardArena.mountStudentDeck(stage);
-      if (typeof window.ScoreARCardArena.grantStarterCardIfEmpty === 'function') {
-        window.ScoreARCardArena.grantStarterCardIfEmpty('solo_player');
-      }
+      
     }
   }
 
@@ -580,7 +578,7 @@ window.handleContestAnswer = function(selectedIndex, correctIndex, worldId){
     title.style.color = '#34d399';
     title.innerHTML = '✨ أحسنت! إجابة صحيحة مبهرة (+100 نقطة)';
     if (window.ScoreARCardArena && typeof window.ScoreARCardArena.onCorrectAnswerGranted === 'function') {
-      window.ScoreARCardArena.onCorrectAnswerGranted('solo_player');
+      window.ScoreARCardArena.onCorrectAnswerGranted('solo_player', true);
     }
   } else {
     if (selectedIndex >= 0) btns[selectedIndex]?.classList.add('wrong');

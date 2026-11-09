@@ -610,20 +610,22 @@ dialog::backdrop {
 
 .toast {
   position: fixed;
-  bottom: 30px;
+  top: 18px;
+  bottom: auto;
   left: 50%;
-  transform: translate(-50%, 20px);
+  transform: translate(-50%, -20px);
   opacity: 0;
   pointer-events: none;
-  background: linear-gradient(110deg, #7550ef, #8e64ef);
+  background: linear-gradient(110deg, #1b1a38, #2a2552);
+  border: 1.5px solid #8e64ef;
   color: #ffffff;
-  padding: 14px 28px;
-  border-radius: 16px;
-  font-size: 14px;
+  padding: 10px 22px;
+  border-radius: 20px;
+  font-size: 13px;
   font-weight: 800;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(117, 80, 239, 0.5);
-  transition: all 0.3s var(--ease);
-  z-index: var(--z-toast, 1000);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 20px rgba(117, 80, 239, 0.4);
+  transition: all 0.25s var(--ease);
+  z-index: 10000000;
 }
 .toast.show {
   opacity: 1;

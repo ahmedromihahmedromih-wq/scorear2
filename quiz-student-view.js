@@ -104,6 +104,10 @@
     const earned = myResult ? Number(myResult.pointsEarned || 0) : 0;
     const respTime = myResult ? myResult.respTime : null;
     const isFastest = (resData.fastestStudent && (String(resData.fastestStudent.id) === myId || resData.fastestStudent.name === currentStudent.name));
+    const myFastRank = (resData.fastestTop2 && Array.isArray(resData.fastestTop2))
+      ? (resData.fastestTop2.findIndex(f => String(f.id) === myId || f.name === currentStudent.name) + 1)
+      : (isFastest ? 1 : 0);
+    const isCardArena = (typeof window !== 'undefined' && window.ScoreARCardArena && window.ScoreARCardArena.isModeActive());
 
     let currentRank = '-';
     if (resData.topLeaderboard && Array.isArray(resData.topLeaderboard)) {
@@ -129,7 +133,7 @@
           <div style="font-size:38px;line-height:1;margin-bottom:4px;">${isCorrect ? '🎉' : '❌'}</div>
           <h2 style="font-size:19px;font-weight:900;color:${isCorrect ? '#34d399' : '#f87171'};margin:0 0 4px 0;">${isCorrect ? 'إجابة صحيحة وممتازة!' : (myChoiceIdx === -1 ? 'انتهى الوقت ولم تُجب!' : 'إجابة خاطئة!')}</h2>
           <div style="font-size:18px;font-weight:900;color:#fcd34d;margin:2px 0;">+${earned} <span style="font-size:12px;color:#c9baff;">نقطة</span>${respTime ? `<span style="font-size:11px;color:#6ee7b7;font-weight:700;margin-inline-start:6px;">(⚡ ${respTime}ث)</span>` : ''}</div>
-          ${isFastest ? `<div style="background:rgba(245,158,11,0.25);border:1px solid #f59e0b;color:#fcd34d;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:900;margin-top:4px;">⚡ بطل السرعة: كنت أسرع إجابة صحيحة!</div>` : ''}
+          ${isCardArena && (myFastRank === 1 || myFastRank === 2) ? `<div style="background:rgba(142,100,239,0.25);border:1px solid #8e64ef;color:#e9d5ff;padding:4px 10px;border-radius:10px;font-size:11px;font-weight:900;margin-top:4px;">🏆 المركز ${myFastRank === 1 ? 'الأول' : 'الثاني'} في السرعة! كسبت كارت تكتيكي 🃏</div>` : (isCardArena && isCorrect ? `<div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#c9baff;padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;margin-top:4px;">💡 أسرع في السؤال القادم لتكون من الأول أو الثاني وتكسب كارت!</div>` : (isFastest ? `<div style="background:rgba(245,158,11,0.25);border:1px solid #f59e0b;color:#fcd34d;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:900;margin-top:4px;">⚡ بطل السرعة: كنت أسرع إجابة صحيحة!</div>` : ''))}
           ${currentStreak > 1 ? `<div style="font-size:11px;color:#f97316;font-weight:800;margin-top:3px;">🔥 سلسلة ${currentStreak} إجابات متتالية!</div>` : ''}
           <div style="background:#0e2a1d;border:2px solid #10b981;border-radius:12px;padding:8px 12px;margin-top:8px;text-align:center;">
             <span style="color:#6ee7b7;font-size:11px;font-weight:800;display:block;">✓ الإجابة النموذجية الصحيحة:</span>

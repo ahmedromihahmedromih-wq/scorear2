@@ -1,7 +1,8 @@
 /**
  * ScoreAR Game Modes & Real-Time Card Arena Engine (Non-Destructive)
  * Supports: SOLO, SQUADS, and CARD_ARENA (20 tactical cards, Hand + Trap slots, smart AI bots).
- * Strictly Rule 7 Compliant (<380 lines).
+ * Enforces Exclusive Single-Use Card Pool (no duplicates room-wide except BETTER_LUCK).
+ * Strictly Rule 7 Compliant (<350 lines).
  */
 
 export const CARDS_DATABASE = {
@@ -36,6 +37,7 @@ export class GameModeManager {
     this.aiEnabled = true;
     this.minPlayers = 4;
     this.players = {};
+    this.claimedCards = new Set();
     this.teams = {
       FALCONS: { id: 'FALCONS', nameAr: 'فريق الصقور الذهبية', score: 0, color: '#f59e0b' },
       LIONS: { id: 'LIONS', nameAr: 'فريق أسود المجرة', score: 0, color: '#38bdf8' }
@@ -69,11 +71,6 @@ export class GameModeManager {
       trapSlots: [],
       status: { isPinned: false, hasFog: false, timeSliced: false, blockDrawTurns: 0, multiplier: 1 }
     };
-
-    if (this.mode === 'CARD_ARENA') {
-      this.grantRandomCard(id);
-    }
-
     this.notifyState();
     return this.players[id];
   }
@@ -89,14 +86,13 @@ export class GameModeManager {
       const b = botProfiles[i];
       if (!this.players[b.id]) {
         this.registerPlayer(b.id, b.name, true);
-        if (this.mode === 'CARD_ARENA') this.grantRandomCard(b.id);
       }
       i++;
     }
     this.startAILoop();
   }
 
-  submitAnswer(playerId, isCorrect, timeTakenMs = 4000, maxTimeMs = 20000) {
+  submitAnswer(playerId, isCorrect, timeTakenMs = 4000, maxTimeMs = 20000, isTop2 = false) {
     const p = this.players[playerId];
     if (!p) return null;
 
@@ -118,7 +114,7 @@ export class GameModeManager {
       if (this.mode === 'SQUADS' && p.team && this.teams[p.team]) {
         this.teams[p.team].score += pointsEarned;
       }
-      if (this.mode === 'CARD_ARENA') {
+      if (this.mode === 'CARD_ARENA' && isTop2) {
         this.grantRandomCard(playerId);
       }
     } else {
@@ -147,13 +143,23 @@ export class GameModeManager {
     }
     if (p.hand.length >= 3) return null;
 
-    const keys = Object.keys(CARDS_DATABASE);
-    const chosenKey = specificCardId && CARDS_DATABASE[specificCardId] ? specificCardId : keys[Math.floor(Math.random() * keys.length)];
+    const allKeys = Object.keys(CARDS_DATABASE);
+    let availableKeys = allKeys.filter(k => k === 'BETTER_LUCK' || !this.claimedCards.has(k));
+    if (availableKeys.length === 0) availableKeys = ['BETTER_LUCK'];
+
+    let chosenKey = (specificCardId && CARDS_DATABASE[specificCardId])
+      ? specificCardId
+      : availableKeys[Math.floor(Math.random() * availableKeys.length)];
+
+    if (chosenKey !== 'BETTER_LUCK') {
+      this.claimedCards.add(chosenKey);
+    }
+
     const template = CARDS_DATABASE[chosenKey];
     const cardInstance = { ...template, instanceId: 'c_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6) };
 
     p.hand.push(cardInstance);
-    this.onPlayerToast(playerId, `🃏 حصلت على كارت: ${cardInstance.nameAr}`);
+    this.onPlayerToast(playerId, `🃏 كسبت كارت: ${cardInstance.nameAr}`);
     this.notifyState();
     return cardInstance;
   }
@@ -248,9 +254,7 @@ export class GameModeManager {
       if (bots.length === 0) return;
 
       const bot = bots[Math.floor(Math.random() * bots.length)];
-      if (bot.hand.length === 0) {
-        this.grantRandomCard(bot.id);
-      }
+      if (bot.hand.length === 0) return;
 
       const trapInHand = bot.hand.find(c => c.type && c.type.startsWith('TRAP_'));
       if (trapInHand && bot.trapSlots.length < 2 && Math.random() < 0.65) {
@@ -258,7 +262,7 @@ export class GameModeManager {
         return;
       }
 
-      if (bot.hand.length > 0 && Math.random() < 0.65) {
+      if (bot.hand.length > 0 && Math.random() < 0.55) {
         const card = bot.hand[0];
         const sorted = [...all].sort((a,b) => b.score - a.score);
         const topTarget = sorted.find(p => p.id !== bot.id) || bot;
@@ -270,11 +274,15 @@ export class GameModeManager {
           this.activateCard(bot.id, card.instanceId, bot.id);
         }
       }
-    }, 4200);
+    }, 5000);
   }
 
   stopAILoop() {
     if (this.aiTimer) clearInterval(this.aiTimer);
+  }
+
+  resetRoomPool() {
+    this.claimedCards.clear();
   }
 
   notifyState() {

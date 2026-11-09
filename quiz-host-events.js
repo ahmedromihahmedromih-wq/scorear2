@@ -159,7 +159,12 @@
     const opts = qData.options || qData.opts || [];
     const correctAnswerText = opts[correctIdx] || '';
 
-    return { correct: correctIndices, correctAnswer: correctIdx, correctAnswerText, playerResults, fastest };
+    const correctList = Object.values(playerResults)
+      .filter(r => r.isCorrect && r.respTime !== null)
+      .sort((a, b) => parseFloat(a.respTime) - parseFloat(b.respTime));
+    const fastestTop2 = correctList.slice(0, 2).map((r, i) => ({ id: r.id, name: r.playerName, timeSec: parseFloat(r.respTime), rank: i + 1 }));
+
+    return { correct: correctIndices, correctAnswer: correctIdx, correctAnswerText, playerResults, fastest, fastestTop2 };
   }
 
   function handleHostIncomingMessage(msg, ctx) {

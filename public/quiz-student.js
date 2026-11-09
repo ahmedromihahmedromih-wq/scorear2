@@ -65,9 +65,7 @@
     }
     if (global.ScoreARCardArena && typeof global.ScoreARCardArena.initArena === 'function') {
       global.ScoreARCardArena.initArena(currentPin, currentStudent.uid, false);
-      if (typeof global.ScoreARCardArena.grantStarterCardIfEmpty === 'function') {
-        global.ScoreARCardArena.grantStarterCardIfEmpty(currentStudent.uid);
-      }
+      
     }
 
     renderStudentLobby(currentWorldId, currentStudent);
@@ -159,9 +157,7 @@
     if (view()) view().renderStudentQuestion(getOrCreateStudentStage(), qData, currentWorldId, timeRemaining);
     if (global.ScoreARCardArena && typeof global.ScoreARCardArena.mountStudentDeck === 'function') {
       global.ScoreARCardArena.mountStudentDeck(getOrCreateStudentStage());
-      if (typeof global.ScoreARCardArena.grantStarterCardIfEmpty === 'function') {
-        global.ScoreARCardArena.grantStarterCardIfEmpty(currentStudent.uid);
-      }
+      
     }
 
     qTimerInterval = setInterval(() => {
@@ -237,8 +233,10 @@
         currentStreak = outcome.isCorrect ? (currentStreak + 1) : 0;
         if (outcome.currentRank !== '-') lastRank = outcome.currentRank;
         saveActiveSession();
-        if (outcome.isCorrect && global.ScoreARCardArena && typeof global.ScoreARCardArena.onCorrectAnswerGranted === 'function') {
-          global.ScoreARCardArena.onCorrectAnswerGranted(currentStudent.uid);
+        const myId = String(currentStudent.uid);
+        const isTop2 = resData.fastestTop2 && Array.isArray(resData.fastestTop2) && resData.fastestTop2.some(f => String(f.id) === myId);
+        if (outcome.isCorrect && isTop2 && global.ScoreARCardArena && typeof global.ScoreARCardArena.onCorrectAnswerGranted === 'function') {
+          global.ScoreARCardArena.onCorrectAnswerGranted(currentStudent.uid, true);
         }
       }
     }

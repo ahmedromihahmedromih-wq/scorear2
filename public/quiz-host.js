@@ -132,8 +132,6 @@
       const mgr = global.ScoreARCardArena.getManager();
       if (mgr) {
         mgr.registerPlayer(botId, pName, true);
-        mgr.grantRandomCard(botId);
-        mgr.grantRandomCard(botId);
       }
     }
     sfx('pop');
@@ -341,11 +339,22 @@
       if (autoSec <= 0) { clearInterval(autoAdvanceTimer); renderHostLeaderboard(); }
     }, 1000);
 
+    if (global.ScoreARCardArena && typeof global.ScoreARCardArena.getManager === 'function') {
+      const mgr = global.ScoreARCardArena.getManager();
+      if (mgr && evalResult.fastestTop2 && Array.isArray(evalResult.fastestTop2)) {
+        evalResult.fastestTop2.forEach(winner => {
+          const isBot = currentRoom.players.some(p => String(p.id) === String(winner.id) && (p.isBot || p.isDemo));
+          if (isBot) mgr.grantRandomCard(winner.id);
+        });
+      }
+    }
+
     if (ev()) {
       ev().publishQuestionResult({
         qIndex, questionText: qData.text || qData.q, options: qData.options || qData.opts,
         correct: correctIndices, correctAnswer: correctIdx, correctAnswerText: evalResult.correctAnswerText,
         explanation: qData.explanation || qData.why || '', fastestStudent: fastest,
+        fastestTop2: evalResult.fastestTop2 || [],
         topLeaderboard: [...currentRoom.players].sort((a,b) => b.score - a.score).slice(0, 5),
         playerResults, worldId: (currentRoom?.world?.id || 'royal')
       });

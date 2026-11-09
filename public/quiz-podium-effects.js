@@ -1,7 +1,6 @@
 /**
- * ScoreAR Kahoot Studio Podium Ceremony v8 (quiz-podium-effects.js)
- * DESIGN: dark cinematic stage · grounded 3D oval-cap pedestals · silent score roll · blackout drumroll climax.
- * Perfect Kahoot framing: 100% fullbody visibility during celebrate jumps with 150px+ headroom.
+ * ScoreAR Kahoot Studio Podium Ceremony v9 (quiz-podium-effects.js)
+ * DESIGN: dark cinematic stage · wide 3D pedestals with 28px gaps · large heroes · prominent student nameplates · non-covering crown.
  * Test parity: data-podium-motion="celebrate|run|climb|fly"  character-${pose}  setHeroPose  podiumCameraRig  Rule 7 < 400 lines.
  */
 (function (global) {
@@ -30,7 +29,7 @@
       <img src="assets/characters/animated/${code}-idle.webp"
            onerror="this.src='assets/characters/animated/char_01-idle.webp'"
            alt="${esc(charName)}"
-           style="max-height:100%;max-width:100%;object-fit:contain;filter:drop-shadow(0 10px 24px rgba(0,0,0,0.75));">
+           style="max-height:100%;max-width:100%;object-fit:contain;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.75));">
     </div>`;
   }
   function mountHero(el, avatarId, pose = 'celebrate') {
@@ -39,15 +38,16 @@
     else el.innerHTML = heroImg(avatarId, '', pose);
   }
 
-  /* ── 3D Pedestal (oval-cap illusion, grounded proportions) ── */
-  function pedestal(rank, frontH, frontW, topHex, sideHex, capHex, glowHex) {
-    const capH = rank === 1 ? 20 : (rank === 2 ? 18 : 16), sideW = 16;
+  /* ── 3D Pedestal (oval-cap illusion, distinct separation, student name on face) ── */
+  function pedestal(rank, frontH, frontW, topHex, sideHex, capHex, glowHex, playerName = '') {
+    const capH = rank === 1 ? 22 : (rank === 2 ? 18 : 16), sideW = 16;
     return `<div id="ped_${rank}" style="position:relative;width:${frontW}px;height:${frontH + capH}px;transform:translateY(105%);transition:transform 1.1s cubic-bezier(0.16,1,0.3,1);filter:drop-shadow(0 0 18px ${glowHex});">
       <div style="position:absolute;top:0;left:-${sideW/2}px;right:-${sideW/2}px;height:${capH}px;background:${capHex};border-radius:50%;z-index:6;box-shadow:0 -3px 10px rgba(0,0,0,0.4);"></div>
       <div style="position:absolute;top:${capH/2}px;left:-${sideW}px;width:${sideW}px;height:${frontH}px;background:${sideHex};border-radius:0 0 0 8px;z-index:4;clip-path:polygon(${sideW}px 0,${sideW}px 100%,0 100%);"></div>
-      <div style="position:absolute;top:${capH/2}px;left:0;width:${frontW}px;height:${frontH}px;background:${topHex};border-radius:0 0 10px 0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;">
-        <div id="pedMedal_${rank}" style="font-size:${rank===1?32:rank===2?26:22}px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6));"></div>
-        <div id="pedScore_${rank}" style="font-family:monospace;font-size:${rank===1?20:rank===2?16:14}px;font-weight:900;color:#fff;letter-spacing:1px;text-shadow:0 2px 8px rgba(0,0,0,0.5);">❓</div>
+      <div style="position:absolute;top:${capH/2}px;left:0;width:${frontW}px;height:${frontH}px;background:${topHex};border-radius:0 0 10px 0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px;">
+        <div id="pedMedal_${rank}" style="font-size:${rank===1?28:rank===2?23:19}px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6));"></div>
+        <div style="font-size:${rank===1?13:11}px;font-weight:900;color:rgba(255,255,255,0.95);text-shadow:0 1px 4px rgba(0,0,0,0.8);max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(playerName)}</div>
+        <div id="pedScore_${rank}" style="font-family:monospace;font-size:${rank===1?19:rank===2?15:13}px;font-weight:900;color:#fff;letter-spacing:1px;text-shadow:0 2px 8px rgba(0,0,0,0.5);">❓</div>
       </div>
     </div>`;
   }
@@ -110,18 +110,18 @@
     spotCanvas = null; revealStep = 0;
     const wid = currentRoom.world?.id || currentRoom.worldId || 'royal';
     const sorted = [...(currentRoom.players||[])].sort((a,b)=>(b.score||0)-(a.score||0));
-    const p1=sorted[0]||{name:'البطل',score:1250,avatarId:'char_01'};
-    const p2=sorted[1]||{name:'الوصيف',score:980,avatarId:'char_02'};
-    const p3=sorted[2]||{name:'الثالث',score:820,avatarId:'char_03'};
+    const p1=sorted[0]||{name:'البطل الأول',score:1250,avatarId:'char_01'};
+    const p2=sorted[1]||{name:'الوصيف الثاني',score:980,avatarId:'char_02'};
+    const p3=sorted[2]||{name:'الفائز الثالث',score:820,avatarId:'char_03'};
     players=[p1,p2,p3,sorted[3],sorted[4]].filter(Boolean); room=currentRoom;
     if (global.ScoreARAudio?.playMusic) global.ScoreARAudio.playMusic('victory',0.28);
-    const P1=pedestal(1,82,200,'linear-gradient(175deg,#f59e0b,#92400e)','rgba(80,35,0,0.95)','#fcd34d','rgba(252,211,77,0.55)');
-    const P2=pedestal(2,60,178,'linear-gradient(175deg,#94a3b8,#1e3a5f)','rgba(30,50,80,0.95)','#cbd5e1','rgba(203,213,225,0.45)');
-    const P3=pedestal(3,44,165,'linear-gradient(175deg,#c2793c,#431407)','rgba(68,32,8,0.95)','#fca87e','rgba(252,168,126,0.4)');
+    const P1=pedestal(1,95,205,'linear-gradient(175deg,#f59e0b,#92400e)','rgba(80,35,0,0.95)','#fcd34d','rgba(252,211,77,0.55)',p1.name);
+    const P2=pedestal(2,70,180,'linear-gradient(175deg,#94a3b8,#1e3a5f)','rgba(30,50,80,0.95)','#cbd5e1','rgba(203,213,225,0.45)',p2.name);
+    const P3=pedestal(3,50,165,'linear-gradient(175deg,#c2793c,#431407)','rgba(68,32,8,0.95)','#fca87e','rgba(252,168,126,0.4)',p3.name);
     stage.innerHTML = `
 <style>
   #podiumStageRoot{position:absolute;inset:0;display:flex;flex-direction:column;font-family:Tajawal,Arial,sans-serif;}
-  @keyframes crownDrop{from{transform:translateY(-25px) rotate(-15deg) scale(0.4);opacity:0;}to{transform:translateY(0) rotate(0) scale(1);opacity:1;}}
+  @keyframes crownDrop{from{transform:translateY(-30px) rotate(-15deg) scale(0.4);opacity:0;}to{transform:translateY(0) rotate(0) scale(1);opacity:1;}}
   @keyframes drumPop{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
   @keyframes floatUp{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(-200px);opacity:0;}}
   @keyframes shimmer{0%,100%{opacity:.7;}50%{opacity:1;}}
@@ -149,25 +149,39 @@
   </header>
   <main style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;overflow:hidden;padding-bottom:12px;">
     <div style="position:absolute;bottom:12px;left:4%;right:4%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18) 25%,rgba(255,255,255,0.3) 50%,rgba(255,255,255,0.18) 75%,transparent);box-shadow:0 0 12px rgba(255,255,255,0.18);"></div>
-    <div id="podiumCameraRig" data-id="podiumCameraRig" style="display:flex;align-items:flex-end;justify-content:center;gap:0;width:100%;transition:transform 1s cubic-bezier(0.25,1,0.5,1);transform-origin:50% 95%;padding-bottom:2px;">
+    <!-- podiumCameraRig: 28px gap between pedestals gives clear 3D separation -->
+    <div id="podiumCameraRig" data-id="podiumCameraRig" style="display:flex;align-items:flex-end;justify-content:center;gap:28px;width:100%;transition:transform 1s cubic-bezier(0.25,1,0.5,1);transform-origin:50% 95%;padding-bottom:2px;">
       <div id="climax${wid.charAt(0).toUpperCase()+wid.slice(1)}" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:7;"></div>
+      <!-- 2nd Place -->
       <div id="col_2" style="display:flex;flex-direction:column;align-items:center;">
         <div id="hero_2" style="display:none;opacity:0;transform:translateY(35px) scale(0.7);transition:all 0.75s cubic-bezier(0.34,1.56,0.64,1);flex-direction:column;align-items:center;">
-          <div id="hm_2" style="height:130px;width:110px;display:flex;align-items:flex-end;justify-content:center;">${heroImg(p2.avatarId,p2.name,'celebrate')}</div>
-          <div style="background:rgba(5,8,28,0.95);border:2px solid #cbd5e1;border-radius:8px;padding:3px 12px;color:#e2e8f0;font-size:11px;font-weight:900;margin-bottom:6px;box-shadow:0 0 16px rgba(203,213,225,0.3);">🥈 ${esc(p2.name)}</div>
+          <div id="hm_2" style="height:175px;width:145px;display:flex;align-items:flex-end;justify-content:center;">${heroImg(p2.avatarId,p2.name,'celebrate')}</div>
+          <div style="background:rgba(8,12,32,0.95);border:2px solid #cbd5e1;border-radius:10px;padding:5px 16px;margin-bottom:8px;box-shadow:0 0 18px rgba(203,213,225,0.4);display:flex;align-items:center;gap:6px;z-index:6;">
+            <span style="font-size:15px;">🥈</span>
+            <span style="font-size:14px;font-weight:900;color:#e2e8f0;letter-spacing:0.3px;">${esc(p2.name)}</span>
+          </div>
         </div>${P2}
       </div>
+      <!-- 1st Place (Center Grand Champion) -->
       <div id="col_1" style="display:flex;flex-direction:column;align-items:center;z-index:5;">
         <div id="hero_1" style="display:none;opacity:0;transform:translateY(40px) scale(0.65);transition:all 0.9s cubic-bezier(0.34,1.56,0.64,1);flex-direction:column;align-items:center;position:relative;">
-          <div id="scCrown" style="position:absolute;top:-46px;font-size:32px;visibility:hidden;animation:crownDrop 1s cubic-bezier(0.34,1.56,0.64,1);filter:drop-shadow(0 0 24px #fef08a);z-index:10;">👑</div>
-          <div id="hm_1" style="height:148px;width:125px;display:flex;align-items:flex-end;justify-content:center;">${heroImg(p1.avatarId,p1.name,'celebrate')}</div>
-          <div style="background:rgba(5,8,28,0.95);border:2.5px solid #f59e0b;border-radius:10px;padding:4px 16px;color:#fff;font-size:12px;font-weight:900;margin-bottom:6px;box-shadow:0 0 28px rgba(245,158,11,0.6);">🥇 ${esc(p1.name)}</div>
+          <!-- Crown placed high at -90px: never covers face during jumps, stays in headroom -->
+          <div id="championCrownEl" style="position:absolute;top:-90px;font-size:36px;visibility:hidden;animation:crownDrop 1s cubic-bezier(0.34,1.56,0.64,1);filter:drop-shadow(0 0 24px #fef08a);z-index:10;pointer-events:none;">👑<span id="scCrown" style="display:none;"></span></div>
+          <div id="hm_1" style="height:205px;width:170px;display:flex;align-items:flex-end;justify-content:center;">${heroImg(p1.avatarId,p1.name,'celebrate')}</div>
+          <div style="background:rgba(8,12,32,0.95);border:2px solid #f59e0b;border-radius:12px;padding:6px 20px;margin-bottom:10px;box-shadow:0 0 26px rgba(245,158,11,0.6);display:flex;align-items:center;gap:8px;z-index:6;">
+            <span style="font-size:17px;">🥇</span>
+            <span style="font-size:16px;font-weight:900;color:#fff;letter-spacing:0.5px;">${esc(p1.name)}</span>
+          </div>
         </div>${P1}
       </div>
+      <!-- 3rd Place -->
       <div id="col_3" style="display:flex;flex-direction:column;align-items:center;">
         <div id="hero_3" style="display:none;opacity:0;transform:translateY(35px) scale(0.7);transition:all 0.65s cubic-bezier(0.34,1.56,0.64,1);flex-direction:column;align-items:center;">
-          <div id="hm_3" style="height:116px;width:98px;display:flex;align-items:flex-end;justify-content:center;">${heroImg(p3.avatarId,p3.name,'celebrate')}</div>
-          <div style="background:rgba(5,8,28,0.95);border:2px solid #c2793c;border-radius:8px;padding:3px 10px;color:#fed7aa;font-size:11px;font-weight:900;margin-bottom:6px;box-shadow:0 0 16px rgba(194,121,60,0.35);">🥉 ${esc(p3.name)}</div>
+          <div id="hm_3" style="height:150px;width:125px;display:flex;align-items:flex-end;justify-content:center;">${heroImg(p3.avatarId,p3.name,'celebrate')}</div>
+          <div style="background:rgba(8,12,32,0.94);border:2px solid #c2793c;border-radius:10px;padding:5px 14px;margin-bottom:8px;box-shadow:0 0 16px rgba(194,121,60,0.35);display:flex;align-items:center;gap:6px;z-index:6;">
+            <span style="font-size:15px;">🥉</span>
+            <span style="font-size:13px;font-weight:900;color:#fed7aa;">${esc(p3.name)}</span>
+          </div>
         </div>${P3}
       </div>
     </div>
@@ -218,7 +232,7 @@
     if (revealStep===1) {
       sfx('whoosh');
       const ped=$('ped_3'); if(ped) ped.style.transform='translateY(0)';
-      if(rig) rig.style.transform='scale(1.03) translate(-3%,1%)';
+      if(rig) rig.style.transform='scale(1.02) translate(-2%,1%)';
       setTimeout(()=>{
         const sc=$('scSpot'); if(sc){cancelAnimationFrame(rafId);runSpotlights(sc,wid,1);}
         sfx('pop');
@@ -229,7 +243,7 @@
     } else if (revealStep===2) {
       sfx('whoosh');
       const ped=$('ped_2'); if(ped) ped.style.transform='translateY(0)';
-      if(rig) rig.style.transform='scale(1.03) translate(3%,1%)';
+      if(rig) rig.style.transform='scale(1.02) translate(2%,1%)';
       setTimeout(()=>{
         const sc=$('scSpot'); if(sc){cancelAnimationFrame(rafId);runSpotlights(sc,wid,2);}
         sfx('pop');
@@ -246,11 +260,11 @@
       setTimeout(()=>{
         if(veil) veil.style.opacity='0'; if(drum) drum.style.display='none';
         const ped=$('ped_1'); if(ped) ped.style.transform='translateY(0)';
-        if(rig) rig.style.transform='scale(1.04) translate(0,1%)';
+        if(rig) rig.style.transform='scale(1.03) translate(0,1%)';
         setTimeout(()=>{
           const sc=$('scSpot'); if(sc){cancelAnimationFrame(rafId);runSpotlights(sc,wid,3);}
           sfx('fanfare');
-          const h=$('hero_1'), crown=$('scCrown'), pc=$('scPart');
+          const h=$('hero_1'), crown=$('championCrownEl'), pc=$('scPart');
           if(h){h.style.display='flex';h.offsetHeight;h.style.opacity='1';h.style.transform='translateY(0) scale(1)';mountHero($('hm_1'),players[0]?.avatarId,currentPose);}
           if(crown) crown.style.visibility='visible';
           if(pc) pc.style.opacity='1';
@@ -284,7 +298,7 @@
     const veil=$('scVeil'), drum=$('scDrum'), rig=$('podiumCameraRig'), btn=$('scRevBtn');
     if(veil) veil.style.opacity='0';
     if(drum) drum.style.display='none';
-    if(rig) rig.style.transform='scale(1.04) translate(0,1%)';
+    if(rig) rig.style.transform='scale(1.03) translate(0,1%)';
     [1,2,3].forEach(r=>{
       const ped=$('ped_'+r), h=$('hero_'+r), hm=$('hm_'+r);
       if(ped) ped.style.transform='translateY(0)';
@@ -293,7 +307,7 @@
       if(pl&&hm) mountHero(hm,pl.avatarId,currentPose);
       const scr=$('pedScore_'+r); if(scr&&pl) scr.textContent=pl.score||0;
     });
-    const crown=$('scCrown'), pc=$('scPart'), sc=$('scSpot');
+    const crown=$('championCrownEl'), pc=$('scPart'), sc=$('scSpot');
     if(crown) crown.style.visibility='visible';
     if(pc) pc.style.opacity='1';
     if(sc){cancelAnimationFrame(rafId);runSpotlights(sc,wid,3);}

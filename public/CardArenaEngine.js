@@ -9,7 +9,7 @@
  *  3. CARD_ARENA (20 tactical cards, instant mobile delivery, Hand + Trap slots, AI Bots)
  */
 
-export const CARDS_DATABASE = {
+const CARDS_DATABASE = {
   // --- 1. فئة النقاط والانقلاب (Game Changers - 5 Cards) ---
   SWAP_STUDENT: {
     id: 'SWAP_STUDENT',
@@ -204,7 +204,7 @@ export const CARDS_DATABASE = {
   }
 };
 
-export class GameModeManager {
+class GameModeManager {
   constructor(syncCallbacks = {}) {
     this.onStateChange = syncCallbacks.onStateChange || (() => {});
     this.onCardEvent = syncCallbacks.onCardEvent || (() => {});
@@ -584,3 +584,7 @@ if (typeof window !== 'undefined') {
   window.ScoreARCardArenaEngine = { CARDS_DATABASE, GameModeManager };
 }
 
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { CARDS_DATABASE, GameModeManager };
+}

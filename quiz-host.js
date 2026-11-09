@@ -84,6 +84,18 @@
       global.ScoreARRealtime.init('host', pin, handleHostIncomingMessage);
       global.ScoreARRealtime.subscribe(handleHostIncomingMessage);
     }
+    if (global.ScoreARCardArena && typeof global.ScoreARCardArena.initArena === 'function') {
+      global.ScoreARCardArena.initArena(pin, 'host', true);
+    }
+    if (global.ScoreARGameModes && typeof global.ScoreARGameModes.isAIEnabled === 'function' && global.ScoreARGameModes.isAIEnabled()) {
+      setTimeout(() => {
+        if (currentRoom && currentRoom.players && currentRoom.players.length === 0) {
+          addDemoPlayer('🤖 أرجون الذكي');
+          addDemoPlayer('🤖 سارة المجرة');
+          addDemoPlayer('🤖 فارس الزمن');
+        }
+      }, 500);
+    }
 
     if (view()) view().renderHostLobby(getOrCreateStage(), currentRoom, isRoomLocked);
     try {

@@ -61,6 +61,9 @@
       global.ScoreARRealtime.subscribe(handleStudentIncomingMessage);
       global.ScoreARRealtime.publish('STUDENT_JOIN', { player: { id: currentStudent.uid, name: currentStudent.name, avatarId: currentStudent.avatarId }, pin: currentPin });
     }
+    if (global.ScoreARCardArena && typeof global.ScoreARCardArena.initArena === 'function') {
+      global.ScoreARCardArena.initArena(currentPin, currentStudent.uid, false);
+    }
 
     renderStudentLobby(currentWorldId, currentStudent);
   }
@@ -142,9 +145,6 @@
     if (global.ScoreARCardArena && typeof global.ScoreARCardArena.mountStudentDeck === 'function') {
       global.ScoreARCardArena.mountStudentDeck(getOrCreateStudentStage());
     }
-    if (global.ScoreARCardArena && typeof global.ScoreARCardArena.mountStudentDeck === 'function') {
-      global.ScoreARCardArena.mountStudentDeck(getOrCreateStudentStage());
-    }
 
     qTimerInterval = setInterval(() => {
       timeRemaining--;
@@ -221,6 +221,9 @@
         currentStreak = outcome.isCorrect ? (currentStreak + 1) : 0;
         if (outcome.currentRank !== '-') lastRank = outcome.currentRank;
         saveActiveSession();
+        if (outcome.isCorrect && global.ScoreARCardArena && typeof global.ScoreARCardArena.onCorrectAnswerGranted === 'function') {
+          global.ScoreARCardArena.onCorrectAnswerGranted(currentStudent.uid);
+        }
       }
     }
   }

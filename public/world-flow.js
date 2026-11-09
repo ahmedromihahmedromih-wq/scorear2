@@ -381,25 +381,49 @@
     closeWorldModal();
     const chosen = activeSelectedWorldId || 'royal';
     try { localStorage.setItem('scorear_last_world', chosen); } catch(e){}
-    if (typeof activePickerCallback === 'function') {
-      activePickerCallback(chosen);
-    } else {
-      launchRoomNow();
+    const proceed = (wId) => {
+      const finalW = wId || chosen;
+      if (typeof activePickerCallback === 'function') {
+        activePickerCallback(finalW);
+      } else {
+        launchRoomNow(finalW);
+      }
+    };
+    if (global.ScoreARGameModes && typeof global.ScoreARGameModes.openModePicker === 'function') {
+      global.ScoreARGameModes.openModePicker({
+        worldId: chosen,
+        pin: global.currentLobbyPin || null,
+        onConfirm: (wId) => proceed(wId || chosen)
+      });
+      return;
     }
+    proceed(chosen);
   }
 
-  function launchRoomNow() {
+  function launchRoomNow(overrideWorldId) {
     closeWorldModal();
-    const worldId = wizardState.worldId || activeSelectedWorldId || 'royal';
+    const worldId = overrideWorldId || wizardState.worldId || activeSelectedWorldId || 'royal';
     const pin = (typeof global.currentLobbyPin === 'string' && /^\d{6}$/.test(global.currentLobbyPin)) ? global.currentLobbyPin : String(Math.floor(100000 + Math.random() * 900000));
     global.currentLobbyPin = pin;
-    if (typeof global.renderLiveLobby === 'function') {
-      global.renderLiveLobby(worldId, pin, true);
-    } else if (global.ScoreARQuizHost && typeof global.ScoreARQuizHost.startHostLobby === 'function') {
-      global.ScoreARQuizHost.startHostLobby(worldId, pin, true);
-    } else {
-      window.location.hash = '#worlds';
+    const doLaunch = (targetWorld) => {
+      const w = targetWorld || worldId;
+      if (typeof global.renderLiveLobby === 'function') {
+        global.renderLiveLobby(w, pin, true);
+      } else if (global.ScoreARQuizHost && typeof global.ScoreARQuizHost.startHostLobby === 'function') {
+        global.ScoreARQuizHost.startHostLobby(w, pin, true);
+      } else {
+        window.location.hash = '#worlds';
+      }
+    };
+    if (!overrideWorldId && global.ScoreARGameModes && typeof global.ScoreARGameModes.openModePicker === 'function') {
+      global.ScoreARGameModes.openModePicker({
+        worldId: worldId,
+        pin: pin,
+        onConfirm: (wId) => doLaunch(wId || worldId)
+      });
+      return;
     }
+    doLaunch(worldId);
   }
 
   // Intercept world launch clicks

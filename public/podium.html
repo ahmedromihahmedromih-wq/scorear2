@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0d1d">
+<title>منصة التتويج الاحتفالية | معيار كاهوت ستوديو | سكور آر</title>
+<link rel="icon" type="image/svg+xml" href="assets/mark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=20261109_v3_live">
+<link rel="stylesheet" href="characters-v4.css?v=20261109_v3_live">
+<link rel="stylesheet" href="cartoon-motion.css?v=20261109_v3_live">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="ScoreARMotionEngine.js?v=20261109_v3_live"></script>
+<script src="characters-v4.js?v=20261109_v3_live"></script>
+<script src="quiz-audio.js?v=20261109_v3_live"></script>
+<script src="quiz-podium-effects.js?v=20261109_v3_live"></script>
+<script src="quiz-podium-capture.js?v=20261109_v3_live"></script>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: #0c0d1d;
+    color: #eceeff;
+    font-family: Tajawal, Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+  .podium-tester-bar {
+    background: rgba(18, 20, 42, 0.95);
+    border-bottom: 1px solid rgba(142, 100, 239, 0.3);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    z-index: 50;
+  }
+  .podium-stage-viewport {
+    position: relative;
+    flex: 1;
+    min-height: 680px;
+    display: flex;
+    flex-direction: column;
+    background: #080914;
+    overflow: hidden;
+  }
+  .test-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .test-btn:hover {
+    background: rgba(142, 100, 239, 0.3);
+    border-color: #8e64ef;
+  }
+  .test-btn.primary {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-color: #fbbf24;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+  }
+</style>
+</head>
+<body>
+
+<div class="podium-tester-bar">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <a href="characters.html" class="test-btn" style="text-decoration:none;">⬅ قاعة الأبطال (٢٠)</a>
+    <a href="index.html#home" class="test-btn" style="text-decoration:none;">🏠 الرئيسية</a>
+    <span style="font-weight:900;color:#fef08a;font-size:16px;">👑 معمل التتويج الملحمي (Kahoot Studio Mode)</span>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <label style="font-size:13px;font-weight:800;color:#b1a2e9;">العالم:</label>
+    <select id="worldSelect" onchange="changeWorld(this.value)" style="background:#1f1d38;border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 12px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;">
+      <option value="royal">👑 المملكة الذهبية (Royal)</option>
+      <option value="cosmic">🚀 المحطة الكونية (Cosmic)</option>
+      <option value="treasure">💎 عالم الكنز (Treasure)</option>
+      <option value="stadium">🏟️ ملعب الأبطال (Stadium)</option>
+      <option value="oasis">🌴 واحة المعرفة (Oasis)</option>
+      <option value="magic">🔮 مملكة السحر (Magic)</option>
+    </select>
+
+    <button type="button" class="test-btn primary" onclick="ScoreARPodiumEffects.startCinematicShow()">🎬 بدء العرض السينمائي (Kahoot Show)</button>
+    <button type="button" class="test-btn" onclick="ScoreARPodiumEffects.advanceReveal()">▶️ الخطوة التالية</button>
+    <button type="button" class="test-btn" onclick="ScoreARPodiumEffects.revealAll()">⚡ كشف الكل</button>
+    <button type="button" class="test-btn" onclick="initDemoPodium()">🔄 إعادة تعيين</button>
+  </div>
+</div>
+
+<div class="podium-stage-viewport" id="scorearQuizHostStage">
+  <!-- Host Podium will mount here -->
+</div>
+
+<script>
+window.ScoreARQuizHost = {
+  closeHostSession: function() {
+    window.location.href = 'index.html#worlds';
+  }
+};
+
+const samplePlayers = [
+  { name: 'زياد البطل', score: 1450, avatarId: 'char_01' },
+  { name: 'نور المستكشفة', score: 1180, avatarId: 'char_02' },
+  { name: 'سليم العالم', score: 920, avatarId: 'char_03' },
+  { name: 'فريدة الفنانة', score: 760, avatarId: 'char_04' },
+  { name: 'ياسين الرياضي', score: 640, avatarId: 'char_05' },
+  { name: 'عمر المخترع', score: 580, avatarId: 'char_07' },
+  { name: 'بندق السنجاب', score: 520, avatarId: 'char_12' }
+];
+
+let activeWorld = 'royal';
+
+function initDemoPodium() {
+  const stage = document.getElementById('scorearQuizHostStage');
+  const room = {
+    worldId: activeWorld,
+    world: { id: activeWorld },
+    players: samplePlayers
+  };
+  ScoreARPodiumEffects.renderHostPodium(stage, room);
+}
+
+function changeWorld(wid) {
+  activeWorld = wid;
+  initDemoPodium();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  initDemoPodium();
+});
+</script>
+
+</body>
+</html>

@@ -11,10 +11,8 @@
   let timeRemaining = 0, readingTimeRemaining = 10, isRoomLocked = false;
   let activeQuestions = [], lastFastestStudent = null, questionStartTime = 0;
 
-  function sfx(t) { if (global.ScoreARAudio) global.ScoreARAudio.playSfx(t); }
-  function music(tr, vol) { if (global.ScoreARAudio) global.ScoreARAudio.playMusic(tr, vol); }
-  function ev() { return global.ScoreARHostEvents || null; }
-  function view() { return global.ScoreARQuizHostView || null; }
+  function sfx(t) { if (global.ScoreARAudio) global.ScoreARAudio.playSfx(t); } function music(tr, vol) { if (global.ScoreARAudio) global.ScoreARAudio.playMusic(tr, vol); }
+  function ev() { return global.ScoreARHostEvents || null; } function view() { return global.ScoreARQuizHostView || null; }
 
   function getOrCreateStage() {
     let stage = document.getElementById('scorearHostStage');
@@ -44,12 +42,23 @@
     });
   }
 
-  async function startHostLobby(worldId = 'royal', customPin = null, bypassPicker = false) {
+  async function startHostLobby(worldId = 'royal', customPin = null, bypassPicker = false, bypassModePicker = false) {
     if (!bypassPicker && global.ScoreARWorldFlow && typeof global.ScoreARWorldFlow.openWorldPicker === 'function') {
       return global.ScoreARWorldFlow.openWorldPicker({
         defaultWorldId: worldId,
         pin: customPin,
-        onConfirm: (chosenWorld) => startHostLobby(chosenWorld, customPin, true)
+        onConfirm: (chosenWorld) => startHostLobby(chosenWorld, customPin, true, false)
+      });
+    }
+
+    if (!bypassModePicker && global.ScoreARGameModes && typeof global.ScoreARGameModes.openModePicker === 'function') {
+      const pinForModal = (typeof customPin === 'string' && /^\d{6}$/.test(customPin)) ? customPin : (global.ScoreARRealtime ? global.ScoreARRealtime.generatePin() : '849201');
+      return global.ScoreARGameModes.openModePicker({
+        worldId,
+        pin: pinForModal,
+        onConfirm: (wId, selectedMode, selectedAI) => {
+          startHostLobby(wId || worldId, pinForModal, true, true);
+        }
       });
     }
 
@@ -59,9 +68,7 @@
     const worlds = (global.worlds && global.worlds.length) ? global.worlds : defaultWorlds;
     const w = worlds.find(x => x.id === worldId) || { id: worldId, name: 'العالم' };
     const rawQs = (global.contestQuestions && global.contestQuestions.length) ? global.contestQuestions : [
-      { skill: 'النحو العربي', q: '«قرأتُ كتابًا ممتعًا». ما إعراب كلمة «ممتعًا»؟', opts: ['حال منصوب', 'نعت منصوب وعلامة نصبه الفتحة', 'مفعول به ثانٍ', 'تمييز منصوب'], ans: 1, why: 'نعت حقيقي منصوب.' },
-      { skill: 'البلاغة والبيان', q: '«العلم نور يضيء الدروب». ما نوع التشبيه؟', opts: ['استعارة تصريحية', 'تشبيه تمثيلي', 'تشبيه بليغ (مبتدأ وخبر)', 'كناية عن موصوف'], ans: 2, why: 'تشبيه بليغ.' },
-      { skill: 'النحو العربي', q: 'أيّ جملة تشتمل على «نعت جملة فعلية»؟', opts: ['شاهدتُ الطالبَ مسرعاً', 'هذا بطلٌ عظيم', 'قرأتُ لغةً تُبهرُ العقول', 'الامتحانُ سهلٌ'], ans: 2, why: 'الجمل بعد النكرات صفات.' }
+      { skill: 'النحو العربي', q: '«قرأتُ كتابًا ممتعًا». ما إعراب كلمة «ممتعًا»؟', opts: ['حال منصوب', 'نعت منصوب وعلامة نصبه الفتحة', 'مفعول به ثانٍ', 'تمييز منصوب'], ans: 1, why: 'نعت حقيقي منصوب.' }, { skill: 'البلاغة والبيان', q: '«العلم نور يضيء الدروب». ما نوع التشبيه؟', opts: ['استعارة تصريحية', 'تشبيه تمثيلي', 'تشبيه بليغ (مبتدأ وخبر)', 'كناية عن موصوف'], ans: 2, why: 'تشبيه بليغ.' }, { skill: 'النحو العربي', q: 'أيّ جملة تشتمل على «نعت جملة فعلية»؟', opts: ['شاهدتُ الطالبَ مسرعاً', 'هذا بطلٌ عظيم', 'قرأتُ لغةً تُبهرُ العقول', 'الامتحانُ سهلٌ'], ans: 2, why: 'الجمل بعد النكرات صفات.' }
     ];
     const evaluator = global.ScoreAREvaluator;
     const migrated = (evaluator && typeof evaluator.migrateQuestions === 'function') ? evaluator.migrateQuestions(rawQs) : rawQs;
@@ -77,8 +84,10 @@
     }
     if (!migrated.length) { if (global.toast) global.toast('لا توجد أسئلة صالحة'); alert('لا توجد أسئلة صالحة'); return; }
 
+    const activeGameMode = (global.ScoreARGameModes && typeof global.ScoreARGameModes.getMode === 'function') ? global.ScoreARGameModes.getMode() : 'SOLO';
+    const aiEnabled = (global.ScoreARGameModes && typeof global.ScoreARGameModes.isAIEnabled === 'function') ? global.ScoreARGameModes.isAIEnabled() : true;
     activeQuestions = migrated;
-    currentRoom = { pin, world: w, players: [], answers: {}, isLocked: false, status: 'lobby' };
+    currentRoom = { pin, world: w, players: [], answers: {}, isLocked: false, status: 'lobby', mode: activeGameMode, gameMode: activeGameMode, aiEnabled };
 
     if (global.ScoreARRealtime) {
       global.ScoreARRealtime.init('host', pin, handleHostIncomingMessage);
@@ -86,8 +95,12 @@
     }
     if (global.ScoreARCardArena && typeof global.ScoreARCardArena.initArena === 'function') {
       global.ScoreARCardArena.initArena(pin, 'host', true);
+      if (global.ScoreARCardArena.getManager) {
+        const mgr = global.ScoreARCardArena.getManager();
+        if (mgr && typeof mgr.setGameMode === 'function') mgr.setGameMode(activeGameMode, aiEnabled, 4);
+      }
     }
-    if (global.ScoreARGameModes && typeof global.ScoreARGameModes.isAIEnabled === 'function' && global.ScoreARGameModes.isAIEnabled()) {
+    if (aiEnabled) {
       setTimeout(() => {
         if (currentRoom && currentRoom.players && currentRoom.players.length === 0) {
           addDemoPlayer('🤖 أرجون الذكي');
@@ -128,12 +141,7 @@
       id: botId,
       name: pName, avatarId: avatarId || chars[(count - 1) % chars.length], score: 0, streak: 0, isDemo: true, isBot: true, accuracy: 0.65, speed: 'medium', isRegistered: false
     });
-    if (global.ScoreARCardArena && typeof global.ScoreARCardArena.getManager === 'function') {
-      const mgr = global.ScoreARCardArena.getManager();
-      if (mgr) {
-        mgr.registerPlayer(botId, pName, true);
-      }
-    }
+    if (global.ScoreARCardArena?.getManager) global.ScoreARCardArena.getManager()?.registerPlayer(botId, pName, true);
     sfx('pop');
     if (currentRoom.status === 'lobby') refreshLobbyUi();
     if (global.toast) global.toast(`تم انضمام: ${pName} 🤖`);
@@ -231,13 +239,9 @@
     timeRemaining = qData.timeLimit || 20;
     questionStartTime = Date.now(); // Authoritative host question start time (Item 2)
 
-    const worldId = (currentRoom?.world?.id || 'royal');
-    const stage = getOrCreateStage();
-    if (view() && view().animateToAnswering) {
-      view().animateToAnswering(stage, qData, currentQIndex, activeQuestions.length, worldId, timeRemaining);
-    } else if (view()) {
-      view().renderHostQuestionView(stage, 'answering', qData, currentQIndex, activeQuestions.length, worldId, timeRemaining, 0);
-    }
+    const worldId = (currentRoom?.world?.id || 'royal'), stage = getOrCreateStage();
+    if (view()?.animateToAnswering) view().animateToAnswering(stage, qData, currentQIndex, activeQuestions.length, worldId, timeRemaining);
+    else if (view()) view().renderHostQuestionView(stage, 'answering', qData, currentQIndex, activeQuestions.length, worldId, timeRemaining, 0);
     sfx('reveal');
     try { const d=(global.ScoreARAuth?.getDb?.())||global.firebase?.database?.(); if(d&&currentRoom?.pin) d.ref('rooms/'+currentRoom.pin).update({status:'answering'}).catch(()=>{}); } catch(e){}
 
@@ -301,13 +305,8 @@
 
     // Reveal option distribution counts ONLY after answering concludes
     const counts = [0, 0, 0, 0];
-    Object.values(answers).forEach(a => {
-      if (a.optionIndex >= 0 && a.optionIndex < 4) counts[a.optionIndex]++;
-    });
-    counts.forEach((c, i) => {
-      const b = document.getElementById(`hostOptionCountBadge_${i}`);
-      if (b) { b.textContent = c; b.style.display = 'block'; }
-    });
+    Object.values(answers).forEach(a => { if (a.optionIndex >= 0 && a.optionIndex < 4) counts[a.optionIndex]++; });
+    counts.forEach((c, i) => { const b = document.getElementById(`hostOptionCountBadge_${i}`); if (b) { b.textContent = c; b.style.display = 'block'; } });
 
     // Reveal animation: wrong options dim down instead of vanishing
     for (let i = 0; i < 4; i++) {
@@ -339,14 +338,9 @@
       if (autoSec <= 0) { clearInterval(autoAdvanceTimer); renderHostLeaderboard(); }
     }, 1000);
 
-    if (global.ScoreARCardArena && typeof global.ScoreARCardArena.getManager === 'function') {
-      const mgr = global.ScoreARCardArena.getManager();
-      if (mgr && evalResult.fastestTop2 && Array.isArray(evalResult.fastestTop2)) {
-        evalResult.fastestTop2.forEach(winner => {
-          const isBot = currentRoom.players.some(p => String(p.id) === String(winner.id) && (p.isBot || p.isDemo));
-          if (isBot) mgr.grantRandomCard(winner.id);
-        });
-      }
+    const cardMgr = global.ScoreARCardArena?.getManager?.();
+    if (cardMgr && Array.isArray(evalResult.fastestTop2)) {
+      evalResult.fastestTop2.forEach(w => { if (currentRoom.players.some(p => String(p.id) === String(w.id) && (p.isBot || p.isDemo))) cardMgr.grantRandomCard(w.id); });
     }
 
     if (ev()) {

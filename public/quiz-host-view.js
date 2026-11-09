@@ -90,7 +90,7 @@
           <div><b style="color:#ffffff;font-size:15px;display:block;">عالم ${w.name}</b><small style="color:#52d9ed;font-size:11px;">${w.tag || 'جاهز للمنافسة'} · مباشر</small></div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;">
-          <button class="btn outline" onclick="ScoreARGameModes && ScoreARGameModes.openModePicker({ worldId: '${worldId}', pin: '${currentRoom.pin}' })" style="font-size:12px;padding:9px 14px;border-radius:12px;border:1.5px solid ${modeBadgeBorder};background:rgba(20,20,40,0.85);color:${modeBadgeBorder};font-weight:900;display:inline-flex;align-items:center;gap:6px;cursor:pointer;" title="تغيير طور اللعب"><span>${modeBadgeText}</span><span style="font-size:10px;opacity:0.8;">▾</span></button>
+          <button id="hostGameModeBtn" class="btn outline" onclick="ScoreARGameModes && ScoreARGameModes.openModePicker({ worldId: '${worldId}', pin: '${currentRoom.pin}' })" style="font-size:12px;padding:9px 14px;border-radius:12px;border:1.5px solid ${modeBadgeBorder};background:rgba(20,20,40,0.85);color:${modeBadgeBorder};font-weight:900;display:inline-flex;align-items:center;gap:6px;cursor:pointer;" title="تغيير طور اللعب"><span id="hostGameModeBtnText">${modeBadgeText}</span><span style="font-size:10px;opacity:0.8;">▾</span></button>
           <button id="hostStartQuizBtn" class="btn dark" onclick="ScoreARQuizHost.launchQuestion(0)" style="font-size:14px;padding:10px 22px;font-weight:900;border-radius:14px;box-shadow:0 0 25px rgba(117,80,239,0.75);">🚀 بدء المنافسة فوراً (<span id="hostPlayerCount">${currentRoom.players.length}</span>)</button>
           <button class="btn light" onclick="ScoreARBots ? ScoreARBots.openModal() : ScoreARQuizHost.addDemoPlayer()" style="font-size:12px;padding:9px 15px;border-radius:12px;">🤖 الطلاب التجريبيون (<span id="hostBotCount">${currentRoom.players.filter(p=>p.isBot).length}</span>)</button>
           <button id="hostLockBtn" class="btn light" onclick="ScoreARQuizHost.toggleRoomLock()" style="font-size:12px;padding:9px 15px;border-radius:12px;color:${isRoomLocked?'#ef4444':'#34d399'};">${isRoomLocked ? '🔒 القاعة مقفلة' : '🔓 القاعة مفتوحة'}</button>
@@ -128,6 +128,19 @@
     if (countPill) countPill.textContent = currentRoom.players.length;
     const botCount = document.getElementById('hostBotCount');
     if (botCount) botCount.textContent = currentRoom.players.filter(p => p.isBot).length;
+    if (currentRoom.mode || currentRoom.gameMode) updateLobbyModeBadge(currentRoom.gameMode || currentRoom.mode);
+  }
+
+  function updateLobbyModeBadge(mode) {
+    const btn = document.getElementById('hostGameModeBtn');
+    const txt = document.getElementById('hostGameModeBtnText') || (btn ? btn.querySelector('span') : null);
+    const modeBadgeText = mode === 'CARD_ARENA' ? '🃏 حرب الكروت' : (mode === 'SQUADS' ? '🛡️ مجموعات' : '👤 فردي');
+    const modeBadgeBorder = mode === 'CARD_ARENA' ? '#f59e0b' : (mode === 'SQUADS' ? '#38bdf8' : '#8e64ef');
+    if (txt) txt.textContent = modeBadgeText;
+    if (btn) {
+      btn.style.borderColor = modeBadgeBorder;
+      btn.style.color = modeBadgeBorder;
+    }
   }
 
   function renderFullbodyCharactersHtml(currentRoom) {
@@ -297,6 +310,7 @@
   const ScoreARQuizHostView = {
     renderHostLobby,
     refreshLobbyUi,
+    updateLobbyModeBadge,
     renderFullbodyCharactersHtml,
     renderHostQuestionView,
     renderWorldTimerHtml,

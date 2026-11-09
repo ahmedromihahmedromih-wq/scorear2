@@ -62,13 +62,20 @@
     const onConfirm = options.onConfirm || (() => {});
     const onCancel = options.onCancel || (() => {});
 
-    // Try reading last saved mode
-    try {
-      const savedMode = localStorage.getItem('scorear_last_game_mode');
-      if (savedMode && MODES_CONFIG[savedMode]) currentMode = savedMode;
-      const savedAI = localStorage.getItem('scorear_last_ai_enabled');
-      if (savedAI !== null) isAiEnabled = (savedAI === 'true');
-    } catch(e){}
+    // Sync from host room if active
+    if (global.ScoreARQuizHost && typeof global.ScoreARQuizHost.getCurrentRoom === 'function') {
+      const room = global.ScoreARQuizHost.getCurrentRoom();
+      if (room && room.gameMode && MODES_CONFIG[room.gameMode]) currentMode = room.gameMode;
+      if (room && typeof room.aiEnabled === 'boolean') isAiEnabled = room.aiEnabled;
+    } else {
+      // Try reading last saved mode
+      try {
+        const savedMode = localStorage.getItem('scorear_last_game_mode');
+        if (savedMode && MODES_CONFIG[savedMode]) currentMode = savedMode;
+        const savedAI = localStorage.getItem('scorear_last_ai_enabled');
+        if (savedAI !== null) isAiEnabled = (savedAI === 'true');
+      } catch(e){}
+    }
 
     closeModePicker();
 
@@ -191,15 +198,50 @@
     setMode(selectedMode, selectedAI);
     closeModePicker();
 
+    // Update CardArenaEngine manager mode
+    if (global.ScoreARCardArena && typeof global.ScoreARCardArena.getManager === 'function') {
+      try {
+        const mgr = global.ScoreARCardArena.getManager();
+        if (mgr && typeof mgr.setGameMode === 'function') mgr.setGameMode(selectedMode, selectedAI, 4);
+      } catch(e){}
+    }
+
+    // Update host room state if host is active
+    if (global.ScoreARQuizHost && typeof global.ScoreARQuizHost.getCurrentRoom === 'function') {
+      const room = global.ScoreARQuizHost.getCurrentRoom();
+      if (room) {
+        room.mode = selectedMode;
+        room.gameMode = selectedMode;
+        room.aiEnabled = selectedAI;
+      }
+    }
+
+    // Update lobby mode badge in DOM
+    if (global.ScoreARQuizHostView && typeof global.ScoreARQuizHostView.updateLobbyModeBadge === 'function') {
+      global.ScoreARQuizHostView.updateLobbyModeBadge(selectedMode);
+    }
+
+    // Sync to Firebase RTDB if available
+    try {
+      const db = (global.ScoreARAuth?.getDb?.()) || global.firebase?.database?.();
+      if (db && pin) {
+        db.ref('rooms/' + pin).update({ mode: selectedMode, gameMode: selectedMode, aiEnabled: selectedAI, updatedAt: Date.now() }).catch(()=>{});
+      }
+    } catch(e){}
+
     // Broadcast room mode update to all participants in this PIN
     if (global.ScoreARRealtime && typeof global.ScoreARRealtime.publish === 'function') {
       global.ScoreARRealtime.publish('ROOM_MODE_UPDATE', {
         mode: selectedMode,
+        gameMode: selectedMode,
         aiEnabled: selectedAI,
         pin: pin,
         worldId: worldId
       });
     }
+
+    const modeName = selectedMode === 'CARD_ARENA' ? 'حرب الكروت' : (selectedMode === 'SQUADS' ? 'المجموعات' : 'الفردي');
+    if (global.toast) global.toast(`تم تفعيل طور «${modeName}» للقاعة بنجاح! 🎮`);
 
     if (typeof onConfirm === 'function') {
       onConfirm(worldId, selectedMode, selectedAI);

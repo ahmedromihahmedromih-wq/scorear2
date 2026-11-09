@@ -313,9 +313,9 @@
     }
 
     if (global.ScoreARQuizHost && typeof global.ScoreARQuizHost.startHostLobby === 'function') {
-      global.ScoreARQuizHost.startHostLobby(activeWorldId, null, true);
+      global.ScoreARQuizHost.startHostLobby(activeWorldId, null, true, false);
     } else if (typeof global.renderLiveLobby === 'function') {
-      global.renderLiveLobby(activeWorldId, null, true);
+      global.renderLiveLobby(activeWorldId, null, true, false);
     }
   }
 

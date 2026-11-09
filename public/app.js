@@ -233,16 +233,16 @@ function updateTopActionsTeacher(teacher){
 // =========================================================================
 // NEVER-BLACK CARTOON WORLDS LIVE LOBBY
 // =========================================================================
-function renderLiveLobby(worldId='royal', pin=null, bypassPicker=false){
+function renderLiveLobby(worldId='royal', pin=null, bypassPicker=false, bypassModePicker=false){
+  if (window.ScoreARQuizHost && typeof window.ScoreARQuizHost.startHostLobby === 'function') {
+    return window.ScoreARQuizHost.startHostLobby(worldId, pin, bypassPicker, bypassModePicker);
+  }
   if (!bypassPicker && window.ScoreARWorldFlow && typeof window.ScoreARWorldFlow.openWorldPicker === 'function') {
     return window.ScoreARWorldFlow.openWorldPicker({
       defaultWorldId: worldId,
       pin: pin,
-      onConfirm: (chosenWorld) => renderLiveLobby(chosenWorld, pin, true)
+      onConfirm: (chosenWorld) => renderLiveLobby(chosenWorld, pin, true, false)
     });
-  }
-  if (window.ScoreARQuizHost && typeof window.ScoreARQuizHost.startHostLobby === 'function') {
-    return window.ScoreARQuizHost.startHostLobby(worldId, pin, bypassPicker);
   }
   currentLobbyWorldId = worldId;
   currentLobbyPin = pin || (window.ScoreARRealtime ? window.ScoreARRealtime.generatePin() : String(Math.floor(100000 + Math.random() * 900000)));
@@ -702,7 +702,7 @@ function preview(id){
     <h3 style="color:#fff;font-size:18px;font-weight:800;">عالم ${w.name} — ${w.tag}</h3>
     <p style="color:#b1a2e9;font-size:13px;line-height:1.7;">${w.desc}</p>
     <div class="preview-actions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;">
-      <button class="btn dark small" onclick="closeModal(); renderLiveLobby('${w.id}');" style="flex:2;justify-content:center;font-weight:900;">🚀 انطلاق القاعة بهذا العالم الآن</button>
+      <button class="btn dark small" onclick="closeModal(); renderLiveLobby('${w.id}', null, true, false);" style="flex:2;justify-content:center;font-weight:900;">🚀 انطلاق القاعة بهذا العالم الآن</button>
       <button class="btn outline small" data-action="close" style="justify-content:center;">✕ إغلاق</button>
     </div>
   </div>`);
@@ -912,7 +912,7 @@ document.addEventListener('click',e=>{
       break;
     case 'filter':state.filter=b.dataset.filter;render();break;
     case 'preview':preview(b.dataset.world);break;
-    case 'launchworld':renderLiveLobby(b.dataset.world || 'royal');break;
+    case 'launchworld':renderLiveLobby(b.dataset.world || 'royal', null, true, false);break;
     case 'worldquiz':startActiveContest(b.dataset.world || 'royal');break;
     case 'setup':renderLiveLobby(b.dataset.world || 'royal');break;
     case 'upload':$('#fileInput').click();break;

@@ -291,8 +291,8 @@
         }
       }
 
-      if (this.particlePool && k1.fx && frameIdx !== this.lastSpawnFrame) {
-        this.lastSpawnFrame = frameIdx;
+      if (this.particlePool && k1.fx && stepIdx !== this.lastSpawnFrame) {
+        this.lastSpawnFrame = stepIdx;
         const rect = this.stage.getBoundingClientRect ? this.stage.getBoundingClientRect() : { width: 320, height: 400 };
         this.particlePool.spawn(k1.fx, rect.width * 0.5, this.action === 'fly' ? rect.height * 0.7 : rect.height * 0.9);
       }

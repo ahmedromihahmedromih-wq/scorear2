@@ -49,3 +49,10 @@
 @media(max-width:330px){#avatarsGrid{grid-template-columns:1fr!important}}
 .heroes-page{max-width:100%!important;box-sizing:border-box!important;overflow-x:hidden!important}
 @media(prefers-reduced-motion:reduce){.character-frames{display:none!important}.scorear-character>img{visibility:visible!important}.character-card{transition:none!important}.character-card:hover{transform:none}}
+
+.character-card .scorear-character { animation: character-card-breathe 2.5s ease-in-out infinite; transform-origin: bottom center; }
+@keyframes character-card-breathe { 0%, 100% { transform: translateY(0) scale(1,1); } 50% { transform: translateY(-4px) scale(0.98,1.02); } }
+.character-card:hover .scorear-character>img { visibility: hidden !important; }
+.character-card:hover .character-frames { display: block !important; animation: character-walk-frames 1.0s steps(1,end) infinite !important; }
+.character-card[aria-pressed=true] .scorear-character>img { visibility: hidden !important; }
+.character-card[aria-pressed=true] .character-frames { display: block !important; animation: character-walk-frames 1.2s steps(1,end) infinite !important; }

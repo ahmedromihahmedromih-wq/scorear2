@@ -709,7 +709,7 @@ function renderHeroesPage(){
     <div class="page-title">
       <div class="eyebrow">قاعة الأبطال الكرتونية</div>
       <h1>لكل بطل حكاية.. وهنا تبدأ مغامرتك.</h1>
-      <p>٢٠ شخصية كرتونية أصلية بجسم كامل وتفاعل حي. اختر رفيق رحلتك في التحدي وتنقّل بين أوضاع الحركة.</p>
+      <p>٢٠ شخصية كرتونية أصلية بجسم كامل وتفاعل ثلاثي الأبعاد. اختر بطلك المفضل ليمثّلك في قاعة التحدي وعلى منصة التتويج.</p>
     </div>
 
     <div class="character-picker" style="display:grid;grid-template-columns:300px 1fr;gap:24px;margin-top:24px;align-items:start;">
@@ -718,13 +718,8 @@ function renderHeroesPage(){
         <div id="studentCustomPreviewBox" style="width:220px;height:280px;margin:8px auto;display:flex;align-items:center;justify-content:center;"></div>
         <div id="studentCustomPreviewTitle" aria-live="polite" style="margin-top:10px;"></div>
         
-        <div class="character-controls" aria-label="تجربة الحركة" style="margin-top:16px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
-          <button type="button" class="btn light small" data-character-pose="idle" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'idle')">🧍 وقوف</button>
-          <button type="button" class="btn light small" data-character-pose="walk" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'walk')">🚶 مشي</button>
-          <button type="button" class="btn light small" data-character-pose="celebrate" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'celebrate')">🎉 احتفال</button>
-          <button type="button" class="btn light small" data-character-pose="run" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'run')">🏃‍♂️ جري</button>
-          <button type="button" class="btn light small" data-character-pose="climb" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'climb')">🧗‍♂️ تسلق</button>
-          <button type="button" class="btn light small" data-character-pose="fly" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'fly')">🦅 طيران</button>
+        <div class="character-controls" aria-label="وضعية البطل" style="margin-top:16px;display:flex;justify-content:center;">
+          <button type="button" class="btn light small" data-character-pose="idle" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'idle')" style="background:linear-gradient(110deg,#7550ef,#9665ff);color:#ffffff;border:1px solid #c4a8ff50;box-shadow:0 4px 15px rgba(117,80,239,0.35);padding:8px 20px;border-radius:12px;font-weight:900;font-size:13px;">🧍 وضع الوقوف والاستعداد</button>
         </div>
       </aside>
 

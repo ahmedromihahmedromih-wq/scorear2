@@ -254,7 +254,7 @@
   <div class="gallery-title-area">
     <div class="eyebrow" style="margin-bottom:8px;">قاعة الأبطال الكرتونية</div>
     <h1>لكل بطل حكاية.. وهنا تبدأ مغامرتك.</h1>
-    <p>٢٠ شخصية كرتونية أصلية بجسم كامل وتفاعل حي. جرّب أوضاع الوقوف، المشي، الاحتفال، الجري، التسلق، والطيران، واختر رفيقك لتحديات الفصل القادمة.</p>
+    <p>٢٠ شخصية كرتونية أصلية بجسم كامل وتفاعل ثلاثي الأبعاد. اختر بطلك المفضل ليمثّلك في قاعة التحدي وعلى منصة التتويج.</p>
   </div>
 
   <div class="character-picker">
@@ -264,13 +264,8 @@
       <div id="studentCustomPreviewBox" style="width:240px;height:300px;margin:8px auto;display:flex;align-items:center;justify-content:center;"></div>
       <div id="studentCustomPreviewTitle" aria-live="polite" style="margin-top:12px;"></div>
       
-      <div class="character-controls" aria-label="تجربة الحركة" style="margin-top:18px;">
-        <button type="button" data-character-pose="idle" onclick="ScoreARCharacters.preview(window.gallerySelected,'idle')">🧍 وقوف</button>
-        <button type="button" data-character-pose="walk" onclick="ScoreARCharacters.preview(window.gallerySelected,'walk')">🚶 مشي</button>
-        <button type="button" data-character-pose="celebrate" onclick="ScoreARCharacters.preview(window.gallerySelected,'celebrate')">🎉 احتفال</button>
-        <button type="button" data-character-pose="run" onclick="ScoreARCharacters.preview(window.gallerySelected,'run')">🏃‍♂️ جري</button>
-        <button type="button" data-character-pose="climb" onclick="ScoreARCharacters.preview(window.gallerySelected,'climb')">🧗‍♂️ تسلق</button>
-        <button type="button" data-character-pose="fly" onclick="ScoreARCharacters.preview(window.gallerySelected,'fly')">🦅 طيران</button>
+      <div class="character-controls" aria-label="وضعية البطل" style="margin-top:18px;display:flex;justify-content:center;">
+        <button type="button" data-character-pose="idle" onclick="ScoreARCharacters.preview(window.gallerySelected,'idle')" aria-pressed="true" style="background:linear-gradient(110deg,#7550ef,#9665ff);color:#ffffff;border:1px solid #c4a8ff50;box-shadow:0 4px 15px rgba(117,80,239,0.35);padding:8px 22px;border-radius:14px;font-weight:900;font-size:13px;display:inline-flex;align-items:center;gap:6px;">🧍 وضع الوقوف والاستعداد</button>
       </div>
       <button type="button" class="character-motion" data-character-motion onclick="ScoreARCharacters.toggleMotion()" style="margin-top:14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);padding:8px 16px;border-radius:10px;color:#ddd8ff;cursor:pointer;">إيقاف الحركة</button>
     </aside>

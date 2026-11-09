@@ -73,7 +73,7 @@
     }
     applyMotion();
   }
-  function preview(id,state='walk'){
+  function preview(id,state='idle'){
     const c=get(id),box=document.getElementById('studentCustomPreviewBox'),title=document.getElementById('studentCustomPreviewTitle');
     if(box){
       if(global.ScoreARMotionEngine&&typeof global.ScoreARMotionEngine.mount==='function'){

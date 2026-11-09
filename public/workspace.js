@@ -1,105 +1,124 @@
-/* Presentation layer: Teacher Studio and Academy */
-window.renderTeacherStudio=function(){
+/* ScoreAR Teacher Studio & Academy - Unified Purple Cover Identity */
+window.renderTeacherStudio = function(){
   return `<div class="page teacher-space">
-    <div class="studio-heading">
+    <!-- STUDIO TOP IDENTITY BAR -->
+    <div class="studio-heading reveal">
       <div style="display:flex;align-items:center;gap:18px;">
-        <div style="width:70px;height:70px;border-radius:20px;border:2px solid #8e64ef;box-shadow:0 0 20px rgba(142,100,239,0.4);overflow:hidden;background:#1b1c33;flex-shrink:0;">
+        <div class="studio-avatar-wrap">
           <img src="assets/characters/teacher_ahmed.webp?v=20261106_real" alt="أ. أحمد صلاح رميح" style="width:100%;height:100%;object-fit:cover;">
         </div>
         <div>
-          <div class="eyebrow">مساحتك للإلهام · أ. أحمد صلاح رميح</div>
-          <h1>كل حصة، فرصة جديدة.</h1>
-          <p>محتواك وأدواتك في مكان واحد. ابدأ بخطوة، وكمل بطريقتك.</p>
+          <div class="launch-pill" style="margin-bottom:8px;"><span class="live-dot"></span> مساحتك للإلهام · أ. أحمد صلاح رميح</div>
+          <h1 style="font-size:32px;font-weight:900;color:#f6f3ff;margin:4px 0 8px;">كل حصة، <span class="gradient-text">فرصة جديدة.</span></h1>
+          <p style="color:#aaa9c1;font-size:14px;line-height:1.8;margin:0;">محتواك وأدواتك في مكان واحد. ابدأ بخطوة، وكمّل بطريقتك وبأعلى معايير التفاعل.</p>
         </div>
       </div>
-      <div style="display:flex;gap:10px;">
-        <button class="btn dark" onclick="renderLiveLobby('royal', currentLobbyPin)">قاعة المنافسات الحية 🚀</button>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+        <button class="btn launch-primary" onclick="renderLiveLobby('royal', currentLobbyPin)" style="padding:12px 24px;font-weight:900;font-size:14px;">قاعة المنافسات الحية 🚀</button>
       </div>
     </div>
 
-    <!-- TEACHER BANNER -->
-    <section class="teacher-banner">
+    <!-- TEACHER HERO BANNER -->
+    <section class="teacher-banner spotlight reveal">
       <img src="assets/classroom.webp" alt="معلم مصري كرتوني مع طلابه وكتاب المعرفة">
-      <div>
-        <span class="studio-kicker">TEACHER STUDIO / استوديو المعلم</span>
-        <h2>إنت تصنع الفكرة.<br><em>وهم يعيشوا المغامرة.</em></h2>
-        <p>من أول سؤال إلى آخر لحظة اكتشاف.</p>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;">
-          <button class="btn dark" onclick="openToolModal('builder')" style="font-weight:900;box-shadow:0 8px 25px rgba(117,80,239,0.5);">${icon('edit')} إنشاء مسابقة جديدة وبدء التحدي 🚀</button>
-          <button class="btn light" onclick="renderLiveLobby('royal', currentLobbyPin)" style="font-weight:800;">${icon('planet')} فتح قاعة اللوبي المباشرة</button>
+      <div class="teacher-banner-overlay"></div>
+      <div class="teacher-banner-content">
+        <div class="launch-pill" style="margin-bottom:14px;"><span class="live-dot"></span> TEACHER STUDIO / استوديو المعلم المتقدم</div>
+        <h2>إنت تصنع الفكرة.<br><span class="gradient-text">وهم يعيشوا المغامرة.</span></h2>
+        <p>من أول سؤال في ملف الدرس إلى آخر لحظة اكتشاف وتتويج على منصة الأبطال.</p>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:20px;">
+          <button class="btn launch-primary" onclick="openToolModal('builder')" style="padding:13px 26px;font-weight:900;font-size:14px;display:inline-flex;align-items:center;gap:8px;">${icon('edit')} إنشاء مسابقة جديدة وبدء التحدي 🚀</button>
+          <button class="btn launch-outline" onclick="renderLiveLobby('royal', currentLobbyPin)" style="padding:13px 22px;font-weight:800;font-size:14px;display:inline-flex;align-items:center;gap:8px;">${icon('planet')} فتح قاعة اللوبي المباشرة</button>
         </div>
       </div>
     </section>
 
-    <!-- 3 STEPS -->
-    <div class="studio-heading compact">
+    <!-- 3 STEPS JOURNEY -->
+    <div class="launch-section-heading reveal" style="margin-top:45px;margin-bottom:24px;">
       <div>
-        <h2>حصة كاملة. ثلاث خطوات.</h2>
-        <p>اختر المهمة التي تحتاجها الآن.</p>
+        <span class="section-kicker">3 STEPS TO MASTERY / مسار الحصة المتكامل</span>
+        <h2 style="font-size:28px;font-weight:900;color:#f6f3ff;">حصة كاملة.<br><span class="gradient-text">ثلاث خطوات سهلة ومباشرة.</span></h2>
       </div>
+      <p style="color:#aaa9c1;font-size:13px;line-height:1.8;">اختر المهمة التي تحتاجها الآن للانطلاق مع فصولك.</p>
     </div>
+
     <div class="studio-steps">
-      <div class="studio-step" onclick="openToolModal('bank')" style="cursor:pointer;">
-        <span class="step-index">01</span>
-        <span class="entry-icon">${icon('book')}</span>
+      <div class="studio-step spotlight reveal" onclick="openToolModal('bank')" style="cursor:pointer;">
+        <span class="experience-num">01 / للتحضير</span>
+        <span class="experience-icon">${icon('book')}</span>
         <h3>جهّز المحتوى</h3>
-        <p>بنك الأسئلة الشامل ومكتبة مسابقاتي الخاصة.</p>
-        <strong style="color:#52d9ed;">افتح مكتبتي وبنك الأسئلة ${icon('arrow')}</strong>
+        <p>بنك الأسئلة الشامل ومكتبة مسابقاتي الخاصة مع أدوات المراجعة والحفظ التلقائي.</p>
+        <span class="experience-link">افتح مكتبتي وبنك الأسئلة ${icon('arrow')}</span>
       </div>
-      <div class="studio-step" onclick="renderLiveLobby('royal', currentLobbyPin)" style="cursor:pointer;">
-        <span class="step-index">02</span>
-        <span class="entry-icon">${icon('planet')}</span>
+
+      <div class="studio-step spotlight reveal" onclick="renderLiveLobby('royal', currentLobbyPin)" style="cursor:pointer;">
+        <span class="experience-num">02 / للانطلاق</span>
+        <span class="experience-icon">${icon('planet')}</span>
         <h3>أطلق المنافسة</h3>
-        <p>اختر نشاطك وعالمك، واجمع طلابك في اللوبي.</p>
-        <strong style="color:#52d9ed;">انطلاق القاعة فوراً ${icon('arrow')}</strong>
+        <p>اختر نشاطك وعالمك الكرتوني، واجمع طلابك في اللوبي بانتظار 3D حي وتحدٍ فوري.</p>
+        <span class="experience-link">انطلاق القاعة فوراً ${icon('arrow')}</span>
       </div>
-      <div class="studio-step" onclick="openToolModal('reports')" style="cursor:pointer;">
-        <span class="step-index">03</span>
-        <span class="entry-icon">${icon('chart')}</span>
-        <h3>افهم النتائج <span style="background:rgba(16,185,129,0.2);color:#34d399;font-size:10px;padding:2px 8px;border-radius:6px;font-weight:800;margin-inline-start:4px;">نشط الآن ✓</span></h3>
-        <p>نسب صواب الأسئلة الفعلية والأسئلة الأضعف ومتابعة المسودات.</p>
-        <strong style="color:#52d9ed;">افتح التقارير والتحليلات ${icon('arrow')}</strong>
+
+      <div class="studio-step spotlight reveal" onclick="openToolModal('reports')" style="cursor:pointer;">
+        <span class="experience-num">03 / للتحليل</span>
+        <span class="experience-icon">${icon('chart')}</span>
+        <h3>افهم النتائج <span class="step-badge"><span class="live-dot"></span> نشط الآن</span></h3>
+        <p>نسب صواب الأسئلة الفعلية وتشخيص الأسئلة الأضعف ومتابعة مسودات وتقارير الطلاب.</p>
+        <span class="experience-link">افتح التقارير والتحليلات ${icon('arrow')}</span>
       </div>
     </div>
 
-    <!-- STUDIO TOOLS -->
-    <div class="studio-bottom">
-      <section class="panel studio-tools">
-        <div class="studio-heading compact">
-          <h2>أدوات الإعداد السريعة</h2>
-          <span class="studio-kicker">منشئ المسابقات الحقيقي</span>
+    <!-- STUDIO FAST TOOLS & ACADEMY TEASER -->
+    <div class="studio-bottom" style="margin-top:40px;">
+      <section class="studio-tools-panel reveal">
+        <div class="tools-head">
+          <div>
+            <span class="section-kicker">RAPID CREATION / أدوات المعلم</span>
+            <h2 style="font-size:24px;font-weight:900;color:#ffffff;margin:4px 0 8px;">أدوات الإعداد السريعة</h2>
+          </div>
+          <span class="launch-pill"><span class="live-dot"></span> منشئ المسابقات الحقيقي</span>
         </div>
-        ${[
-          ['edit','إنشاء مسابقة جديدة','أنشئ أسئلتك وخياراتها مع الحفظ التلقائي وانطلق بالقاعة.','builder',true],
-          ['spark','مساعد الأسئلة الذكي AI','توليد الأسئلة بالذكاء الاصطناعي عبر الخادم مع مراجعة المعلم.','ai',true],
-          ['grid','بنك الأسئلة الشامل','بنك أسئلة مخصص ومكتبة مسابقات خاصة بالمعلم.','bank',true],
-          ['file','استيراد Excel / CSV','استيراد سريع بنفس ترتيب أعمدة كاهوت ومعاينة تفاعلية.','import',true],
-          ['trophy','تقارير القاعة والنتائج','تحليلات دقيقة لنسب صواب الأسئلة والأسئلة الأضعف.','reports',true],
-          ['shield','إدارة المعلمين والمنصة','الموافقات والحسابات حسب صلاحيتك.','teachers',true]
-        ].map(([ic,t,d,r,isActive])=>`
-          <button class="studio-tool ${isActive?'':'disabled'}" onclick="openToolModal('${r}')" style="${isActive?'':'opacity:0.65;cursor:not-allowed;'}">
-            <span class="entry-icon">${icon(ic)}</span>
-            <span>
-              <b>${t} ${isActive ? '<span style=\"background:rgba(16,185,129,0.2);color:#34d399;font-size:10px;padding:2px 8px;border-radius:6px;font-weight:800;margin-inline-start:6px;\">نشط الآن ✓</span>' : '<span style=\"background:rgba(142,100,239,0.25);color:#c4b5fd;font-size:10px;padding:2px 8px;border-radius:6px;font-weight:800;margin-inline-start:6px;\">قريبًا</span>'}</b>
-              <small>${d}</small>
-            </span>
-            ${icon('arrow')}
-          </button>
-        `).join('')}
+
+        <div class="studio-tools-grid">
+          ${[
+            ['edit','إنشاء مسابقة جديدة','أنشئ أسئلتك وخياراتها مع الحفظ التلقائي الفوري.','builder',true],
+            ['spark','مساعد الأسئلة الذكي AI','توليد الأسئلة بالذكاء الاصطناعي مع مراجعة دقيقة.','ai',true],
+            ['grid','بنك الأسئلة الشامل','بنك أسئلة منظم ومكتبة مسابقات خاصة بالمعلم.','bank',true],
+            ['file','استيراد Excel / CSV','استيراد سريع بنفس ترتيب أعمدة كاهوت ومعاينة حية.','import',true],
+            ['trophy','تقارير القاعة والنتائج','تحليلات دقيقة لنسب الصواب وتشخيص الثغرات.','reports',true],
+            ['shield','إدارة المعلمين والمنصة','الموافقات والصلاحيات المتقدمة حسب الرتبة.','teachers',true]
+          ].map(([ic,t,d,r,isActive])=>`
+            <button type="button" class="studio-tool-card spotlight ${isActive?'':'disabled'}" onclick="openToolModal('${r}')" style="${isActive?'':'opacity:0.65;cursor:not-allowed;'}">
+              <div class="tool-card-top">
+                <span class="tool-icon">${icon(ic)}</span>
+                ${isActive ? '<span class="step-badge"><span class="live-dot"></span> نشط</span>' : '<span class="step-badge soon">قريباً</span>'}
+              </div>
+              <div class="tool-card-body">
+                <h4>${t}</h4>
+                <p>${d}</p>
+              </div>
+              <span class="tool-card-link">فتح الأداة ${icon('arrow')}</span>
+            </button>
+          `).join('')}
+        </div>
       </section>
 
-      <a href="#academy" class="academy-teaser">
+      <a href="#academy" class="academy-teaser spotlight reveal">
         <img src="assets/academy.webp" alt="أكاديمية المعرفة العائمة">
-        <div>
-          <span class="studio-kicker">أول عالم يتجدّد</span>
-          <h2>وراء البوابة،<br>حكاية تنتظر.</h2>
-          <p>استكشف تصميم الدخول والانتظار والسؤال والنتيجة والتتويج.</p>
-          <strong>جرّب معاينة بوابة المعرفة ${icon('arrow')}</strong>
+        <div class="academy-teaser-overlay"></div>
+        <div class="academy-teaser-content">
+          <span class="section-kicker" style="color:#52d9ed;">FIRST UNIVERSE / أول عالم يتجدّد</span>
+          <h2>وراء البوابة،<br><span class="gradient-text">حكاية تنتظر.</span></h2>
+          <p>استكشف تصميم الدخول والانتظار والسؤال والنتيجة ومنصة التتويج ثلاثية الأبعاد.</p>
+          <span class="experience-link" style="color:#7be8dc;">جرّب معاينة بوابة المعرفة ${icon('arrow')}</span>
         </div>
       </a>
     </div>
 
-    <p class="note">تُفتح أدوات الحساب بعد تسجيل الدخول. يمكنك بدء المسابقات في أي وقت وتعديل خياراتها بحرية.</p>
+    <div class="reveal" style="margin-top:30px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:12px;color:#94a3b8;font-size:12px;">
+      <span style="font-size:18px;">💡</span>
+      <span>تُفتح أدوات الحساب بعد تسجيل الدخول. يمكنك بدء المسابقات في أي وقت وتعديل خياراتها وتخصيص تجربة فصولك بحرية تامة.</span>
+    </div>
   </div>`;
 };
 
@@ -107,16 +126,16 @@ let academyStage=0,academyAnswer=null;
 const academyNames=['الدخول','الانتظار','السؤال','نتيجة الجولة','التتويج'];
 window.renderAcademy=function(){
   const views=[
-    `<div class="academy-intro"><span class="academy-seal">${icon('book')}</span><span class="studio-kicker">THE KNOWLEDGE GATE</span><h2>بوابة المعرفة</h2><p>كل سؤال مفتاح.<br>وكل فكرة تفتح عالمًا.</p><button class="btn dark" data-academy="1">ادخل المعاينة ${icon('arrow')}</button></div>`,
-    `<div class="academy-intro"><span class="studio-kicker">المغامرة تبدأ معًا</span><h2>مكانك بين الأبطال.</h2><p>في القاعة الفعلية يظهر رمز الانضمام والطلاب المتصلون هنا.</p><div class="academy-heroes"><span>✦</span><span>✧</span><span>✦</span></div><button class="btn dark" data-academy="2">شاهد شاشة السؤال ${icon('arrow')}</button></div>`,
+    `<div class="academy-intro"><span class="academy-seal">${icon('book')}</span><span class="studio-kicker">THE KNOWLEDGE GATE</span><h2>بوابة المعرفة</h2><p>كل سؤال مفتاح.<br>وكل فكرة تفتح عالمًا.</p><button class="btn launch-primary" data-academy="1">ادخل المعاينة ${icon('arrow')}</button></div>`,
+    `<div class="academy-intro"><span class="studio-kicker">المغامرة تبدأ معًا</span><h2>مكانك بين الأبطال.</h2><p>في القاعة الفعلية يظهر رمز الانضمام والطلاب المتصلون هنا.</p><div class="academy-heroes"><span>✦</span><span>✧</span><span>✦</span></div><button class="btn launch-primary" data-academy="2">شاهد شاشة السؤال ${icon('arrow')}</button></div>`,
     `<div class="academy-question"><div class="academy-question-top"><span>تجربة سؤال / اللغة العربية</span><span>${icon('book')} النعت</span></div><h2>«قرأتُ كتابًا ممتعًا»</h2><p>ما إعراب «ممتعًا»؟</p><div class="academy-answers">${['حال منصوب','نعت منصوب','مفعول به منصوب','خبر مرفوع'].map((t,i)=>`<button data-academy-answer="${i}"><span>${['أ','ب','ج','د'][i]}</span>${t}</button>`).join('')}</div></div>`,
-    `<div class="academy-intro"><span class="academy-seal">${icon(academyAnswer===1?'check':'book')}</span><span class="studio-kicker">لحظة فهم</span><h2>${academyAnswer===null?'الإجابة: نعت منصوب':academyAnswer===1?'أحسنت، فتحت بابًا جديدًا!':'خلّينا نفهمها معًا.'}</h2><p>«ممتعًا» تصف الكتاب وتتبعُه في النصب والتنكير؛ لذلك فهي نعت منصوب.</p><button class="btn dark" data-academy="4">شاهد التتويج ${icon('arrow')}</button></div>`,
-    `<div class="academy-intro"><span class="academy-seal gold">${icon('trophy')}</span><span class="studio-kicker">كل خطوة تستحق الاحتفال</span><h2>المعرفة هي المكسب.</h2><p>هنا تُعرض نتائج القاعة وأبطالها بعد نهاية المسابقة.</p><button class="btn dark" onclick="renderLiveLobby('royal', currentLobbyPin)">جهّز منافسة فعلية الآن ${icon('arrow')}</button></div>`
+    `<div class="academy-intro"><span class="academy-seal">${icon(academyAnswer===1?'check':'book')}</span><span class="studio-kicker">لحظة فهم</span><h2>${academyAnswer===null?'الإجابة: نعت منصوب':academyAnswer===1?'أحسنت، فتحت بابًا جديدًا!':'خلّينا نفهمها معًا.'}</h2><p>«ممتعًا» تصف الكتاب وتتبعُه في النصب والتنكير؛ لذلك فهي نعت منصوب.</p><button class="btn launch-primary" data-academy="4">شاهد التتويج ${icon('arrow')}</button></div>`,
+    `<div class="academy-intro"><span class="academy-seal gold">${icon('trophy')}</span><span class="studio-kicker">كل خطوة تستحق الاحتفال</span><h2>المعرفة هي المكسب.</h2><p>هنا تُعرض نتائج القاعة وأبطالها بعد نهاية المسابقة.</p><button class="btn launch-primary" onclick="renderLiveLobby('royal', currentLobbyPin)">جهّز منافسة فعلية الآن ${icon('arrow')}</button></div>`
   ];
   return `<div class="page academy-page">
     <div class="studio-heading">
       <div><div class="eyebrow">معاينة التصميم</div><h1>عالم واحد. خمس لحظات.</h1><p>تنقّل بين حالات القاعة.</p></div>
-      <a href="#studio" class="btn light small">العودة للاستوديو</a>
+      <a href="#studio" class="btn launch-outline small">العودة للاستوديو</a>
     </div>
     <nav class="academy-tabs" aria-label="شاشات القاعة">${academyNames.map((t,i)=>`<button data-academy="${i}" aria-pressed="${i===academyStage}"><span>0${i+1}</span>${t}</button>`).join('')}</nav>
     <section class="academy-stage" aria-live="polite"><div class="academy-top"><span>✦ بوابة المعرفة</span><span>معاينة مستقلة</span></div>${views[academyStage]}</section>

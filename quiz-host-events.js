@@ -64,7 +64,8 @@
   }
 
   function publishQuestionResult(payload) {
-    if (rt()) rt().publish('QUESTION_RESULT', payload);
+    const { mode, gameMode, aiEnabled } = getModeInfo();
+    if (rt()) rt().publish('QUESTION_RESULT', { ...payload, mode, gameMode, aiEnabled });
   }
 
   function publishContestCompleted(podium, totalPlayers, fullLeaderboard = []) {
@@ -108,29 +109,29 @@
 
       let earned = 0, respTime = null, scoreFormula = '';
       if (isAnsCorrect) {
-        // Authoritative Server Time Calculation:
-        // Ignore any ans.timeRemaining from client! Compute from server ts vs host question start time:
-        let derivedTimeRemaining = 0;
-        if (ans && typeof ans.ts === 'number' && typeof questionStartTime === 'number' && questionStartTime > 0) {
-          const elapsedSec = Math.max(0, (ans.ts - questionStartTime) / 1000);
-          derivedTimeRemaining = Math.max(0, totalTime - elapsedSec);
-          respTime = elapsedSec.toFixed(1);
-        } else if (ans && typeof ans.timeRemaining === 'number' && (!ans.ts || !questionStartTime)) {
-          // Fallback only if offline simulation without timestamps
-          derivedTimeRemaining = Math.max(0, Math.min(totalTime, ans.timeRemaining));
-          respTime = Math.max(0, totalTime - derivedTimeRemaining).toFixed(1);
+        // Robust Authoritative Server Time Calculation
+        const rawTs = (ans && typeof ans.ts === 'number' && !isNaN(ans.ts))
+          ? ans.ts
+          : (ans && typeof ans.answeredAt === 'number' ? ans.answeredAt : Date.now());
+        let elapsedSec = 1.0;
+        if (typeof questionStartTime === 'number' && questionStartTime > 0) {
+          elapsedSec = Math.max(0.1, (rawTs - questionStartTime) / 1000);
+        } else if (ans && typeof ans.timeRemaining === 'number') {
+          elapsedSec = Math.max(0.1, totalTime - ans.timeRemaining);
         }
+        respTime = elapsedSec.toFixed(1);
+        const derivedTimeRemaining = Math.max(0, totalTime - elapsedSec);
 
         const base = Number(qData.points) || 1000;
         const mult = (qData.isDouble || qData.multiplier === 2) ? 2 : (Number(qData.multiplier) || 1);
-        const tf = (0.5 + 0.5 * (Math.max(0, derivedTimeRemaining) / (totalTime || 20)));
+        const tf = (0.5 + 0.5 * (derivedTimeRemaining / (totalTime || 20)));
         earned = Math.round(base * tf * mult);
         scoreFormula = `${base} × ${tf.toFixed(2)} × ${mult} = ${earned}`;
 
-        const numericResp = respTime !== null ? parseFloat(respTime) : Infinity;
+        const numericResp = parseFloat(respTime);
         if (numericResp < minTimeSec) {
           minTimeSec = numericResp;
-          fastest = { id: p.id, name: p.name, timeSec: numericResp };
+          fastest = { id: String(p.id), name: p.name, timeSec: numericResp };
         }
       }
 
@@ -160,9 +161,9 @@
     const correctAnswerText = opts[correctIdx] || '';
 
     const correctList = Object.values(playerResults)
-      .filter(r => r.isCorrect && r.respTime !== null)
-      .sort((a, b) => parseFloat(a.respTime) - parseFloat(b.respTime));
-    const fastestTop2 = correctList.slice(0, 2).map((r, i) => ({ id: r.id, name: r.playerName, timeSec: parseFloat(r.respTime), rank: i + 1 }));
+      .filter(r => r.isCorrect)
+      .sort((a, b) => parseFloat(a.respTime || 999) - parseFloat(b.respTime || 999));
+    const fastestTop2 = correctList.slice(0, 2).map((r, i) => ({ id: String(r.id), name: r.playerName, timeSec: parseFloat(r.respTime || 0), rank: i + 1 }));
 
     return { correct: correctIndices, correctAnswer: correctIdx, correctAnswerText, playerResults, fastest, fastestTop2 };
   }
@@ -187,7 +188,9 @@
           score: 0, streak: 0, lastPointsGained: 0, isRegistered: !!p.isRegistered, isDemo: false
         });
         if (typeof ctx.onPlayerJoined === 'function') ctx.onPlayerJoined(p);
-      } else if (exists && msg.isReconnect) {
+      } else if (exists && (msg.isReconnect || msg.type === 'STUDENT_JOIN')) {
+        if (p.id) exists.id = p.id;
+        if (p.avatarId) exists.avatarId = p.avatarId;
         if (typeof ctx.onPlayerReconnected === 'function') ctx.onPlayerReconnected(exists);
       }
     } else if (msg.type === 'STUDENT_ANSWER' || msg.type === 'STUDENT_ANSWERED') {

@@ -455,6 +455,7 @@
 
   function fastReconnect() {
     if (state.savedActiveSession) {
+      state.isReconnect = true;
       state.pin = state.savedActiveSession.pin;
       state.name = state.savedActiveSession.name;
       state.avatarId = state.savedActiveSession.avatarId || 'char_01';

@@ -134,8 +134,10 @@ export class GameModeManager {
   }
 
   grantRandomCard(playerId, specificCardId = null) {
-    const p = this.players[playerId];
-    if (!p) return null;
+    let p = this.players[playerId];
+    if (!p) {
+      p = this.registerPlayer(playerId, 'طالب', false);
+    }
     if (p.status.blockDrawTurns > 0) {
       p.status.blockDrawTurns -= 1;
       this.onPlayerToast(playerId, '🚫 لا يمكنك سحب كروت جديدة (تأثير مانع السحب نشط)!');

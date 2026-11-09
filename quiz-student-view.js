@@ -103,11 +103,14 @@
     const isCorrect = myResult ? Boolean(myResult.isCorrect ?? myResult.correct) : false;
     const earned = myResult ? Number(myResult.pointsEarned || 0) : 0;
     const respTime = myResult ? myResult.respTime : null;
-    const isFastest = (resData.fastestStudent && (String(resData.fastestStudent.id) === myId || resData.fastestStudent.name === currentStudent.name));
+    const myName = (currentStudent.name || '').trim();
+    const isFastest = (resData.fastestStudent && (String(resData.fastestStudent.id) === myId || (resData.fastestStudent.name && resData.fastestStudent.name.trim() === myName)));
     const myFastRank = (resData.fastestTop2 && Array.isArray(resData.fastestTop2))
-      ? (resData.fastestTop2.findIndex(f => String(f.id) === myId || f.name === currentStudent.name) + 1)
+      ? (resData.fastestTop2.findIndex(f => String(f.id) === myId || (f.name && f.name.trim() === myName)) + 1)
       : (isFastest ? 1 : 0);
-    const isCardArena = (typeof window !== 'undefined' && window.ScoreARCardArena && window.ScoreARCardArena.isModeActive());
+    const isCardArena = (typeof window !== 'undefined' && window.ScoreARCardArena && typeof window.ScoreARCardArena.isModeActive === 'function')
+      ? window.ScoreARCardArena.isModeActive()
+      : (resData.gameMode === 'CARD_ARENA' || resData.mode === 'CARD_ARENA');
 
     let currentRank = '-';
     if (resData.topLeaderboard && Array.isArray(resData.topLeaderboard)) {

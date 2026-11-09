@@ -69,6 +69,7 @@
     }
 
     renderStudentLobby(currentWorldId, currentStudent);
+    saveActiveSession();
   }
 
   function renderStudentLobby(worldId, student) {
@@ -155,6 +156,7 @@
     selectedOptionIndex = null;
 
     if (view()) view().renderStudentQuestion(getOrCreateStudentStage(), qData, currentWorldId, timeRemaining);
+    saveActiveSession();
     if (global.ScoreARCardArena && typeof global.ScoreARCardArena.mountStudentDeck === 'function') {
       global.ScoreARCardArena.mountStudentDeck(getOrCreateStudentStage());
       
@@ -208,6 +210,10 @@
     if (global.ScoreARRealtime) {
       global.ScoreARRealtime.publish('STUDENT_ANSWERED', {
         playerId: currentStudent.uid,
+        playerName: currentStudent.name,
+        optionIndex: idx,
+        chosenIndices: [idx],
+        ts: Date.now(),
         answeredAt: Date.now()
       });
     }
@@ -234,11 +240,52 @@
         if (outcome.currentRank !== '-') lastRank = outcome.currentRank;
         saveActiveSession();
         const myId = String(currentStudent.uid);
-        const isTop2 = resData.fastestTop2 && Array.isArray(resData.fastestTop2) && resData.fastestTop2.some(f => String(f.id) === myId);
+        const myName = (currentStudent.name || '').trim();
+        const isTop2 = resData.fastestTop2 && Array.isArray(resData.fastestTop2) && resData.fastestTop2.some(f =>
+          String(f.id) === myId || (f.name && f.name.trim() === myName)
+        );
         if (outcome.isCorrect && isTop2 && global.ScoreARCardArena && typeof global.ScoreARCardArena.onCorrectAnswerGranted === 'function') {
           global.ScoreARCardArena.onCorrectAnswerGranted(currentStudent.uid, true);
         }
       }
+    }
+  }
+
+  function tryRestoreSession() {
+    try {
+      const saved = sessionStorage.getItem('scorear_active_quiz_session');
+      if (!saved) return false;
+      const parsed = JSON.parse(saved);
+      if (!parsed || !parsed.pin || !parsed.name || !parsed.uid) return false;
+      if (Date.now() - (parsed.savedAt || 0) > 7200000) {
+        sessionStorage.removeItem('scorear_active_quiz_session');
+        return false;
+      }
+      currentPin = String(parsed.pin).trim();
+      currentStudent = { uid: parsed.uid, name: parsed.name, avatarId: parsed.avatarId || 'char_01' };
+      currentScore = Number(parsed.score) || 0;
+      currentStreak = Number(parsed.streak) || 0;
+      lastRank = parsed.rank || null;
+      if (parsed.worldId) currentWorldId = parsed.worldId;
+
+      if (global.ScoreARRealtime) {
+        global.ScoreARRealtime.init('student', currentPin, handleStudentIncomingMessage);
+        global.ScoreARRealtime.subscribe(handleStudentIncomingMessage);
+        global.ScoreARRealtime.publish('STUDENT_JOIN', {
+          player: { id: currentStudent.uid, name: currentStudent.name, avatarId: currentStudent.avatarId },
+          pin: currentPin,
+          isReconnect: true
+        });
+      }
+      if (global.ScoreARCardArena && typeof global.ScoreARCardArena.initArena === 'function') {
+        global.ScoreARCardArena.initArena(currentPin, currentStudent.uid, false);
+      }
+      renderStudentLobby(currentWorldId, currentStudent);
+      const fb = document.getElementById('studentFeedbackBox');
+      if (fb) fb.innerHTML = '🔄 <strong style="color:#fcd34d;">تمت استعادة جلستك بنجاح!</strong> بانتظار السؤال الحالي من المعلم...';
+      return true;
+    } catch(e) {
+      return false;
     }
   }
 
@@ -264,7 +311,16 @@
   global.ScoreARQuizStudent = {
     startStudentSession, submitAnswer, renderStudentQuestion, renderStudentResult,
     closeStudentSession, renderStudentRoomClosed, saveActiveSession, clearActiveSession,
-    sendReaction, getPin: () => currentPin, get state() { return currentStudent; }
+    tryRestoreSession, sendReaction, getPin: () => currentPin, get state() { return currentStudent; }
   };
   global.ScoreARStudent = global.ScoreARQuizStudent;
+
+  if (typeof window !== 'undefined') {
+    const doAutoRestore = () => { setTimeout(() => { tryRestoreSession(); }, 60); };
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', doAutoRestore);
+    } else {
+      doAutoRestore();
+    }
+  }
 })(typeof window !== 'undefined' ? window : this);

@@ -295,18 +295,29 @@
     }
   }
 
+  function isModeActive() {
+    const m = (global.ScoreARGameModes && typeof global.ScoreARGameModes.getMode === 'function')
+      ? global.ScoreARGameModes.getMode()
+      : (manager?.mode || 'CARD_ARENA');
+    return m === 'CARD_ARENA';
+  }
+
   // Only 1st and 2nd fastest correct responders receive a card
   function onCorrectAnswerGranted(playerId, isTop2 = false) {
     if (!isTop2 && playerId !== 'solo_player') return;
     const mgr = getManager();
-    if (mgr && (global.ScoreARGameModes?.getMode?.() || 'CARD_ARENA') === 'CARD_ARENA') {
-      const card = mgr.grantRandomCard(playerId);
-      if (card && playerId === currentStudentId) {
-        isDeckOpen = true;
-        renderStudentDeckUi();
-        showStudentCardAlert(`🏆 أسرع إجابة! كسبت كارت: ${card.nameAr}`);
-        sfx('fanfare');
-      }
+    if (!mgr) return;
+    const pidStr = String(playerId || currentStudentId || 's_local');
+    if (!mgr.players[pidStr]) {
+      const name = global.ScoreARQuizStudent?.state?.name || 'طالب';
+      mgr.registerPlayer(pidStr, name, false);
+    }
+    const card = mgr.grantRandomCard(pidStr);
+    if (card) {
+      isDeckOpen = true;
+      renderStudentDeckUi();
+      showStudentCardAlert(`🏆 مركز متقدم بالسرعة! كسبت كارت: ${card.nameAr}`);
+      sfx('fanfare');
     }
   }
 
@@ -314,6 +325,7 @@
     initArena, mountStudentDeck, renderStudentDeckUi, showStudentCardAlert,
     toggleDeck, equipTrap, activateSelf, openTargetPicker, confirmTarget,
     simulateCardAction, showHostCardBanner, applyPinEffect, applyFogEffect,
-    applyEraserEffect, applyTimeSlicerEffect, onCorrectAnswerGranted, getManager
+    applyEraserEffect, applyTimeSlicerEffect, onCorrectAnswerGranted, getManager,
+    isModeActive
   };
 })(typeof window !== 'undefined' ? window : global);

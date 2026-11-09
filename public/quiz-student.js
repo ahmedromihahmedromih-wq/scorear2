@@ -139,6 +139,12 @@
     selectedOptionIndex = null;
 
     if (view()) view().renderStudentQuestion(getOrCreateStudentStage(), qData, currentWorldId, timeRemaining);
+    if (global.ScoreARCardArena && typeof global.ScoreARCardArena.mountStudentDeck === 'function') {
+      global.ScoreARCardArena.mountStudentDeck(getOrCreateStudentStage());
+    }
+    if (global.ScoreARCardArena && typeof global.ScoreARCardArena.mountStudentDeck === 'function') {
+      global.ScoreARCardArena.mountStudentDeck(getOrCreateStudentStage());
+    }
 
     qTimerInterval = setInterval(() => {
       timeRemaining--;

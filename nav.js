@@ -22,6 +22,7 @@
     { id: 'home', hash: '#home', title: 'الرئيسية', icon: 'home', desc: 'مساحة التعلم والبدء للمتسابقين' },
     { id: 'worlds', hash: '#worlds', title: 'قاعة المنافسات', icon: 'planet', desc: 'مسارات / قاعات المنافسة', badge: 'حي' },
     { id: 'heroes', hash: 'characters.html', title: 'قاعة الأبطال (20)', icon: 'spark', desc: 'مستودع أبطال سكور آر' },
+    { id: 'cards', hash: 'cards.html', title: 'قاعة الكروت (20)', icon: 'spark', desc: 'موسوعة الـ 20 كارت التكتيكي', badge: 'جديد' },
     { id: 'journey', hash: '#journey', title: 'رحلتي التعليمية', icon: 'route', desc: 'مسار التحدي الفردي والمهارات' },
     { id: 'studio', hash: '#studio', title: 'استوديو المعلم', icon: 'grid', desc: 'مساحة المعلم وإدارة المسابقات' },
     { id: 'library', hash: '#library', title: 'مكتبة المحتوى', icon: 'book', desc: 'بنك الأسئلة والتمارين' },

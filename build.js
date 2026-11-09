@@ -53,7 +53,7 @@ const portalFiles = [
   'quiz-builder-actions.js', 'quiz-builder-media.js', 'quiz-builder.js', 'quiz-bank-data.js', 'quiz-bank.js', 'quiz-importer.js', 'quiz-doc-extractor.js', 'quiz-ai-pipeline.js', 'quiz-ai-review.js', 'quiz-ai.js', 'quiz-reports.js', 'admin-management.js',
   'student-journey.js', 'mistake-scheduler.js', 'mistake-notebook.js', 'streak.js',
   'skill-engine.js', 'skill-map.js', 'nav.js', 'world-content-picker.js', 'world-flow.js', 'launch.js', 'workspace.js',
-  'characters.html', 'podium.html', 'characters-v4.js', 'characters-v4.css',
+  'characters.html', 'cards.html', 'podium.html', 'cards-gallery.js', 'characters-v4.js', 'characters-v4.css',
   'ScoreARMotionEngine.js', 'cartoon-motion.css',
   'quiz-game-modes.js', 'quiz-card-arena.js', 'CardArenaEngine.js', 'manifest.json', 'sw.js', 'interactive-character.js', 'interactive-character.css',
   'cards.json', 'worlds.js', 'robots.txt', 'sitemap.xml'

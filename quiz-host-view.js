@@ -76,6 +76,10 @@
     const w = currentRoom.world || { name: 'المنافسة', tag: 'جاهز' };
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.origin + window.location.pathname + '?pin=' + currentRoom.pin)}`;
 
+        const activeGameMode = (global.ScoreARGameModes && typeof global.ScoreARGameModes.getMode === 'function') ? global.ScoreARGameModes.getMode() : 'SOLO';
+    const modeBadgeText = activeGameMode === 'CARD_ARENA' ? '🃏 حرب الكروت' : (activeGameMode === 'SQUADS' ? '🛡️ مجموعات' : '👤 فردي');
+    const modeBadgeBorder = activeGameMode === 'CARD_ARENA' ? '#f59e0b' : (activeGameMode === 'SQUADS' ? '#38bdf8' : '#8e64ef');
+
     stage.innerHTML = `
       <div style="position:absolute;inset:0;background:url('assets/worlds/${worldId}/lobby.jpg') center/cover no-repeat;z-index:1;"></div>
       <video id="hostLiveVideoBg" autoplay loop muted playsinline poster="assets/worlds/${worldId}/lobby.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;opacity:0.95;"><source src="assets/videos/worlds/${worldId}.mp4" type="video/mp4"></video>

@@ -799,7 +799,7 @@ function render(){
     return;
   }
 
-  const renders={home,studio,worlds:worldPage,heroes:renderHeroesPage,journey,library,about,academy:()=>window.renderAcademy()};
+  const renders={home,studio,worlds:worldPage,heroes:renderHeroesPage,cards:()=>{window.location.href='cards.html';return '';},journey,library,about,academy:()=>window.renderAcademy()};
   const mainEl = document.getElementById('main');
   if (mainEl && renders[p]) mainEl.innerHTML=renders[p]();
   

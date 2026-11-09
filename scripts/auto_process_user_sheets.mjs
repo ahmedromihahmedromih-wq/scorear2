@@ -9,16 +9,39 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
 
 const inputDir = path.join(projectRoot, 'input_sheets');
-const outCharDir = path.join(projectRoot, 'assets', 'characters', 'char_01');
-const outAnimatedDir = path.join(projectRoot, 'assets', 'characters', 'animated');
+const animatedDir = path.join(projectRoot, 'assets', 'characters', 'animated');
 
 if (!fs.existsSync(inputDir)) {
   fs.mkdirSync(inputDir, { recursive: true });
 }
 
+function detectCharId(fileName) {
+  const m = fileName.match(/char[_-]?(\d{1,2})/i) || fileName.match(/^(\d{1,2})[_-]/);
+  if (m) {
+    const num = parseInt(m[1], 10);
+    if (num >= 1 && num <= 20) return `char_${String(num).padStart(2, '0')}`;
+  }
+  const nameMap = {
+    'ziyad': 'char_01', 'زياد': 'char_01', 'nour': 'char_02', 'نور': 'char_02',
+    'salim': 'char_03', 'سليم': 'char_03', 'farida': 'char_04', 'فريدة': 'char_04',
+    'yaseen': 'char_05', 'ياسين': 'char_05', 'malak': 'char_06', 'ملك': 'char_06',
+    'omar': 'char_07', 'عمر': 'char_07', 'hana': 'char_08', 'هنا': 'char_08',
+    'laith': 'char_09', 'ليث': 'char_09', 'felfel': 'char_10', 'فلفل': 'char_10',
+    'qafza': 'char_11', 'قفزة': 'char_11', 'bondoq': 'char_12', 'بندق': 'char_12',
+    'mishmish': 'char_13', 'مشمش': 'char_13', 'hakeem': 'char_14', 'حكيم': 'char_14',
+    'nabd': 'char_15', 'نبض': 'char_15', 'wameed': 'char_16', 'وميض': 'char_16',
+    'sharara': 'char_17', 'شرارة': 'char_17', 'ghaima': 'char_18', 'غيمة': 'char_18',
+    'najm': 'char_19', 'نجم': 'char_19', 'ballour': 'char_20', 'بلور': 'char_20'
+  };
+  const lower = fileName.toLowerCase();
+  for (const [k, v] of Object.entries(nameMap)) {
+    if (lower.includes(k)) return v;
+  }
+  return 'char_01';
+}
+
 /**
- * Automatically detects whether an image is a 3-row Master Atlas (Run + Climb + Fly)
- * or individual action sheets, and compiles them to 1280x400 transparent WebP.
+ * Automatically processes incoming sheets for ANY of the 20 characters
  */
 async function processIncoming() {
   const files = fs.readdirSync(inputDir).filter(f => /\.(png|jpe?g|webp)$/i.test(f));
@@ -33,39 +56,40 @@ async function processIncoming() {
   for (const file of files) {
     const fullPath = path.join(inputDir, file);
     const meta = await sharp(fullPath).metadata();
-    console.log(`\nInspecting ${file}: ${meta.width}x${meta.height}`);
+    const charId = detectCharId(file);
+    const outCharDir = path.join(projectRoot, 'assets', 'characters', charId);
+    console.log(`\nProcessing ${file} for character: ${charId} (${meta.width}x${meta.height})`);
 
-    // Case 1: 3-Row Grid (Height significantly tall, aspect ratio ~ 16:9 or taller)
-    // If aspect ratio is close to 4:3, 1:1, or 16:12 (3 stacked rows of 4 frames)
-    if (meta.height > meta.width * 0.45 && file.toLowerCase().includes('master')) {
+    // Case 1: 3-Row Master Atlas
+    if (meta.height > meta.width * 0.45 && (file.toLowerCase().includes('master') || file.toLowerCase().includes('all') || meta.height > 600)) {
       console.log(`Detected 3-Row Master Atlas in ${file}! Slicing into 3 rows...`);
       const rowH = Math.floor(meta.height / 3);
 
-      const runRow = path.join(inputDir, 'temp_run.png');
-      const climbRow = path.join(inputDir, 'temp_climb.png');
-      const flyRow = path.join(inputDir, 'temp_fly.png');
+      const runRow = path.join(inputDir, `temp_${charId}_run.png`);
+      const climbRow = path.join(inputDir, `temp_${charId}_climb.png`);
+      const flyRow = path.join(inputDir, `temp_${charId}_fly.png`);
 
       await sharp(fullPath).extract({ left: 0, top: 0, width: meta.width, height: rowH }).png().toFile(runRow);
       await sharp(fullPath).extract({ left: 0, top: rowH, width: meta.width, height: rowH }).png().toFile(climbRow);
       await sharp(fullPath).extract({ left: 0, top: rowH * 2, width: meta.width, height: meta.height - rowH * 2 }).png().toFile(flyRow);
 
-      await processSheet(runRow, 'run', outCharDir, outAnimatedDir, 'char_01');
-      await processSheet(climbRow, 'climb', outCharDir, outAnimatedDir, 'char_01');
-      await processSheet(flyRow, 'fly', outCharDir, outAnimatedDir, 'char_01');
+      await processSheet(runRow, 'run', outCharDir, animatedDir, charId);
+      await processSheet(climbRow, 'climb', outCharDir, animatedDir, charId);
+      await processSheet(flyRow, 'fly', outCharDir, animatedDir, charId);
 
       try { fs.unlinkSync(runRow); fs.unlinkSync(climbRow); fs.unlinkSync(flyRow); } catch (e) {}
-      console.log('✅ Successfully sliced and processed Master 3-Row Atlas!');
+      console.log(`✅ Successfully processed all 3 action states for ${charId}!`);
       continue;
     }
 
-    // Case 2: Individual action sheets based on file name or single 4-panel sheet
+    // Case 2: Individual action sheet
     let action = 'run';
     const lower = file.toLowerCase();
     if (lower.includes('climb')) action = 'climb';
     else if (lower.includes('fly')) action = 'fly';
     else if (lower.includes('run') || lower.includes('sprint')) action = 'run';
 
-    await processSheet(fullPath, action, outCharDir, outAnimatedDir, 'char_01');
+    await processSheet(fullPath, action, outCharDir, animatedDir, charId);
   }
 
   // Synchronize to public and dist
@@ -73,7 +97,7 @@ async function processIncoming() {
   console.log('\nRunning build.js to synchronize assets across public/ and dist/...');
   const { execSync } = await import('child_process');
   execSync(`node "${runBuild}"`, { stdio: 'inherit', cwd: projectRoot });
-  console.log('\n🎉 ALL DONE! Character 1 assets are fully updated and synchronized.');
+  console.log('\n🎉 ALL DONE! Character assets are fully updated and synchronized.');
 }
 
 processIncoming().catch(console.error);

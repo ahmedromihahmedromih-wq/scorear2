@@ -1,0 +1,46 @@
+======================================================================
+ScoreAR 20 Characters — Master Animation Atlas Prompt for ChatGPT (GPT-4o)
+======================================================================
+
+HOW TO USE IN CHATGPT:
+1. Open ChatGPT (GPT-4o).
+2. Attach the reference image of ANY character from folder "01_Studio_White_Reference_For_ChatGPT".
+3. Copy and paste the prompt below.
+4. If you upload multiple characters at once, ChatGPT will generate the master sheet for each!
+
+----------------------------------------------------------------------
+COPY THE MASTER PROMPT BELOW:
+----------------------------------------------------------------------
+
+You are a senior 3D character game animator and artist (Pixar & Supercell standard).
+I have attached the exact canonical reference image of Character from ScoreAR platform.
+
+MANDATORY CHARACTER LOCK:
+Maintain 100% STRICT IDENTITY CONSISTENCY with the attached reference picture:
+- Same face structure, facial expression, eyes, hair / fur / helmet, and exact colors.
+- Same costume, clothing details, accessories, accents, and materials.
+- Identical 3D Pixar claymation CGI render style, soft studio rim lighting, zero style deviation.
+- Do NOT alter the character's facial features or proportions. It must be the EXACT same character across all poses.
+
+OUTPUT FORMAT:
+Generate ONE SINGLE MASTER ANIMATION ATLAS image featuring a 3x4 grid (3 horizontal rows with 4 sequential poses each, total 12 poses) on a SOLID PURE WHITE BACKGROUND (#FFFFFF) with no background graphics, gradients, or shadows:
+
+• ROW 1 (TOP) — [ATHLETIC SPRINT / RUN CYCLE] (4 frames from left to right):
+  1. Contact: Right foot planted forward, 20° forward lean, trailing left leg back, left fist forward.
+  2. Airborne: High leap in mid-air, both feet off ground, right knee driving high like an Olympic sprinter.
+  3. Opposite Plant: Left foot planted firmly under center of gravity, right leg extending back.
+  4. Spring: Explosive push-off into the next stride with aerodynamic forward momentum.
+
+• ROW 2 (MIDDLE) — [VERTICAL ROCK CLIMBING CYCLE] (4 frames from left to right):
+  1. High Reach: Head looking up, right arm extended high gripping a rock ledge, left foot braced.
+  2. Body Pull: Elbows flexed, pulling body weight upward close to the vertical rock face.
+  3. Step & Switch: Left hand reaching higher for the next ledge, right foot stepping up on high rock shelf.
+  4. Summit Crest: Both hands pushing down on the top cliff edge, torso cresting the summit with a proud exertion smile.
+
+• ROW 3 (BOTTOM) — [SUPERHERO FLIGHT / GLIDE CYCLE] (4 frames from left to right):
+  1. Arrow Glide: Torso tilted horizontally at 70°, both arms outstretched forward like an arrow cutting the wind.
+  2. Banking Turn: Dynamic 20° aerodynamic roll/bank, arms tilted like airplane wings to steer airflow.
+  3. Soaring Ascent: Chest arched upwards, head looking toward the sky with an exhilarated smile, arms spread wide like wings.
+  4. Bullet Dive: Streamlined aerodynamic dive, arms tucked tightly along sides, body straight and streamlined.
+
+Ensure all 12 characters are full-body, sharp silhouettes, studio-lit, and cleanly aligned in their respective rows.

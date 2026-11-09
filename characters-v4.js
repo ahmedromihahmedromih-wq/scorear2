@@ -65,10 +65,24 @@
     document.documentElement.classList.toggle('characters-paused',paused);
     document.querySelectorAll('[data-character-motion]').forEach(b=>{b.textContent=paused?'تشغيل الحركة':'إيقاف الحركة';b.setAttribute('aria-pressed',String(paused));});
   }
-  function toggleMotion(){paused=!paused;try{localStorage.setItem('scorear_character_motion',paused?'off':'on');}catch(e){}applyMotion();}
+  function toggleMotion(){
+    paused=!paused;
+    try{localStorage.setItem('scorear_character_motion',paused?'off':'on');}catch(e){}
+    if(global.ScoreARMotionEngine&&typeof global.ScoreARMotionEngine.setSpeed==='function'){
+      global.ScoreARMotionEngine.setSpeed(paused?0.0001:1.0);
+    }
+    applyMotion();
+  }
   function preview(id,state='walk'){
     const c=get(id),box=document.getElementById('studentCustomPreviewBox'),title=document.getElementById('studentCustomPreviewTitle');
-    if(box){const ornament=box.querySelector('.character-ornament')?.outerHTML||'';box.innerHTML=render(id,state)+ornament;}
+    if(box){
+      if(global.ScoreARMotionEngine&&typeof global.ScoreARMotionEngine.mount==='function'){
+        global.ScoreARMotionEngine.mount(box,c.code,state);
+      }else{
+        const ornament=box.querySelector('.character-ornament')?.outerHTML||'';
+        box.innerHTML=render(id,state)+ornament;
+      }
+    }
     if(title)title.innerHTML='<h3>'+c.name+'</h3><p>'+c.title+'</p>';
     const stage=document.querySelector('.character-stage');if(stage)stage.style.setProperty('--character-accent',c.accent);
     document.querySelectorAll('[data-character-pose]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.characterPose===state)));

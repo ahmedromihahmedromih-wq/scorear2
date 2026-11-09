@@ -54,6 +54,7 @@ const portalFiles = [
   'student-journey.js', 'mistake-scheduler.js', 'mistake-notebook.js', 'streak.js',
   'skill-engine.js', 'skill-map.js', 'nav.js', 'world-content-picker.js', 'world-flow.js', 'launch.js', 'workspace.js',
   'characters.html', 'characters-v4.js', 'characters-v4.css',
+  'ScoreARMotionEngine.js', 'cartoon-motion.css',
   'manifest.json', 'sw.js', 'interactive-character.js', 'interactive-character.css',
   'cards.json', 'worlds.js', 'robots.txt', 'sitemap.xml'
 ];

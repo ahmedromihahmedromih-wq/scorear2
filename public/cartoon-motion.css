@@ -1,0 +1,161 @@
+/**
+ * cartoon-motion.css
+ * Production Stylesheet for ScoreAR Cartoon Motion Engine
+ * Pixar & Supercell Standard Rendering, Dynamic Lighting, & DOM Adapters
+ */
+
+:root {
+  --scorear-aspect-ratio: 4 / 5; /* 320px x 400px standard */
+  --scorear-gold-glow: 0 0 25px rgba(255, 215, 0, 0.45);
+  --scorear-silver-glow: 0 0 20px rgba(192, 192, 210, 0.35);
+  --scorear-bronze-glow: 0 0 18px rgba(205, 127, 50, 0.35);
+}
+
+/* Master Engine Container */
+.scorear-motion-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+/* Stage: Maintains 4:5 Pixar Proportions across all viewports */
+.scorear-motion-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 320px;
+  max-height: 400px;
+  aspect-ratio: var(--scorear-aspect-ratio);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  perspective: 800px;
+}
+
+/* Character Wrap: Root for 60FPS GPU Squash & Stretch */
+.scorear-character-wrap {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transform-origin: bottom center; /* Essential for ground-anchored squash */
+  will-change: transform;
+  z-index: 2;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Double-Buffered Sprite Layers for Seamless Action Blending */
+.scorear-sprite-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: 400% 100%; /* 4 horizontal frames of 320px each (1280px total) */
+  background-position: 0% 0%;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  transition: opacity 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+
+.scorear-sprite-layer.layer-active {
+  opacity: 1;
+  z-index: 2;
+}
+
+.scorear-sprite-layer.layer-standby {
+  opacity: 0;
+  z-index: 1;
+}
+
+/* Procedural Reactive Ground Shadow */
+.scorear-motion-shadow {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72%;
+  height: 28px;
+  transform-origin: center center;
+  pointer-events: none;
+  z-index: 1;
+  will-change: transform, opacity;
+  filter: blur(1.5px);
+}
+
+.scorear-motion-shadow svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Particle FX Canvas Overlay */
+.scorear-particle-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* 1. Student Customization & Character Select Preview Box */
+#studentCustomPreviewBox,
+.studentCustomPreviewBox {
+  min-width: 240px;
+  min-height: 300px;
+  max-width: 360px;
+  max-height: 450px;
+  margin: 0 auto;
+  position: relative;
+  border-radius: 16px;
+  background: radial-gradient(circle at 50% 60%, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.05));
+}
+
+/* 2. Podium Columns (1st, 2nd, 3rd Victory Ranks) */
+#podiumCol_1,
+.podiumCol_1 {
+  position: relative;
+  filter: drop-shadow(var(--scorear-gold-glow));
+}
+
+#podiumCol_2,
+.podiumCol_2 {
+  position: relative;
+  filter: drop-shadow(var(--scorear-silver-glow));
+}
+
+#podiumCol_3,
+.podiumCol_3 {
+  position: relative;
+  filter: drop-shadow(var(--scorear-bronze-glow));
+}
+
+/* High-DPI / Retina Optimization */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .scorear-sprite-layer {
+    image-rendering: auto;
+  }
+}
+
+/* Accessibility: Respect Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  .scorear-character-wrap,
+  .scorear-motion-shadow,
+  .scorear-sprite-layer {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+  .scorear-particle-canvas {
+    display: none !important;
+  }
+}

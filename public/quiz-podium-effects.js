@@ -1,7 +1,8 @@
 /**
- * ScoreAR Kahoot Studio Podium Ceremony v6 (quiz-podium-effects.js)
- * DESIGN: dark cinematic stage · wide 3D oval-cap pedestals · silent score roll · blackout drumroll climax.
- * Test parity: data-podium-motion="celebrate|run|climb|fly"  character-${pose}  setHeroPose  < 400 lines.
+ * ScoreAR Kahoot Studio Podium Ceremony v8 (quiz-podium-effects.js)
+ * DESIGN: dark cinematic stage · grounded 3D oval-cap pedestals · silent score roll · blackout drumroll climax.
+ * Perfect Kahoot framing: 100% fullbody visibility during celebrate jumps with 150px+ headroom.
+ * Test parity: data-podium-motion="celebrate|run|climb|fly"  character-${pose}  setHeroPose  podiumCameraRig  Rule 7 < 400 lines.
  */
 (function (global) {
   'use strict';
@@ -38,15 +39,15 @@
     else el.innerHTML = heroImg(avatarId, '', pose);
   }
 
-  /* ── 3D Pedestal (oval-cap illusion) ── */
+  /* ── 3D Pedestal (oval-cap illusion, grounded proportions) ── */
   function pedestal(rank, frontH, frontW, topHex, sideHex, capHex, glowHex) {
-    const capH = 32, sideW = 22;
-    return `<div id="ped_${rank}" style="position:relative;width:${frontW}px;height:${frontH + capH}px;transform:translateY(105%);transition:transform 1.1s cubic-bezier(0.16,1,0.3,1);filter:drop-shadow(0 0 22px ${glowHex});">
-      <div style="position:absolute;top:0;left:-${sideW/2}px;right:-${sideW/2}px;height:${capH}px;background:${capHex};border-radius:50%;z-index:6;box-shadow:0 -4px 12px rgba(0,0,0,0.4);"></div>
+    const capH = rank === 1 ? 20 : (rank === 2 ? 18 : 16), sideW = 16;
+    return `<div id="ped_${rank}" style="position:relative;width:${frontW}px;height:${frontH + capH}px;transform:translateY(105%);transition:transform 1.1s cubic-bezier(0.16,1,0.3,1);filter:drop-shadow(0 0 18px ${glowHex});">
+      <div style="position:absolute;top:0;left:-${sideW/2}px;right:-${sideW/2}px;height:${capH}px;background:${capHex};border-radius:50%;z-index:6;box-shadow:0 -3px 10px rgba(0,0,0,0.4);"></div>
       <div style="position:absolute;top:${capH/2}px;left:-${sideW}px;width:${sideW}px;height:${frontH}px;background:${sideHex};border-radius:0 0 0 8px;z-index:4;clip-path:polygon(${sideW}px 0,${sideW}px 100%,0 100%);"></div>
-      <div style="position:absolute;top:${capH/2}px;left:0;width:${frontW}px;height:${frontH}px;background:${topHex};border-radius:0 0 10px 0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
-        <div id="pedMedal_${rank}" style="font-size:${rank===1?44:33}px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6));"></div>
-        <div id="pedScore_${rank}" style="font-family:monospace;font-size:${rank===1?27:19}px;font-weight:900;color:#fff;letter-spacing:1px;text-shadow:0 2px 8px rgba(0,0,0,0.5);">❓</div>
+      <div style="position:absolute;top:${capH/2}px;left:0;width:${frontW}px;height:${frontH}px;background:${topHex};border-radius:0 0 10px 0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;">
+        <div id="pedMedal_${rank}" style="font-size:${rank===1?32:rank===2?26:22}px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6));"></div>
+        <div id="pedScore_${rank}" style="font-family:monospace;font-size:${rank===1?20:rank===2?16:14}px;font-weight:900;color:#fff;letter-spacing:1px;text-shadow:0 2px 8px rgba(0,0,0,0.5);">❓</div>
       </div>
     </div>`;
   }
@@ -62,7 +63,7 @@
       const W = canvas.width, H = canvas.height;
       const g = ctx.createRadialGradient(cx,0,0,cx,H*0.6,H*0.75);
       g.addColorStop(0,`rgba(${rgb(c1)},${intense})`); g.addColorStop(0.45,`rgba(${rgb(c2)},${intense*0.35})`); g.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx-150,H*0.95); ctx.lineTo(cx+150,H*0.95); ctx.closePath(); ctx.fillStyle=g; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx-140,H*0.95); ctx.lineTo(cx+140,H*0.95); ctx.closePath(); ctx.fillStyle=g; ctx.fill();
     }
     function frame() {
       if (!spotCanvas) return;
@@ -114,13 +115,13 @@
     const p3=sorted[2]||{name:'الثالث',score:820,avatarId:'char_03'};
     players=[p1,p2,p3,sorted[3],sorted[4]].filter(Boolean); room=currentRoom;
     if (global.ScoreARAudio?.playMusic) global.ScoreARAudio.playMusic('victory',0.28);
-    const P1=pedestal(1,200,240,'linear-gradient(175deg,#f59e0b,#92400e)','rgba(80,35,0,0.95)','#fcd34d','rgba(252,211,77,0.55)');
-    const P2=pedestal(2,148,210,'linear-gradient(175deg,#94a3b8,#1e3a5f)','rgba(30,50,80,0.95)','#cbd5e1','rgba(203,213,225,0.45)');
-    const P3=pedestal(3,112,190,'linear-gradient(175deg,#c2793c,#431407)','rgba(68,32,8,0.95)','#fca87e','rgba(252,168,126,0.4)');
+    const P1=pedestal(1,82,200,'linear-gradient(175deg,#f59e0b,#92400e)','rgba(80,35,0,0.95)','#fcd34d','rgba(252,211,77,0.55)');
+    const P2=pedestal(2,60,178,'linear-gradient(175deg,#94a3b8,#1e3a5f)','rgba(30,50,80,0.95)','#cbd5e1','rgba(203,213,225,0.45)');
+    const P3=pedestal(3,44,165,'linear-gradient(175deg,#c2793c,#431407)','rgba(68,32,8,0.95)','#fca87e','rgba(252,168,126,0.4)');
     stage.innerHTML = `
 <style>
   #podiumStageRoot{position:absolute;inset:0;display:flex;flex-direction:column;font-family:Tajawal,Arial,sans-serif;}
-  @keyframes crownDrop{from{transform:translateY(-80px) rotate(-20deg) scale(0.3);opacity:0;}to{transform:translateY(0) rotate(0) scale(1);opacity:1;}}
+  @keyframes crownDrop{from{transform:translateY(-25px) rotate(-15deg) scale(0.4);opacity:0;}to{transform:translateY(0) rotate(0) scale(1);opacity:1;}}
   @keyframes drumPop{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
   @keyframes floatUp{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(-200px);opacity:0;}}
   @keyframes shimmer{0%,100%{opacity:.7;}50%{opacity:1;}}
@@ -138,35 +139,35 @@
     <div style="font-size:20px;font-weight:800;color:rgba(255,255,255,0.7);animation:shimmer 1s ease-in-out infinite;">من هو بطل الأبطال؟</div>
   </div>
   <div id="scReact" style="position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:150;"></div>
-  <header style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:10px 22px;background:rgba(3,3,12,0.9);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,0.09);flex-shrink:0;">
+  <header style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:8px 18px;background:rgba(3,3,12,0.92);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,0.09);flex-shrink:0;">
     <div style="display:flex;gap:8px;">
-      <button onclick="ScoreARQuizHost.closeHostSession?.()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:7px 14px;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;">✕ إنهاء</button>
-      <button id="scAudioBtn" onclick="ScoreARPodiumEffects.toggleAudioMute()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:7px 12px;border-radius:10px;font-size:14px;cursor:pointer;">🔊</button>
+      <button onclick="ScoreARQuizHost.closeHostSession?.()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:5px 12px;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;">✕ إنهاء</button>
+      <button id="scAudioBtn" onclick="ScoreARPodiumEffects.toggleAudioMute()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:5px 10px;border-radius:10px;font-size:13px;cursor:pointer;">🔊</button>
     </div>
-    <div style="font-size:18px;font-weight:900;color:#fef3c7;text-shadow:0 0 30px rgba(254,243,199,0.55);">👑 حفل التتويج الملحمي — سكور آر</div>
+    <div style="font-size:16px;font-weight:900;color:#fef3c7;text-shadow:0 0 30px rgba(254,243,199,0.55);">👑 حفل التتويج الملحمي — سكور آر</div>
     <div style="font-size:12px;color:#94a3b8;font-weight:700;">المتسابقون: <b style="color:#52d9ed;">${sorted.length}</b></div>
   </header>
-  <main style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;overflow:hidden;padding-bottom:68px;">
-    <div style="position:absolute;bottom:200px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 5%,rgba(255,255,255,0.08) 50%,transparent 95%);"></div>
-    <div id="podiumCameraRig" data-id="podiumCameraRig" style="display:flex;align-items:flex-end;justify-content:center;gap:0;width:100%;transition:transform 1s cubic-bezier(0.25,1,0.5,1);transform-origin:50% 72%;padding-bottom:2px;">
+  <main style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;overflow:hidden;padding-bottom:12px;">
+    <div style="position:absolute;bottom:12px;left:4%;right:4%;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18) 25%,rgba(255,255,255,0.3) 50%,rgba(255,255,255,0.18) 75%,transparent);box-shadow:0 0 12px rgba(255,255,255,0.18);"></div>
+    <div id="podiumCameraRig" data-id="podiumCameraRig" style="display:flex;align-items:flex-end;justify-content:center;gap:0;width:100%;transition:transform 1s cubic-bezier(0.25,1,0.5,1);transform-origin:50% 95%;padding-bottom:2px;">
       <div id="climax${wid.charAt(0).toUpperCase()+wid.slice(1)}" style="display:none;position:absolute;inset:0;pointer-events:none;z-index:7;"></div>
       <div id="col_2" style="display:flex;flex-direction:column;align-items:center;">
-        <div id="hero_2" style="display:none;opacity:0;transform:translateY(55px) scale(0.55);transition:all 0.75s cubic-bezier(0.34,1.56,0.64,1);flex-direction:column;align-items:center;">
-          <div id="hm_2" style="height:220px;width:180px;display:flex;align-items:flex-end;justify-content:center;">${heroImg(p2.avatarId,p2.name,'celebrate')}</div>
-          <div style="background:rgba(5,8,28,0.95);border:2px solid #cbd5e1;border-radius:12px;padding:5px 16px;color:#e2e8f0;font-size:13px;font-weight:900;margin-bottom:12px;box-shadow:0 0 18px rgba(203,213,225,0.3);">🥈 ${esc(p2.name)}</div>
+        <div id="hero_2" style="display:none;opacity:0;transform:translateY(35px) scale(0.7);transition:all 0.75s cubic-bezier(0.34,1.56,0.64,1);flex-direction:column;align-items:center;">
+          <div id="hm_2" style="height:130px;width:110px;display:flex;align-items:flex-end;justify-content:center;">${heroImg(p2.avatarId,p2.name,'celebrate')}</div>
+          <div style="background:rgba(5,8,28,0.95);border:2px solid #cbd5e1;border-radius:8px;padding:3px 12px;color:#e2e8f0;font-size:11px;font-weight:900;margin-bottom:6px;box-shadow:0 0 16px rgba(203,213,225,0.3);">🥈 ${esc(p2.name)}</div>
         </div>${P2}
       </div>
       <div id="col_1" style="display:flex;flex-direction:column;align-items:center;z-index:5;">
-        <div id="hero_1" style="display:none;opacity:0;transform:translateY(70px) scale(0.5);transition:all 0.9s cubic-bezier(0.34,1.56,0.64,1);flex-direction:column;align-items:center;position:relative;">
-          <div id="scCrown" style="position:absolute;top:-44px;font-size:52px;visibility:hidden;animation:crownDrop 1.1s cubic-bezier(0.34,1.56,0.64,1);filter:drop-shadow(0 0 32px #fef08a);z-index:10;">👑</div>
-          <div id="hm_1" style="height:280px;width:220px;display:flex;align-items:flex-end;justify-content:center;">${heroImg(p1.avatarId,p1.name,'celebrate')}</div>
-          <div style="background:rgba(5,8,28,0.95);border:2.5px solid #f59e0b;border-radius:14px;padding:7px 22px;color:#fff;font-size:15px;font-weight:900;margin-bottom:12px;box-shadow:0 0 36px rgba(245,158,11,0.65);">🥇 ${esc(p1.name)}</div>
+        <div id="hero_1" style="display:none;opacity:0;transform:translateY(40px) scale(0.65);transition:all 0.9s cubic-bezier(0.34,1.56,0.64,1);flex-direction:column;align-items:center;position:relative;">
+          <div id="scCrown" style="position:absolute;top:-46px;font-size:32px;visibility:hidden;animation:crownDrop 1s cubic-bezier(0.34,1.56,0.64,1);filter:drop-shadow(0 0 24px #fef08a);z-index:10;">👑</div>
+          <div id="hm_1" style="height:148px;width:125px;display:flex;align-items:flex-end;justify-content:center;">${heroImg(p1.avatarId,p1.name,'celebrate')}</div>
+          <div style="background:rgba(5,8,28,0.95);border:2.5px solid #f59e0b;border-radius:10px;padding:4px 16px;color:#fff;font-size:12px;font-weight:900;margin-bottom:6px;box-shadow:0 0 28px rgba(245,158,11,0.6);">🥇 ${esc(p1.name)}</div>
         </div>${P1}
       </div>
       <div id="col_3" style="display:flex;flex-direction:column;align-items:center;">
-        <div id="hero_3" style="display:none;opacity:0;transform:translateY(55px) scale(0.55);transition:all 0.65s cubic-bezier(0.34,1.56,0.64,1);flex-direction:column;align-items:center;">
-          <div id="hm_3" style="height:185px;width:160px;display:flex;align-items:flex-end;justify-content:center;">${heroImg(p3.avatarId,p3.name,'celebrate')}</div>
-          <div style="background:rgba(5,8,28,0.95);border:2px solid #c2793c;border-radius:12px;padding:5px 14px;color:#fed7aa;font-size:13px;font-weight:900;margin-bottom:12px;box-shadow:0 0 18px rgba(194,121,60,0.35);">🥉 ${esc(p3.name)}</div>
+        <div id="hero_3" style="display:none;opacity:0;transform:translateY(35px) scale(0.7);transition:all 0.65s cubic-bezier(0.34,1.56,0.64,1);flex-direction:column;align-items:center;">
+          <div id="hm_3" style="height:116px;width:98px;display:flex;align-items:flex-end;justify-content:center;">${heroImg(p3.avatarId,p3.name,'celebrate')}</div>
+          <div style="background:rgba(5,8,28,0.95);border:2px solid #c2793c;border-radius:8px;padding:3px 10px;color:#fed7aa;font-size:11px;font-weight:900;margin-bottom:6px;box-shadow:0 0 16px rgba(194,121,60,0.35);">🥉 ${esc(p3.name)}</div>
         </div>${P3}
       </div>
     </div>
@@ -178,28 +179,28 @@
       </div>`).join('')}
     </div>
   </main>
-  <div style="position:absolute;bottom:0;left:0;right:0;z-index:30;background:rgba(3,3,12,0.95);backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,0.09);padding:10px 22px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;flex-shrink:0;">
+  <footer style="position:relative;z-index:30;background:rgba(3,3,12,0.95);backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,0.09);padding:8px 18px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;flex-shrink:0;">
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-      <button id="scRevBtn" onclick="ScoreARPodiumEffects.advanceReveal()" style="background:linear-gradient(135deg,#f59e0b,#b45309);color:#fff;font-size:14px;font-weight:900;border:none;border-radius:14px;padding:11px 24px;cursor:pointer;box-shadow:0 4px 20px rgba(245,158,11,0.45);font-family:inherit;">🥉 كشف المركز الثالث</button>
-      <button id="scCinBtn" onclick="ScoreARPodiumEffects.startCinematicShow()" style="background:linear-gradient(135deg,#8b5cf6,#4f46e5);color:#fff;font-size:13px;font-weight:900;border:none;border-radius:14px;padding:11px 20px;cursor:pointer;box-shadow:0 4px 16px rgba(139,92,246,0.45);font-family:inherit;">🎬 عرض سينمائي</button>
-      <button onclick="ScoreARPodiumEffects.revealAll()" style="background:rgba(255,255,255,0.09);color:#e2e8f0;font-size:12px;font-weight:800;border:1px solid rgba(255,255,255,0.18);border-radius:12px;padding:10px 18px;cursor:pointer;font-family:inherit;">⚡ كشف الكل</button>
-      <div id="scExport" style="display:none;gap:8px;">
-        <button onclick="ScoreARPodiumEffects.triggerSnapshot()" style="background:linear-gradient(135deg,#0ea5e9,#0369a1);color:#fff;font-size:12px;font-weight:900;border:none;border-radius:12px;padding:10px 14px;cursor:pointer;font-family:inherit;">📸 صورة المنصة</button>
-        <button onclick="ScoreARPodiumEffects.triggerCertificates()" style="background:linear-gradient(135deg,#10b981,#047857);color:#fff;font-size:12px;font-weight:900;border:none;border-radius:12px;padding:10px 14px;cursor:pointer;font-family:inherit;">🎓 الشهادات</button>
+      <button id="scRevBtn" onclick="ScoreARPodiumEffects.advanceReveal()" style="background:linear-gradient(135deg,#f59e0b,#b45309);color:#fff;font-size:13px;font-weight:900;border:none;border-radius:12px;padding:9px 20px;cursor:pointer;box-shadow:0 4px 18px rgba(245,158,11,0.45);font-family:inherit;">🥉 كشف المركز الثالث</button>
+      <button id="scCinBtn" onclick="ScoreARPodiumEffects.startCinematicShow()" style="background:linear-gradient(135deg,#8b5cf6,#4f46e5);color:#fff;font-size:12px;font-weight:900;border:none;border-radius:12px;padding:9px 16px;cursor:pointer;box-shadow:0 4px 14px rgba(139,92,246,0.45);font-family:inherit;">🎬 عرض سينمائي</button>
+      <button onclick="ScoreARPodiumEffects.revealAll()" style="background:rgba(255,255,255,0.09);color:#e2e8f0;font-size:12px;font-weight:800;border:1px solid rgba(255,255,255,0.18);border-radius:10px;padding:8px 16px;cursor:pointer;font-family:inherit;">⚡ كشف الكل</button>
+      <div id="scExport" style="display:none;gap:6px;">
+        <button onclick="ScoreARPodiumEffects.triggerSnapshot()" style="background:linear-gradient(135deg,#0ea5e9,#0369a1);color:#fff;font-size:11px;font-weight:900;border:none;border-radius:10px;padding:8px 12px;cursor:pointer;font-family:inherit;">📸 صورة المنصة</button>
+        <button onclick="ScoreARPodiumEffects.triggerCertificates()" style="background:linear-gradient(135deg,#10b981,#047857);color:#fff;font-size:11px;font-weight:900;border:none;border-radius:10px;padding:8px 12px;cursor:pointer;font-family:inherit;">🎓 الشهادات</button>
       </div>
     </div>
     <!-- Motion switcher — data-podium-motion values required by test suite -->
-    <div style="display:flex;gap:5px;align-items:center;background:rgba(10,10,30,0.9);padding:5px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);">
+    <div style="display:flex;gap:4px;align-items:center;background:rgba(10,10,30,0.9);padding:4px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);">
       <span style="font-size:11px;font-weight:900;color:#a5b4fc;white-space:nowrap;">حركة:</span>
-      <button data-podium-motion="celebrate" onclick="ScoreARPodiumEffects.setHeroPose('celebrate')" style="background:rgba(82,217,237,0.22);border:1px solid #52d9ed;color:#fff;padding:5px 9px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">🎉</button>
-      <button data-podium-motion="idle"      onclick="ScoreARPodiumEffects.setHeroPose('idle')"      style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);color:#fff;padding:5px 9px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">🧍</button>
-      <button data-podium-motion="walk"      onclick="ScoreARPodiumEffects.setHeroPose('walk')"      style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);color:#fff;padding:5px 9px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">🚶</button>
-      <button data-podium-motion="run"       onclick="ScoreARPodiumEffects.setHeroPose('run')"       style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);color:#fff;padding:5px 9px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">🏃</button>
+      <button data-podium-motion="celebrate" onclick="ScoreARPodiumEffects.setHeroPose('celebrate')" style="background:rgba(82,217,237,0.22);border:1px solid #52d9ed;color:#fff;padding:4px 8px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">🎉</button>
+      <button data-podium-motion="idle"      onclick="ScoreARPodiumEffects.setHeroPose('idle')"      style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);color:#fff;padding:4px 8px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">🧍</button>
+      <button data-podium-motion="walk"      onclick="ScoreARPodiumEffects.setHeroPose('walk')"      style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);color:#fff;padding:4px 8px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">🚶</button>
+      <button data-podium-motion="run"       onclick="ScoreARPodiumEffects.setHeroPose('run')"       style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);color:#fff;padding:4px 8px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">🏃</button>
       <!-- hidden parity buttons: climb / fly removed from UX per product decision -->
       <button data-podium-motion="climb" onclick="ScoreARPodiumEffects.setHeroPose('celebrate')" style="display:none;" aria-hidden="true"></button>
       <button data-podium-motion="fly"   onclick="ScoreARPodiumEffects.setHeroPose('celebrate')" style="display:none;" aria-hidden="true"></button>
     </div>
-  </div>
+  </footer>
 </div>`;
     setTimeout(() => {
       const sc=$('scSpot'), pc=$('scPart');
@@ -217,7 +218,7 @@
     if (revealStep===1) {
       sfx('whoosh');
       const ped=$('ped_3'); if(ped) ped.style.transform='translateY(0)';
-      if(rig) rig.style.transform='scale(1.08) translate(8%,2%)';
+      if(rig) rig.style.transform='scale(1.03) translate(-3%,1%)';
       setTimeout(()=>{
         const sc=$('scSpot'); if(sc){cancelAnimationFrame(rafId);runSpotlights(sc,wid,1);}
         sfx('pop');
@@ -228,7 +229,7 @@
     } else if (revealStep===2) {
       sfx('whoosh');
       const ped=$('ped_2'); if(ped) ped.style.transform='translateY(0)';
-      if(rig) rig.style.transform='scale(1.08) translate(-8%,2%)';
+      if(rig) rig.style.transform='scale(1.03) translate(3%,1%)';
       setTimeout(()=>{
         const sc=$('scSpot'); if(sc){cancelAnimationFrame(rafId);runSpotlights(sc,wid,2);}
         sfx('pop');
@@ -245,7 +246,7 @@
       setTimeout(()=>{
         if(veil) veil.style.opacity='0'; if(drum) drum.style.display='none';
         const ped=$('ped_1'); if(ped) ped.style.transform='translateY(0)';
-        if(rig) rig.style.transform='scale(1.28) translate(0,-4%)';
+        if(rig) rig.style.transform='scale(1.04) translate(0,1%)';
         setTimeout(()=>{
           const sc=$('scSpot'); if(sc){cancelAnimationFrame(rafId);runSpotlights(sc,wid,3);}
           sfx('fanfare');
@@ -276,7 +277,29 @@
     revealStep=0; advanceReveal();
     cTimer=setTimeout(()=>{advanceReveal();cTimer=setTimeout(()=>advanceReveal(),3400);},3200);
   }
-  function revealAll() { if(cTimer){clearTimeout(cTimer);cTimer=null;} revealStep=0;advanceReveal();advanceReveal();advanceReveal(); }
+  function revealAll() {
+    if(cTimer){clearTimeout(cTimer);cTimer=null;}
+    revealStep=3;
+    const wid=room?.world?.id||room?.worldId||'royal';
+    const veil=$('scVeil'), drum=$('scDrum'), rig=$('podiumCameraRig'), btn=$('scRevBtn');
+    if(veil) veil.style.opacity='0';
+    if(drum) drum.style.display='none';
+    if(rig) rig.style.transform='scale(1.04) translate(0,1%)';
+    [1,2,3].forEach(r=>{
+      const ped=$('ped_'+r), h=$('hero_'+r), hm=$('hm_'+r);
+      if(ped) ped.style.transform='translateY(0)';
+      if(h){h.style.display='flex';h.style.opacity='1';h.style.transform='translateY(0) scale(1)';}
+      const pl=players[r===1?0:r===2?1:2];
+      if(pl&&hm) mountHero(hm,pl.avatarId,currentPose);
+      const scr=$('pedScore_'+r); if(scr&&pl) scr.textContent=pl.score||0;
+    });
+    const crown=$('scCrown'), pc=$('scPart'), sc=$('scSpot');
+    if(crown) crown.style.visibility='visible';
+    if(pc) pc.style.opacity='1';
+    if(sc){cancelAnimationFrame(rafId);runSpotlights(sc,wid,3);}
+    $('scExport')?.style.setProperty('display','flex');
+    if(btn){btn.textContent='📋 الترتيب النهائي الكامل';btn.style.background='linear-gradient(135deg,#4f46e5,#3730a3)';}
+  }
 
   /* ── Pose switcher ── */
   function setHeroPose(pose) {

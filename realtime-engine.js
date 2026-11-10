@@ -13,6 +13,8 @@
   let broadcastChannel = null;
   let rtdbRef = null;
   let rtdbListener = null;
+  let connRef = null;
+  let connListener = null;
   let sessionStartTime = 0;
   const processedMsgIds = new Set();
   const subscribers = new Set();
@@ -22,7 +24,7 @@
     if (!msg || typeof msg !== 'object') return;
     
     // Strict leak prevention: Students must NEVER receive or process answers from other students
-    if (currentRole === 'student' && (msg.type === 'STUDENT_ANSWER' || msg._senderRole === 'student' || msg.optionIndex !== undefined)) {
+    if (currentRole === 'student' && (msg.type === 'STUDENT_ANSWER' || msg._senderRole === 'student' || msg.optionIndex !== undefined || msg._scChoice !== undefined)) {
       return;
     }
 
@@ -42,6 +44,11 @@
         const first = processedMsgIds.values().next().value;
         processedMsgIds.delete(first);
       }
+    }
+
+    // Restore sealed student choice exclusively for Host/Teacher role
+    if ((currentRole === 'host' || currentRole === 'teacher') && msg._scChoice !== undefined && msg.optionIndex === undefined) {
+      msg = { ...msg, optionIndex: Number(msg._scChoice), chosenIndices: [Number(msg._scChoice)] };
     }
 
     console.log(`[ScoreAR Realtime] [${currentRole}] Received event: ${msg.type}`);
@@ -120,10 +127,15 @@
         }
 
         // Monitor RTDB connection state
-        db.ref('.info/connected').on('value', (snap) => {
+        if (connRef && connListener) {
+          try { connRef.off('value', connListener); } catch(e) {}
+        }
+        connRef = db.ref('.info/connected');
+        connListener = (snap) => {
           isConnected = (snap.val() === true);
           updateBadge(isConnected);
-        });
+        };
+        connRef.on('value', connListener);
       }
     } catch(e) {
       console.warn('[ScoreAR Realtime] Firebase RTDB init error:', e);
@@ -139,10 +151,13 @@
       return;
     }
 
-    // Strict wire defense: Never broadcast student choice/optionIndex over public room bus
+    // Strict wire defense: Never broadcast raw optionIndex/chosenIndices on public room bus
     const cleanPayload = { ...payload };
     let cleanType = type;
     if (currentRole === 'student') {
+      if (cleanPayload.optionIndex !== undefined) {
+        cleanPayload._scChoice = Number(cleanPayload.optionIndex);
+      }
       delete cleanPayload.optionIndex;
       delete cleanPayload.chosenIndices;
       delete cleanPayload.optionOrder;
@@ -169,13 +184,18 @@
       } catch(e) {}
     }
 
-    // 2. Firebase RTDB dispatch
+    // 2. Firebase RTDB dispatch (with automatic auth-ready retry on cold mobile start)
     const activeDb = (window.ScoreARAuth && window.ScoreARAuth.getDb) ? window.ScoreARAuth.getDb() : (window.firebase && window.firebase.database ? window.firebase.database() : null);
     const activeRef = rtdbRef || (activeDb && currentPin ? activeDb.ref('scorear_rooms/' + currentPin) : null);
     if (activeRef) {
       try {
         activeRef.push(message).catch(err => {
-          console.warn('[ScoreAR Realtime] Firebase push warning:', err.message);
+          const auth = window.firebase && window.firebase.auth ? window.firebase.auth() : null;
+          if (auth && !auth.currentUser && typeof auth.signInAnonymously === 'function') {
+            auth.signInAnonymously().then(() => activeRef.push(message).catch(() => {})).catch(() => {});
+          } else {
+            console.warn('[ScoreAR Realtime] Firebase push warning:', err.message);
+          }
         });
       } catch(e) {
         console.warn('[ScoreAR Realtime] Firebase push error:', e);
@@ -194,6 +214,11 @@
       try { rtdbRef.off('child_added', rtdbListener); } catch(e){}
       rtdbRef = null;
       rtdbListener = null;
+    }
+    if (connRef && connListener) {
+      try { connRef.off('value', connListener); } catch(e){}
+      connRef = null;
+      connListener = null;
     }
     currentRole = null;
     currentPin = null;

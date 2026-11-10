@@ -166,10 +166,17 @@
       }
       return;
     }
+    const syncQuestionToStudent = () => {
+      if (currentRoom.status === 'question' && activeQuestions[currentQIndex] && ev()) {
+        const wid = (currentRoom?.world?.id || 'royal');
+        if (readingTimeRemaining > 0) ev().publishQuestionReading(currentQIndex, activeQuestions.length, activeQuestions[currentQIndex], wid);
+        else ev().publishQuestionStart(currentQIndex, activeQuestions.length, activeQuestions[currentQIndex], timeRemaining, wid);
+      }
+    };
     const ctx = {
       currentRoom, currentQIndex, isRoomLocked,
-      onPlayerJoined: () => { sfx('pop'); if (currentRoom.status === 'lobby') refreshLobbyUi(); },
-      onPlayerReconnected: () => { if (currentRoom.status === 'question' && activeQuestions[currentQIndex] && ev()) ev().publishQuestionStart(currentQIndex, activeQuestions.length, activeQuestions[currentQIndex], timeRemaining, (currentRoom?.world?.id || 'royal')); },
+      onPlayerJoined: () => { sfx('pop'); if (currentRoom.status === 'lobby') refreshLobbyUi(); else syncQuestionToStudent(); },
+      onPlayerReconnected: () => { syncQuestionToStudent(); },
       onPlayerAnswered: () => { sfx('pop'); updateLiveAnswerStats(); },
       onAllAnswered: () => { finishCurrentQuestion(); }
     };

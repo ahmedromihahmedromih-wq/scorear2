@@ -52,8 +52,9 @@
     currentPin = String(pin).trim();
     const isObj = (student && typeof student === 'object');
     if (isObj && student.worldId) currentWorldId = student.worldId;
+    const authUid = global.firebase?.auth?.()?.currentUser?.uid;
     currentStudent = {
-      uid: (isObj && (student.uid || student.id)) ? (student.uid || student.id) : ('s_' + Math.random().toString(36).substring(2, 8)),
+      uid: (isObj && (student.uid || student.id)) ? (student.uid || student.id) : (authUid || ('s_' + Math.random().toString(36).substring(2, 8))),
       name: isObj ? (student.name || 'بطل جديد') : (typeof student === 'string' ? student : 'بطل جديد'),
       avatarId: (isObj && student.avatarId) ? student.avatarId : (optionalAvatar || 'char_01')
     };

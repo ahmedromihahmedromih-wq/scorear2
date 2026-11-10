@@ -727,14 +727,17 @@ function renderHeroesPage(){
       <p>٢٠ شخصية كرتونية أصلية بجسم كامل وتفاعل ثلاثي الأبعاد. اختر بطلك المفضل ليمثّلك في قاعة التحدي وعلى منصة التتويج.</p>
     </div>
 
-    <div class="character-picker" style="display:grid;grid-template-columns:300px 1fr;gap:24px;margin-top:24px;align-items:start;">
+    <div class="character-picker" style="margin-top:24px;align-items:start;">
       <aside class="character-stage" aria-label="معاينة الشخصية" style="background:radial-gradient(ellipse at 50% 50%, rgba(115,91,192,0.35), transparent 70%), linear-gradient(160deg,#1d1a36,#111326);border:1px solid rgba(142,100,239,0.3);border-radius:24px;padding:24px;text-align:center;box-shadow:0 15px 40px rgba(0,0,0,0.5);">
         <small style="color:#52d9ed;font-weight:800;letter-spacing:1px;display:block;margin-bottom:8px;">✦ البطل المختار حالياً ✦</small>
         <div id="studentCustomPreviewBox" style="width:220px;height:280px;margin:8px auto;display:flex;align-items:center;justify-content:center;"></div>
         <div id="studentCustomPreviewTitle" aria-live="polite" style="margin-top:10px;"></div>
         
-        <div class="character-controls" aria-label="وضعية البطل" style="margin-top:16px;display:flex;justify-content:center;">
-          <button type="button" class="btn light small" data-character-pose="idle" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'idle')" style="background:linear-gradient(110deg,#7550ef,#9665ff);color:#ffffff;border:1px solid #c4a8ff50;box-shadow:0 4px 15px rgba(117,80,239,0.35);padding:8px 20px;border-radius:12px;font-weight:900;font-size:13px;">🧍 وضع الوقوف والاستعداد</button>
+        <div class="character-controls" aria-label="وضعية البطل" style="margin-top:16px;display:flex;justify-content:center;flex-wrap:wrap;gap:8px;">
+          <button type="button" data-character-pose="idle" aria-pressed="true" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'idle')">🧍 وقوف</button>
+          <button type="button" data-character-pose="walk" aria-pressed="false" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'walk')">🚶 مشي</button>
+          <button type="button" data-character-pose="celebrate" aria-pressed="false" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'celebrate')">🤸 قفز</button>
+          <button type="button" data-character-pose="run" aria-pressed="false" onclick="if(window.ScoreARCharacters)window.ScoreARCharacters.preview(window.gallerySelected||1,'run')">🏃 جري</button>
         </div>
       </aside>
 

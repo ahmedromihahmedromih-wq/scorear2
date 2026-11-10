@@ -9,23 +9,23 @@
 
   // 6 Animation states: duration (ms), loop flag, frame sequence mapping, and cartoon physics keyframes
   const ACTIONS = {
-    idle: { duration: 2000, loop: true, frames: [0, 0, 0, 0], physics: [
+    idle: { duration: 2200, loop: true, frames: [0, 0, 0, 0], physics: [
       { y: 0, sx: 1.0, sy: 1.0, tilt: 0, sScale: 1.0, sAlpha: 0.65 },
-      { y: -3, sx: 0.98, sy: 1.02, tilt: 0.5, sScale: 0.95, sAlpha: 0.60 },
-      { y: -5, sx: 0.97, sy: 1.03, tilt: 0, sScale: 0.92, sAlpha: 0.58 },
-      { y: -1.5, sx: 0.99, sy: 1.01, tilt: -0.5, sScale: 0.98, sAlpha: 0.63 }
+      { y: -4, sx: 0.985, sy: 1.018, tilt: 0.6, sScale: 0.95, sAlpha: 0.60 },
+      { y: -7, sx: 0.975, sy: 1.028, tilt: 0, sScale: 0.91, sAlpha: 0.56 },
+      { y: -2.5, sx: 0.99, sy: 1.01, tilt: -0.6, sScale: 0.97, sAlpha: 0.62 }
     ]},
-    walk: { duration: 1200, loop: true, frames: [1, 0, 2, 0], physics: [
-      { y: 4, sx: 1.04, sy: 0.96, tilt: 3, sScale: 1.06, sAlpha: 0.72, fx: 'dust' },
-      { y: -8, sx: 0.96, sy: 1.04, tilt: 0.5, sScale: 0.86, sAlpha: 0.48 },
-      { y: 4, sx: 1.04, sy: 0.96, tilt: -3, sScale: 1.06, sAlpha: 0.72, fx: 'dust' },
-      { y: -8, sx: 0.96, sy: 1.04, tilt: -0.5, sScale: 0.86, sAlpha: 0.48 }
+    walk: { duration: 1050, loop: true, frames: [1, 0, 2, 0], physics: [
+      { y: 3, sx: 1.035, sy: 0.968, tilt: 2.8, sScale: 1.05, sAlpha: 0.72, fx: 'dust' },
+      { y: -9, sx: 0.97, sy: 1.032, tilt: 0.8, sScale: 0.86, sAlpha: 0.48 },
+      { y: 3, sx: 1.035, sy: 0.968, tilt: -2.8, sScale: 1.05, sAlpha: 0.72, fx: 'dust' },
+      { y: -9, sx: 0.97, sy: 1.032, tilt: -0.8, sScale: 0.86, sAlpha: 0.48 }
     ]},
-    run: { duration: 800, loop: true, frames: [0, 1, 2, 3], physics: [
-      { y: 6, sx: 1.08, sy: 0.92, tilt: 18, sScale: 1.15, sAlpha: 0.75, fx: 'dust' },
-      { y: -16, sx: 0.90, sy: 1.12, tilt: 22, sScale: 0.68, sAlpha: 0.35, fx: 'dash' },
-      { y: 6, sx: 1.08, sy: 0.92, tilt: 16, sScale: 1.15, sAlpha: 0.75, fx: 'dust' },
-      { y: -14, sx: 0.92, sy: 1.10, tilt: 20, sScale: 0.70, sAlpha: 0.38, fx: 'dash' }
+    run: { duration: 720, loop: true, frames: [0, 1, 2, 3], physics: [
+      { y: 5, sx: 1.06, sy: 0.94, tilt: 12, sScale: 1.12, sAlpha: 0.75, fx: 'dust' },
+      { y: -15, sx: 0.93, sy: 1.08, tilt: 15, sScale: 0.70, sAlpha: 0.36, fx: 'dash' },
+      { y: 5, sx: 1.06, sy: 0.94, tilt: 11, sScale: 1.12, sAlpha: 0.75, fx: 'dust' },
+      { y: -14, sx: 0.94, sy: 1.07, tilt: 14, sScale: 0.72, sAlpha: 0.38, fx: 'dash' }
     ]},
     climb: { duration: 1350, loop: true, frames: [0, 1, 2, 3], physics: [
       { y: -4, sx: 0.96, sy: 1.04, tilt: -6, sScale: 0.55, sAlpha: 0.28 },
@@ -39,11 +39,11 @@
       { y: -34, sx: 0.94, sy: 1.06, tilt: 35, sScale: 0.35, sAlpha: 0.12, fx: 'sparkle' },
       { y: -24, sx: 1.08, sy: 0.92, tilt: 42, sScale: 0.45, sAlpha: 0.18, fx: 'sparkle' }
     ]},
-    celebrate: { duration: 1600, loop: true, frames: [0, 3, 3, 0], physics: [
-      { y: 14, sx: 1.18, sy: 0.82, tilt: 0, sScale: 1.25, sAlpha: 0.88 },
-      { y: -34, sx: 0.88, sy: 1.18, tilt: -3, sScale: 0.50, sAlpha: 0.30, fx: 'confetti' },
-      { y: -44, sx: 0.96, sy: 1.04, tilt: 3, sScale: 0.40, sAlpha: 0.22, fx: 'star' },
-      { y: 6, sx: 1.12, sy: 0.88, tilt: 0, sScale: 1.15, sAlpha: 0.80 }
+    celebrate: { duration: 1350, loop: true, frames: [0, 3, 3, 0], physics: [
+      { y: 10, sx: 1.12, sy: 0.88, tilt: 0, sScale: 1.18, sAlpha: 0.85 },
+      { y: -32, sx: 0.91, sy: 1.11, tilt: -2.5, sScale: 0.52, sAlpha: 0.30, fx: 'confetti' },
+      { y: -42, sx: 0.97, sy: 1.03, tilt: 2.5, sScale: 0.42, sAlpha: 0.22, fx: 'star' },
+      { y: 4, sx: 1.08, sy: 0.92, tilt: 0, sScale: 1.10, sAlpha: 0.78 }
     ]}
   };
 
@@ -272,19 +272,20 @@
       this.activeSprite.style.backgroundPosition = `${(frameNum * 33.333333).toFixed(4)}% 0%`;
 
       const subT = (progress * 4) - stepIdx;
+      const easeT = 0.5 - 0.5 * Math.cos(subT * Math.PI);
       const k1 = cfg.physics[stepIdx];
       const k2 = cfg.physics[(stepIdx + 1) % 4];
 
       if (!this.reducedMotion) {
-        const y = lerp(k1.y, k2.y, subT);
-        const sx = lerp(k1.sx, k2.sx, subT);
-        const sy = lerp(k1.sy, k2.sy, subT);
-        const tilt = lerp(k1.tilt, k2.tilt, subT);
+        const y = lerp(k1.y, k2.y, easeT);
+        const sx = lerp(k1.sx, k2.sx, easeT);
+        const sy = lerp(k1.sy, k2.sy, easeT);
+        const tilt = lerp(k1.tilt, k2.tilt, easeT);
         this.charWrap.style.transform = `translate3d(0,${y.toFixed(2)}px,0) scale(${sx.toFixed(3)},${sy.toFixed(3)}) rotate(${tilt.toFixed(2)}deg)`;
 
         if (this.shadow) {
-          const sScale = lerp(k1.sScale, k2.sScale, subT);
-          const sAlpha = lerp(k1.sAlpha, k2.sAlpha, subT);
+          const sScale = lerp(k1.sScale, k2.sScale, easeT);
+          const sAlpha = lerp(k1.sAlpha, k2.sAlpha, easeT);
           this.shadow.style.transform = `scale(${sScale.toFixed(3)},${sScale.toFixed(3)})`;
           this.shadow.style.opacity = sAlpha.toFixed(3);
         }

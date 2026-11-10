@@ -84,12 +84,12 @@
       <div style="position:absolute;inset:0;background:url('assets/worlds/${worldId}/lobby.jpg') center/cover no-repeat;z-index:1;"></div>
       <video id="hostLiveVideoBg" autoplay loop muted playsinline poster="assets/worlds/${worldId}/lobby.jpg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;opacity:0.95;"><source src="assets/videos/worlds/${worldId}.mp4" type="video/mp4"></video>
       <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center, rgba(12,13,29,0.2) 0%, rgba(12,13,29,0.72) 100%);z-index:3;"></div>
-      <div style="position:absolute;top:18px;left:24px;right:24px;display:flex;justify-content:space-between;align-items:center;z-index:20;">
-        <div style="display:flex;align-items:center;gap:12px;background:rgba(17,18,37,0.85);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.15);padding:8px 18px;border-radius:16px;">
+      <div class="host-lobby-topbar" style="position:absolute;top:18px;left:24px;right:24px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;z-index:20;">
+        <div class="host-lobby-world-badge" style="display:flex;align-items:center;gap:12px;background:rgba(17,18,37,0.85);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.15);padding:8px 18px;border-radius:16px;">
           <span style="font-size:22px;">🌍</span>
           <div><b style="color:#ffffff;font-size:15px;display:block;">عالم ${w.name}</b><small style="color:#52d9ed;font-size:11px;">${w.tag || 'جاهز للمنافسة'} · مباشر</small></div>
         </div>
-        <div style="display:flex;gap:10px;align-items:center;">
+        <div class="host-lobby-actions" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
           <button id="hostGameModeBtn" class="btn outline" onclick="ScoreARGameModes && ScoreARGameModes.openModePicker({ worldId: '${worldId}', pin: '${currentRoom.pin}' })" style="font-size:12px;padding:9px 14px;border-radius:12px;border:1.5px solid ${modeBadgeBorder};background:rgba(20,20,40,0.85);color:${modeBadgeBorder};font-weight:900;display:inline-flex;align-items:center;gap:6px;cursor:pointer;" title="تغيير طور اللعب"><span id="hostGameModeBtnText">${modeBadgeText}</span><span style="font-size:10px;opacity:0.8;">▾</span></button>
           <button id="hostStartQuizBtn" class="btn dark" onclick="ScoreARQuizHost.launchQuestion(0)" style="font-size:14px;padding:10px 22px;font-weight:900;border-radius:14px;box-shadow:0 0 25px rgba(117,80,239,0.75);">🚀 بدء المنافسة فوراً (<span id="hostPlayerCount">${currentRoom.players.length}</span>)</button>
           <button class="btn light" onclick="ScoreARBots ? ScoreARBots.openModal() : ScoreARQuizHost.addDemoPlayer()" style="font-size:12px;padding:9px 15px;border-radius:12px;">🤖 الطلاب التجريبيون (<span id="hostBotCount">${currentRoom.players.filter(p=>p.isBot).length}</span>)</button>
@@ -97,23 +97,23 @@
           <button class="btn outline" onclick="ScoreARQuizHost.closeHostSession()" style="background:rgba(0,0,0,0.5);border-radius:12px;padding:9px 15px;color:#fff;">✕ مغادرة القاعة</button>
         </div>
       </div>
-      <div style="position:absolute;top:82px;left:50%;transform:translateX(-50%);z-index:20;">
-        <div class="lobby-white-3d-box" style="padding:14px 34px;display:flex;align-items:center;gap:24px;text-align:right;">
-          <div id="lobbyQrCodeHolder" style="width:72px;height:72px;background:#fff;border-radius:12px;padding:3px;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;">
+      <div class="host-lobby-pin-stage" style="position:absolute;top:82px;left:50%;transform:translateX(-50%);z-index:20;max-width:94vw;">
+        <div class="lobby-white-3d-box host-lobby-pin-box" style="padding:14px 34px;display:flex;align-items:center;gap:24px;text-align:right;">
+          <div id="lobbyQrCodeHolder" style="width:72px;height:72px;flex-shrink:0;background:#fff;border-radius:12px;padding:3px;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;">
             <img src="${qrUrl}" alt="QR" style="width:66px;height:66px;border-radius:8px;display:block;">
           </div>
-          <div>
+          <div style="min-width:0;">
             <span style="font-size:11px;font-weight:900;letter-spacing:1px;color:#7550ef;text-transform:uppercase;display:block;">رمز القاعة المباشر (PIN)</span>
-            <div style="font-size:40px;font-weight:900;letter-spacing:10px;line-height:1.1;color:#0c0d1d;font-family:Arial,monospace,sans-serif;margin:3px 0;">${currentRoom.pin}</div>
-            <small style="color:#4b5563;font-size:12px;font-weight:700;">ادخل واكتب الرمز لبدء التحدي</small>
+            <div class="host-lobby-pin-digits" style="font-size:40px;font-weight:900;letter-spacing:10px;line-height:1.1;color:#0c0d1d;font-family:Arial,monospace,sans-serif;margin:3px 0;">${currentRoom.pin}</div>
+            <small style="color:#4b5563;font-size:12px;font-weight:700;display:block;">ادخل واكتب الرمز لبدء التحدي</small>
           </div>
-          <button onclick="navigator.clipboard?.writeText('${currentRoom.pin}'); if(window.toast) window.toast('تم نسخ رمز القاعة: ' + '${currentRoom.pin}');" style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:12px;padding:10px 14px;font-size:12px;font-weight:800;color:#1f2937;cursor:pointer;">نسخ 📋</button>
+          <button class="host-lobby-copy-btn" onclick="navigator.clipboard?.writeText('${currentRoom.pin}'); if(window.toast) window.toast('تم نسخ رمز القاعة: ' + '${currentRoom.pin}');" style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:12px;padding:10px 14px;font-size:12px;font-weight:800;color:#1f2937;cursor:pointer;flex-shrink:0;">نسخ 📋</button>
         </div>
       </div>
-      <div id="hostCharactersArena" style="position:absolute;bottom:0;left:0;right:0;height:52vh;display:flex;align-items:flex-end;justify-content:center;gap:26px;padding:0 35px 24px;z-index:15;pointer-events:none;overflow-x:auto;">
+      <div id="hostCharactersArena" class="host-lobby-characters-arena" style="position:absolute;bottom:0;left:0;right:0;height:52vh;display:flex;align-items:flex-end;justify-content:center;gap:26px;padding:0 35px 24px;z-index:15;pointer-events:none;overflow-x:auto;">
         ${renderFullbodyCharactersHtml(currentRoom)}
       </div>
-      <div style="position:absolute;bottom:12px;left:24px;display:flex;gap:14px;align-items:center;z-index:20;">
+      <div class="host-lobby-footer-pills" style="position:absolute;bottom:12px;left:24px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;z-index:20;">
         <span style="background:rgba(17,18,37,0.85);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);padding:5px 14px;border-radius:12px;color:#ddd8ff;font-size:12px;font-weight:700;">👥 المتسابقون المتصلون: <b id="hostConnectedPlayersPill" style="color:#52d9ed;">${currentRoom.players.length}</b></span>
         <span style="background:rgba(17,18,37,0.85);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1);padding:5px 14px;border-radius:12px;color:#ddd8ff;font-size:12px;font-weight:700;">⏱️ وقت الانتظار: <b id="hostLobbyTimerText" style="color:#fff;">0:00</b></span>
       </div>`;
@@ -158,16 +158,16 @@
       const roleColor = p.isRegistered ? '#34d399' : isBot ? '#38bdf8' : '#fcd34d';
       const safeName = escapeHtml(p.name);
       const delAction = p.isBot ? `ScoreARBots && ScoreARBots.removeBot('${escapeHtml(p.id)}')` : `ScoreARQuizHost.kickPlayer('${escapeHtml(p.id)}')`;
-      return `<div class="animate-enter-fullbody" style="position:relative;display:flex;flex-direction:column;align-items:center;pointer-events:auto;animation-delay:${idx*0.06}s;min-width:125px;">
+      return `<div class="animate-enter-fullbody host-lobby-hero-slot" style="position:relative;display:flex;flex-direction:column;align-items:center;pointer-events:auto;animation-delay:${idx*0.06}s;min-width:125px;">
         <div class="player-name-floating-pill" style="margin-bottom:10px;" title="${safeName}">
           <span style="color:${roleColor};font-size:12px;">${roleIcon}</span>
           <span style="max-width:110px;overflow:hidden;text-overflow:ellipsis;display:inline-block;">${safeName}</span>
           <button onclick="${delAction}" style="background:none;border:0;color:#ef4444;font-size:12px;cursor:pointer;padding:0 0 0 3px;" title="حذف">✕</button>
         </div>
-        <div style="position:relative;width:140px;height:220px;display:flex;align-items:flex-end;justify-content:center;">
+        <div class="host-lobby-hero-figure" style="position:relative;width:140px;height:220px;display:flex;align-items:flex-end;justify-content:center;">
           <span class="scorear-character character-walk" style="--character-atlas:url('assets/characters/animated/${p.avatarId || 'char_01'}-atlas.webp');width:130px;height:180px;">
             <img src="assets/characters/animated/${p.avatarId || 'char_01'}-idle.webp" onerror="this.src='assets/characters/animated/char_01-idle.webp'" alt="${safeName}" style="object-fit:contain;filter:drop-shadow(0 15px 25px rgba(0,0,0,0.6));">
-            <span class="character-frames" aria-hidden="true"></span>
+            <span class="character-frames" style="animation-delay:-${((idx * 0.37) % 1.05).toFixed(2)}s;" aria-hidden="true"></span>
           </span>
           <div style="position:absolute;bottom:0;width:115px;height:16px;background:radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 70%);border-radius:50%;z-index:-1;"></div>
         </div>
@@ -185,15 +185,15 @@
       <div style="position:absolute;inset:0;overflow:hidden;z-index:0;background:url('assets/worlds/${worldId}/question.jpg') center/cover no-repeat;">
         <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 30%, rgba(15,23,42,0.65) 0%, rgba(12,13,30,0.92) 100%);"></div>
       </div>
-      <header style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:12px 28px;background:rgba(12,13,30,0.7);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,0.1);">
-        <div style="display:flex;align-items:center;gap:12px;">
+      <header class="host-question-header" style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:12px 28px;background:rgba(12,13,30,0.7);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,0.1);">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <button onclick="ScoreARQuizHost.closeHostSession()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 12px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;">✕ إنهاء</button>
           <span style="background:rgba(117,80,239,0.3);border:1px solid #8e64ef;color:#d8b4fe;padding:4px 12px;border-radius:10px;font-size:12px;font-weight:900;">${escapeHtml(qData.skill || 'سؤال')}</span>
           <span style="font-size:14px;color:#fff;font-weight:900;">السؤال ${currentQIndex + 1} من ${total}</span>
           ${(qData.isDouble || qData.multiplier === 2) ? `<span style="background:linear-gradient(135deg, #f59e0b, #d97706);color:#fff;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:900;box-shadow:0 0 12px rgba(245,158,11,0.5);">⚡ نقاط ×2</span>` : ''}
           ${activeGameMode === 'CARD_ARENA' ? `<span style="background:rgba(245,158,11,0.22);border:1.5px solid #f59e0b;color:#fcd34d;padding:4px 12px;border-radius:10px;font-size:12px;font-weight:900;display:inline-flex;align-items:center;gap:6px;"><span>🃏 حرب الكروت نشطة</span><button onclick="ScoreARCardArena&&ScoreARCardArena.simulateCardAction&&ScoreARCardArena.simulateCardAction()" style="background:#f59e0b;color:#000;border:none;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:900;cursor:pointer;" title="محاكاة سريعة لإطلاق كارت بالقاعة">تجربة كارت ⚡</button></span>` : ''}
         </div>
-        <div style="display:flex;align-items:center;gap:16px;">
+        <div style="display:flex;align-items:center;gap:12px;">
           <div id="hostLiveAnswerStats" style="display:${isReading ? 'none' : 'flex'};align-items:center;gap:8px;background:rgba(255,255,255,0.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.15);padding:6px 16px;border-radius:14px;font-size:13px;font-weight:800;color:#fff;">
             <span>أجاب:</span>
             <b id="hostAnsweredCount" style="color:#38bdf8;font-size:18px;font-family:monospace;">0</b>
@@ -203,8 +203,8 @@
           <button onclick="ScoreARQuizHost.finishCurrentQuestion()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 14px;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;">تخطي ⏭</button>
         </div>
       </header>
-      <main id="hostQuestionArena" style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;justify-content:${isReading ? 'center' : 'flex-start'};align-items:center;padding:16px 36px 24px;gap:14px;min-height:calc(100vh - 85px);">
-        <div id="hostQuestionCard" style="background:rgba(18,20,44,0.92);backdrop-filter:blur(22px);border:2px solid rgba(142,100,239,0.4);border-radius:${isReading ? '28px' : '20px'};padding:${isReading ? '40px 48px' : '14px 28px'};text-align:center;box-shadow:${isReading ? '0 20px 60px rgba(0,0,0,0.65), 0 0 40px rgba(117,80,239,0.35)' : '0 10px 30px rgba(0,0,0,0.4)'};margin:${isReading ? '40px auto 20px auto' : '0 auto 8px auto'};max-width:${isReading ? '1020px' : '960px'};width:100%;transition:all 0.75s cubic-bezier(0.16, 1, 0.3, 1);">
+      <main id="hostQuestionArena" class="host-question-arena" style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;justify-content:${isReading ? 'center' : 'flex-start'};align-items:center;padding:16px 36px 24px;gap:14px;min-height:calc(100vh - 85px);">
+        <div id="hostQuestionCard" class="host-question-card" style="background:rgba(18,20,44,0.92);backdrop-filter:blur(22px);border:2px solid rgba(142,100,239,0.4);border-radius:${isReading ? '28px' : '20px'};padding:${isReading ? '40px 48px' : '14px 28px'};text-align:center;box-shadow:${isReading ? '0 20px 60px rgba(0,0,0,0.65), 0 0 40px rgba(117,80,239,0.35)' : '0 10px 30px rgba(0,0,0,0.4)'};margin:${isReading ? '40px auto 20px auto' : '0 auto 8px auto'};max-width:${isReading ? '1020px' : '960px'};width:100%;transition:all 0.75s cubic-bezier(0.16, 1, 0.3, 1);">
           <h2 id="hostQuestionText" style="font-size:${isReading ? '36px' : '22px'};font-weight:900;color:#ffffff;line-height:1.45;margin:0 0 ${isReading ? '14px' : '6px'} 0;transition:all 0.75s cubic-bezier(0.16, 1, 0.3, 1);text-shadow:0 4px 18px rgba(0,0,0,0.8);">${escapeHtml(questionText)}</h2>
           ${imgUrl ? `
             <div id="hostQuestionImgBox" style="display:flex;justify-content:center;margin:8px 0;max-height:${isReading ? '240px' : '140px'};transition:max-height 0.75s ease;">
@@ -230,7 +230,7 @@
           ${renderWorldTimerHtml(worldId, timeRemaining)}
         </div>
 
-        <div id="hostOptionsGrid" style="display:${isReading ? 'none' : 'grid'};grid-template-columns:1fr 1fr;gap:14px;max-width:960px;margin:0 auto;width:100%;">
+        <div id="hostOptionsGrid" class="host-options-grid" style="display:${isReading ? 'none' : 'grid'};grid-template-columns:1fr 1fr;gap:14px;max-width:960px;margin:0 auto;width:100%;">
           ${opts.slice(0, 4).map((optText, idx) => {
             const theme = OPTION_THEMES[idx % 4];
             return `

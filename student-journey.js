@@ -389,7 +389,7 @@
           ${global.ScoreARStreak ? global.ScoreARStreak.renderStreakCard() : ''}
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:24px;margin-bottom:38px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(min(100%, 275px), 1fr));gap:20px;margin-bottom:38px;">
           <div style="background:radial-gradient(circle at top right, rgba(16,185,129,0.12), rgba(21,23,49,0.95));border:2px solid #10b981;border-radius:24px;padding:28px;display:flex;flex-direction:column;justify-content:space-between;gap:20px;">
             <div>
               <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(16,185,129,0.2);color:#34d399;padding:6px 14px;border-radius:12px;font-size:13px;font-weight:900;margin-bottom:12px;">

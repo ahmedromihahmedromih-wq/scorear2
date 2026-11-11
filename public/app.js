@@ -268,8 +268,8 @@ function renderLiveLobby(worldId='royal', pin=null, bypassPicker=false, bypassMo
     <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center, rgba(12,13,29,0.2) 0%, rgba(12,13,29,0.7) 100%);z-index:3;"></div>
 
     <!-- LAYER 4: Top Action Header -->
-    <div style="position:absolute;top:20px;left:24px;right:24px;display:flex;justify-content:space-between;align-items:center;z-index:20;">
-      <div style="display:flex;align-items:center;gap:12px;background:rgba(17,18,37,0.85);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.15);padding:10px 18px;border-radius:18px;">
+    <div class="host-lobby-topbar" style="position:absolute;top:20px;left:24px;right:24px;display:flex;justify-content:space-between;align-items:center;z-index:20;flex-wrap:wrap;gap:10px;">
+      <div class="host-lobby-world-badge" style="display:flex;align-items:center;gap:12px;background:rgba(17,18,37,0.85);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.15);padding:10px 18px;border-radius:18px;">
         <span style="font-size:22px;">🌍</span>
         <div>
           <b style="color:#ffffff;font-size:15px;display:block;">عالم ${w.name}</b>
@@ -277,7 +277,7 @@ function renderLiveLobby(worldId='royal', pin=null, bypassPicker=false, bypassMo
         </div>
       </div>
 
-      <div style="display:flex;gap:10px;align-items:center;">
+      <div class="host-lobby-actions" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <button class="btn dark" onclick="startActiveContest('${w.id}')" style="font-size:15px;padding:12px 24px;font-weight:900;border-radius:14px;box-shadow:0 0 25px rgba(117,80,239,0.75);">🚀 بدء المنافسة فوراً</button>
         <button class="btn light" onclick="openAddHeroModal('${w.id}', '${pin}')" style="font-size:13px;padding:10px 16px;border-radius:12px;">+ إضافة بطل تجريبي</button>
         <button class="btn outline" onclick="closeLiveLobby()" style="background:rgba(0,0,0,0.5);border-radius:12px;padding:10px 16px;color:#fff;">✕ مغادرة القاعة</button>
@@ -285,20 +285,20 @@ function renderLiveLobby(worldId='royal', pin=null, bypassPicker=false, bypassMo
     </div>
 
     <!-- LAYER 5: 3D Pure White Floating PIN Box -->
-    <div style="position:absolute;top:90px;left:50%;transform:translateX(-50%);z-index:20;">
-      <div class="lobby-white-3d-box" style="padding:16px 36px;display:flex;align-items:center;gap:28px;text-align:right;">
+    <div class="host-lobby-pin-stage" style="position:absolute;top:90px;left:50%;transform:translateX(-50%);z-index:20;">
+      <div class="lobby-white-3d-box host-lobby-pin-box" style="padding:16px 36px;display:flex;align-items:center;gap:28px;text-align:right;">
         <div id="lobbyQrCodeHolder" style="width:76px;height:76px;background:#fff;border-radius:12px;padding:4px;box-shadow:0 4px 12px rgba(0,0,0,0.15);"></div>
         <div>
           <span style="font-size:11px;font-weight:900;letter-spacing:1px;color:#7550ef;text-transform:uppercase;display:block;">رمز القاعة المباشر (PIN)</span>
-          <div style="font-size:42px;font-weight:900;letter-spacing:10px;line-height:1.1;color:#0c0d1d;font-family:Arial,sans-serif;margin:4px 0;">${pin}</div>
+          <div class="host-lobby-pin-digits" style="font-size:42px;font-weight:900;letter-spacing:10px;line-height:1.1;color:#0c0d1d;font-family:Arial,sans-serif;margin:4px 0;">${pin}</div>
           <small style="color:#4b5563;font-size:12px;font-weight:700;">ادخل على <b>scorear-e4186.web.app</b> واكتب الرمز</small>
         </div>
-        <button onclick="navigator.clipboard?.writeText('${pin}'); toast('تم نسخ رمز القاعة: ' + '${pin}');" style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:12px;padding:10px 14px;font-size:12px;font-weight:800;color:#1f2937;cursor:pointer;">نسخ 📋</button>
+        <button class="host-lobby-copy-btn" onclick="navigator.clipboard?.writeText('${pin}'); toast('تم نسخ رمز القاعة: ' + '${pin}');" style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:12px;padding:10px 14px;font-size:12px;font-weight:800;color:#1f2937;cursor:pointer;">نسخ 📋</button>
       </div>
     </div>
 
     <!-- LAYER 6: Fullbody 3D Characters Roster -->
-    <div style="position:absolute;bottom:0;left:0;right:0;height:55vh;display:flex;align-items:flex-end;justify-content:center;gap:35px;padding:0 50px 30px;z-index:15;pointer-events:none;">
+    <div class="host-lobby-characters-arena" style="position:absolute;bottom:0;left:0;right:0;height:55vh;display:flex;align-items:flex-end;justify-content:center;gap:35px;padding:0 50px 30px;z-index:15;pointer-events:none;overflow-x:auto;">
       ${participants.length === 0 ? `
         <div style="background:rgba(17,18,37,0.78);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.15);border-radius:24px;padding:24px 36px;text-align:center;pointer-events:auto;margin-bottom:60px;">
           <div style="font-size:42px;margin-bottom:8px;">⏳</div>
@@ -370,7 +370,7 @@ function openAddHeroModal(worldId, pin){
 
       <div>
         <label style="display:block;color:#ddd8ff;font-size:12px;font-weight:700;margin-bottom:8px;">الشخصية الكرتونية المتحركة (من قاعة الأبطال):</label>
-        <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;max-height:220px;overflow-y:auto;padding-right:4px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(75px, 1fr));gap:10px;max-height:220px;overflow-y:auto;padding-right:4px;">
           ${cleanCharacterRoster.map((c, i) => `
             <div class="avatar-card-picker ${i===0?'selected':''}" data-avatar-id="${c.id}" onclick="selectAvatarCard('${c.id}', this)" style="display:flex;flex-direction:column;align-items:center;background:#181729;border:1px solid rgba(136,128,183,0.3);border-radius:14px;padding:8px 4px;cursor:pointer;">
               <img src="assets/characters/animated/${c.id}-idle.webp" alt="${c.name}" loading="lazy" style="width:68px;height:84px;object-fit:contain;">
@@ -428,7 +428,7 @@ function startActiveContest(worldId='royal'){
   if(!stage){
     stage = document.createElement('div');
     stage.id = 'activeContestStage';
-    stage.style.cssText = 'position:fixed;inset:0;z-index:10000;background:#0c0d1d;overflow:hidden;font-family:Cairo,Tajawal,sans-serif;direction:rtl;';
+    stage.style.cssText = 'position:fixed;inset:0;z-index:10000;background:#0c0d1d;overflow-y:auto;overflow-x:hidden;font-family:Cairo,Tajawal,sans-serif;direction:rtl;display:flex;flex-direction:column;';
     document.body.appendChild(stage);
   }
 
@@ -476,39 +476,39 @@ function renderActiveQuestionStage(worldId='royal'){
 
   stage.innerHTML = `
     <!-- Background Artwork: World Crisp Large Background (No Video during question) -->
-    <div style="position:absolute;inset:0;background:url('assets/${w.image}.webp') center/cover no-repeat;filter:brightness(0.35) saturate(1.05);z-index:1;"></div>
+    <div style="position:fixed;inset:0;background:url('assets/${w.image}.webp') center/cover no-repeat;filter:brightness(0.35) saturate(1.05);z-index:1;pointer-events:none;"></div>
 
     <!-- Top Status Bar -->
-    <div style="position:absolute;top:20px;left:28px;right:28px;display:flex;justify-content:space-between;align-items:center;z-index:20;">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span style="background:#272044;color:#52d9ed;border:1px solid #8e64ef;padding:6px 16px;border-radius:14px;font-size:13px;font-weight:900;">${esc(qData.skill || 'مسابقة سكور آر')}</span>
-        <span style="color:#ffffff;font-size:14px;font-weight:800;background:rgba(0,0,0,0.5);padding:6px 14px;border-radius:12px;">سؤال ${currentContestIndex + 1} من ${contestQuestions.length}</span>
+    <div style="position:relative;padding:clamp(12px,2vw,20px) clamp(14px,3vw,28px) 8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;z-index:20;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="background:#272044;color:#52d9ed;border:1px solid #8e64ef;padding:5px 12px;border-radius:12px;font-size:12px;font-weight:900;">${esc(qData.skill || 'مسابقة سكور آر')}</span>
+        <span style="color:#ffffff;font-size:13px;font-weight:800;background:rgba(0,0,0,0.5);padding:5px 12px;border-radius:10px;">سؤال ${currentContestIndex + 1} من ${contestQuestions.length}</span>
       </div>
 
-      <div style="display:flex;align-items:center;gap:14px;">
-        <div style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);padding:6px 18px;border-radius:14px;color:#f5c518;font-weight:900;font-size:15px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);padding:5px 14px;border-radius:12px;color:#f5c518;font-weight:900;font-size:13px;">
           🏆 نقاطك: <span id="contestLiveScore">${contestScore}</span>
         </div>
-        <button onclick="closeActiveContest()" style="background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:8px 14px;border-radius:12px;font-size:12px;cursor:pointer;">✕ إنهاء</button>
+        <button onclick="closeActiveContest()" style="background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 12px;border-radius:10px;font-size:12px;cursor:pointer;">✕ إنهاء</button>
       </div>
     </div>
 
     <!-- Timer Bar -->
-    <div style="position:absolute;top:76px;left:28px;right:28px;height:8px;background:rgba(255,255,255,0.15);border-radius:8px;overflow:hidden;z-index:20;">
+    <div style="position:relative;margin:4px clamp(14px,3vw,28px) 0;height:8px;background:rgba(255,255,255,0.15);border-radius:8px;overflow:hidden;z-index:20;flex-shrink:0;">
       <div id="contestProgressBar" style="width:100%;height:100%;background:linear-gradient(90deg, #7550ef, #52d9ed);transition:width 1s linear;"></div>
     </div>
 
     <!-- Center Question Area -->
-    <div style="position:absolute;inset:100px 30px 40px;display:flex;flex-direction:column;justify-content:center;align-items:center;max-width:1100px;margin:0 auto;z-index:20;">
+    <div style="position:relative;flex:1;padding:clamp(14px,3vw,28px) clamp(14px,3vw,30px) 70px;display:flex;flex-direction:column;justify-content:center;align-items:center;max-width:1100px;width:100%;margin:0 auto;z-index:20;">
       
       <!-- Massive Question Box -->
-      <div style="width:100%;background:rgba(21, 23, 42, 0.92);backdrop-filter:blur(18px);border:2px solid rgba(142,100,239,0.35);border-radius:26px;padding:34px 40px;text-align:center;margin-bottom:28px;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
-        <span style="font-size:12px;color:#a1a4be;letter-spacing:1px;font-weight:800;display:block;margin-bottom:10px;">اختر الإجابة الصحيحة بالضغط عليها:</span>
-        <h2 style="color:#ffffff;font-size:clamp(22px, 3.2vw, 36px);font-weight:900;line-height:1.55;">${esc(qData.q)}</h2>
+      <div style="width:100%;background:rgba(21, 23, 42, 0.92);backdrop-filter:blur(18px);border:2px solid rgba(142,100,239,0.35);border-radius:22px;padding:clamp(18px,3.5vw,34px) clamp(16px,3.5vw,40px);text-align:center;margin-bottom:clamp(14px,2.5vw,28px);box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+        <span style="font-size:12px;color:#a1a4be;letter-spacing:1px;font-weight:800;display:block;margin-bottom:8px;">اختر الإجابة الصحيحة بالضغط عليها:</span>
+        <h2 style="color:#ffffff;font-size:clamp(18px, 3.2vw, 34px);font-weight:900;line-height:1.5;">${esc(qData.q)}</h2>
       </div>
 
       <!-- 4 Massive Choices Grid -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;width:100%;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(min(100%, 260px), 1fr));gap:clamp(10px, 2vw, 18px);width:100%;">
         ${qData.opts.map((opt, i) => `
           <button class="contest-choice-btn" data-choice-index="${i}" onclick="handleContestAnswer(${i}, ${qData.answer}, '${worldId}')">
             <span style="width:36px;height:36px;border-radius:12px;background:rgba(255,255,255,0.1);display:grid;place-items:center;font-size:16px;font-weight:900;color:#52d9ed;flex-shrink:0;">${['أ','ب','ج','د'][i]}</span>
@@ -518,7 +518,7 @@ function renderActiveQuestionStage(worldId='royal'){
       </div>
 
       <!-- Feedback & Explanation Drawer -->
-      <div id="contestFeedbackDrawer" style="display:none;width:100%;margin-top:20px;background:rgba(17,18,37,0.96);border:1px solid #8e64ef;border-radius:18px;padding:18px 24px;text-align:right;">
+      <div id="contestFeedbackDrawer" style="display:none;width:100%;margin-top:16px;background:rgba(17,18,37,0.96);border:1px solid #8e64ef;border-radius:18px;padding:16px 20px;text-align:right;">
         <div id="contestFeedbackTitle" style="font-weight:900;font-size:16px;margin-bottom:6px;"></div>
         <div id="contestFeedbackText" style="color:#ddd8ff;font-size:14px;line-height:1.7;"></div>
         <button class="btn dark" id="btnNextQuestion" style="margin-top:14px;padding:10px 24px;font-weight:900;" onclick="goToNextContestStep('${worldId}')">السؤال التالي ➔</button>

@@ -333,7 +333,7 @@
           </div>
 
           <!-- 6 Worlds Cards Grid -->
-          <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;margin-bottom:20px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:10px;margin-bottom:20px;">
             ${WORLDS_DATA.map(w => {
               const isSel = (w.id === activeSelectedWorldId);
               return `

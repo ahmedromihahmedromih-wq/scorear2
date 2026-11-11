@@ -215,8 +215,8 @@
         </div>
 
         <!-- Sticky Live Counter & Launch Footer -->
-        <footer style="background:#171836;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(142,100,239,0.3);">
-          <div style="display:flex;align-items:center;gap:16px;">
+        <footer style="background:#171836;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-top:1px solid rgba(142,100,239,0.3);">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
             <div style="background:#11122a;border:1px solid rgba(142,100,239,0.4);border-radius:10px;padding:6px 14px;display:flex;align-items:center;gap:8px;">
               <span style="font-size:16px;">📝</span>
               <span style="color:#fff;font-size:13px;font-weight:900;"><b style="color:#52d9ed;">${totalCount}</b> أسئلة مختارة</span>

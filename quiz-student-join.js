@@ -167,8 +167,8 @@
             </div>
             <button type="button" onclick="ScoreARStudentJoin.fastReconnect()" style="background:#7550ef;border:none;border-radius:10px;padding:6px 12px;color:#fff;font-weight:900;font-size:12px;cursor:pointer;">دخول سريع ↩</button>
           </div>` : ''}
-        <div id="studentPinDisplay" onclick="const inp=document.getElementById('studentJoinPinInput'); if(inp) inp.focus();" style="display:flex;justify-content:center;gap:8px;margin-bottom:14px;direction:ltr;cursor:pointer;">
-          ${[0,1,2,3,4,5].map(i => `<div class="pin-digit-box" style="width:44px;height:52px;background:#13152a;border:2px solid ${i===digits.length?'#a855f7':(digits[i]?'#7550ef':'rgba(255,255,255,0.2)')};border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#fcd34d;font-family:monospace;">${digits[i]||''}</div>`).join('')}
+        <div id="studentPinDisplay" onclick="const inp=document.getElementById('studentJoinPinInput'); if(inp) inp.focus();" style="display:flex;justify-content:center;gap:6px;margin-bottom:14px;direction:ltr;cursor:pointer;width:100%;">
+          ${[0,1,2,3,4,5].map(i => `<div class="pin-digit-box" style="flex:1;max-width:44px;min-width:34px;height:clamp(44px,11vw,52px);background:#13152a;border:2px solid ${i===digits.length?'#a855f7':(digits[i]?'#7550ef':'rgba(255,255,255,0.2)')};border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:clamp(20px,5.2vw,26px);font-weight:900;color:#fcd34d;font-family:monospace;">${digits[i]||''}</div>`).join('')}
         </div>
         <input id="studentJoinPinInput" type="text" inputmode="numeric" maxlength="6" value="${escapeHtml(state.pin)}" style="opacity:0;position:absolute;pointer-events:none;height:0;width:0;">
         <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;max-width:320px;margin:0 auto 14px;direction:ltr;">

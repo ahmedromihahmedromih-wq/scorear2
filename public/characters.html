@@ -9,12 +9,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261111_v5_live">
-<link rel="stylesheet" href="characters-v4.css?v=20261111_v5_live">
-<link rel="stylesheet" href="cartoon-motion.css?v=20261111_v5_live">
-<script src="ScoreARMotionEngine.js?v=20261111_v5_live"></script>
-<script src="characters-v4.js?v=20261111_v5_live"></script>
-<script src="nav.js?v=20261111_v5_live" defer></script>
+<link rel="stylesheet" href="styles.css?v=20261111_v6_responsive">
+<link rel="stylesheet" href="characters-v4.css?v=20261111_v6_responsive">
+<link rel="stylesheet" href="cartoon-motion.css?v=20261111_v6_responsive">
+<script src="ScoreARMotionEngine.js?v=20261111_v6_responsive"></script>
+<script src="characters-v4.js?v=20261111_v6_responsive"></script>
+<script src="nav.js?v=20261111_v6_responsive" defer></script>
 <style>
   body {
     margin: 0;
@@ -182,6 +182,16 @@
   }
   @media (max-width: 1000px) {
     .gallery-desktop-actions { display: none !important; }
+  }
+  @media (max-width: 920px) {
+    .character-gallery-page { padding: 20px 16px 40px; }
+  }
+  @media (max-width: 580px) {
+    .gallery-header { padding-bottom: 16px; gap: 10px; }
+    .gallery-brand b { font-size: 20px; }
+    .btn-gallery-back { padding: 7px 12px; font-size: 12px; min-height: 38px; }
+    .gallery-title-area { margin: 22px 0 18px; }
+    .character-controls button { padding: 8px 12px; font-size: 12px; }
   }
   .sidebar {
     transform: translateX(100%);

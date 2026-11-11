@@ -62,7 +62,7 @@
       <div style="position:relative;z-index:10;width:100%;height:4px;background:#1b1d38;">
         <div id="studentProgressBar" style="width:100%;height:100%;background:#52d9ed;transition:width 1s linear;"></div>
       </div>
-      <main style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:12px 14px;gap:10px;overflow:hidden;">
+      <main style="position:relative;z-index:10;flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:12px 14px 46px;gap:10px;overflow-y:auto;">
         <div style="background:rgba(21,23,49,0.9);border:1px solid rgba(142,100,239,0.4);border-radius:14px;padding:10px 14px;text-align:center;">
           <div style="font-size:15px;font-weight:900;color:#ffffff;line-height:1.35;">${escapeHtml(qData.q || 'اختر الإجابة الصحيحة')}</div>
           ${(qData.imageUrl || qData.img) ? `

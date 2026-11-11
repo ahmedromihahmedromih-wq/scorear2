@@ -300,15 +300,15 @@
     const lastDraft = global.ScoreARQuizBuilderActions ? global.ScoreARQuizBuilderActions.getLastDraftInfo() : null;
 
     stage.innerHTML = `
-      <header style="background:#101124;border-bottom:1px solid rgba(142,100,239,0.3);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:20;flex-wrap:wrap;">
-        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:320px;">
+      <header style="background:#101124;border-bottom:1px solid rgba(142,100,239,0.3);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:20;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:min(100%, 260px);flex-wrap:wrap;">
           <span style="font-size:22px;">📝</span>
-          <input type="text" value="${escapeHtml(currentQuiz.title)}" oninput="ScoreARQuizBuilder.updateQuizTitle(this.value)" placeholder="عنوان المسابقة..." style="background:#191b35;border:1px solid rgba(142,100,239,0.3);color:#ffffff;font-size:15px;font-weight:900;padding:6px 14px;border-radius:10px;flex:1;font-family:inherit;">
-          <input type="text" list="scorearSubjectList" value="${escapeHtml(currentQuiz.subject || '')}" oninput="ScoreARQuizBuilder.updateQuizSubject(this.value)" placeholder="المادة (اختياري)" style="width:140px;background:#191b35;border:1px solid rgba(142,100,239,0.3);color:#52d9ed;font-size:12px;font-weight:800;padding:6px 10px;border-radius:10px;font-family:inherit;">
-          <input type="text" list="scorearGradeList" value="${escapeHtml(currentQuiz.grade || '')}" oninput="ScoreARQuizBuilder.updateQuizGrade(this.value)" placeholder="الصف (اختياري)" style="width:140px;background:#191b35;border:1px solid rgba(142,100,239,0.3);color:#a89bff;font-size:12px;font-weight:800;padding:6px 10px;border-radius:10px;font-family:inherit;">
+          <input type="text" value="${escapeHtml(currentQuiz.title)}" oninput="ScoreARQuizBuilder.updateQuizTitle(this.value)" placeholder="عنوان المسابقة..." style="background:#191b35;border:1px solid rgba(142,100,239,0.3);color:#ffffff;font-size:14px;font-weight:900;padding:6px 12px;border-radius:10px;flex:1;min-width:140px;font-family:inherit;">
+          <input type="text" list="scorearSubjectList" value="${escapeHtml(currentQuiz.subject || '')}" oninput="ScoreARQuizBuilder.updateQuizSubject(this.value)" placeholder="المادة (اختياري)" style="width:125px;background:#191b35;border:1px solid rgba(142,100,239,0.3);color:#52d9ed;font-size:12px;font-weight:800;padding:6px 10px;border-radius:10px;font-family:inherit;">
+          <input type="text" list="scorearGradeList" value="${escapeHtml(currentQuiz.grade || '')}" oninput="ScoreARQuizBuilder.updateQuizGrade(this.value)" placeholder="الصف (اختياري)" style="width:125px;background:#191b35;border:1px solid rgba(142,100,239,0.3);color:#a89bff;font-size:12px;font-weight:800;padding:6px 10px;border-radius:10px;font-family:inherit;">
         </div>
 
-        <div style="display:flex;align-items:center;gap:10px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           ${lastDraft && lastDraft.id !== currentQuiz.id ? `
             <button onclick="ScoreARQuizBuilder.resumeLastDraft()" style="background:rgba(245,158,11,0.18);border:1px solid #f59e0b;color:#fcd34d;padding:6px 12px;border-radius:10px;font-size:11px;font-weight:800;cursor:pointer;">📂 تابع آخر مسودة (${lastDraft.questionsCount} أسئلة)</button>
           ` : ''}
@@ -328,9 +328,9 @@
 
       <div id="builderValidationAlert" style="display:none;background:rgba(239,68,68,0.18);border-bottom:1px solid #ef4444;color:#ff8a8a;padding:12px 24px;z-index:15;"></div>
 
-      <div style="flex:1;display:flex;overflow:hidden;">
+      <div class="builder-body-layout" style="flex:1;display:flex;overflow:hidden;">
         <!-- Left/Right Sidebar: Questions List with Drag & Drop -->
-        <aside style="width:280px;background:#0d0e21;border-left:1px solid rgba(142,100,239,0.25);display:flex;flex-direction:column;justify-content:space-between;padding:12px;overflow-y:auto;">
+        <aside class="builder-sidebar" style="width:280px;background:#0d0e21;border-left:1px solid rgba(142,100,239,0.25);display:flex;flex-direction:column;justify-content:space-between;padding:12px;overflow-y:auto;">
           <div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
               <span style="color:#ddd8ff;font-size:12px;font-weight:900;">الأسئلة (${totalQ})</span>
@@ -367,7 +367,7 @@
         </aside>
 
         <!-- Main Editor Stage -->
-        <main style="flex:1;display:flex;flex-direction:column;padding:16px 28px;overflow-y:auto;gap:14px;">
+        <main class="builder-main-stage" style="flex:1;display:flex;flex-direction:column;padding:16px 28px;overflow-y:auto;gap:14px;">
           ${!q ? `
             <div style="text-align:center;padding:60px 20px;color:#c9baff;">
               <h3>لا يوجد سؤال محدد</h3>
@@ -427,7 +427,7 @@
                   <button onclick="ScoreARQuizBuilder.addOption()" style="background:#1f1c3d;color:#52d9ed;border:1px solid #52d9ed;border-radius:8px;padding:3px 10px;font-size:11px;font-weight:800;cursor:pointer;">+ إضافة خيار (${q.opts.length}/6)</button>
                 ` : ''}
               </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div class="builder-options-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 ${q.opts.map((optText, oIdx) => {
                   const isCorrect = (q.ans === oIdx);
                   return `

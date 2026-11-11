@@ -119,8 +119,7 @@
       wrap.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:999999;direction:rtl;font-family:Cairo,Tajawal,sans-serif;pointer-events:auto;';
       document.body.appendChild(wrap);
     }
-    const opts = document.getElementById('studentOptionsContainer');
-    if (opts) opts.style.paddingBottom = '150px';
+    if (global.innerWidth && global.innerWidth <= 768) isDeckOpen = false;
     renderStudentDeckUi();
   }
 

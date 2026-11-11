@@ -7,7 +7,7 @@
   'use strict';
 
   let currentMode = 'SOLO'; // 'SOLO' | 'SQUADS' | 'CARD_ARENA'
-  let isAiEnabled = true;
+  let isAiEnabled = false;
   let activeModalEl = null;
 
   const MODES_CONFIG = {
@@ -45,7 +45,7 @@
     return isAiEnabled;
   }
 
-  function setMode(mode, ai = true) {
+  function setMode(mode, ai = false) {
     if (MODES_CONFIG[mode]) currentMode = mode;
     isAiEnabled = Boolean(ai);
     try {
@@ -66,21 +66,18 @@
     if (global.ScoreARQuizHost && typeof global.ScoreARQuizHost.getCurrentRoom === 'function') {
       const room = global.ScoreARQuizHost.getCurrentRoom();
       if (room && room.gameMode && MODES_CONFIG[room.gameMode]) currentMode = room.gameMode;
-      if (room && typeof room.aiEnabled === 'boolean') isAiEnabled = room.aiEnabled;
     } else {
-      // Try reading last saved mode
       try {
         const savedMode = localStorage.getItem('scorear_last_game_mode');
         if (savedMode && MODES_CONFIG[savedMode]) currentMode = savedMode;
-        const savedAI = localStorage.getItem('scorear_last_ai_enabled');
-        if (savedAI !== null) isAiEnabled = (savedAI === 'true');
       } catch(e){}
     }
+    isAiEnabled = false;
 
     closeModePicker();
 
     let selectedMode = currentMode;
-    let selectedAI = isAiEnabled;
+    let selectedAI = false;
 
     const modal = document.createElement('div');
     modal.id = 'scorearGameModeModal';
@@ -125,17 +122,12 @@
           }).join('')}
         </div>
 
-        <!-- AI Bots Switch -->
-        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;cursor:pointer;" onclick="ScoreARGameModes.toggleAiInModal()">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:24px;">🤖</span>
-            <div>
-              <b style="color:#ffffff;font-size:14px;display:block;">تفعيل منافسين بالذكاء الاصطناعي (AI Bots)</b>
-              <small style="color:#a1a4be;font-size:11px;">إضافة 3 طلاب افتراضيين لمنافسة الأسئلة والكروت فوراً إذا كنت وحدك بالقاعة.</small>
-            </div>
-          </div>
-          <div id="modalAiToggleSwitch" style="width:48px;height:26px;border-radius:13px;background:${selectedAI ? '#10b981' : 'rgba(255,255,255,0.2)'};position:relative;transition:background 0.25s;flex-shrink:0;">
-            <div style="width:20px;height:20px;border-radius:50%;background:#ffffff;position:absolute;top:3px;${selectedAI ? 'left:4px;' : 'right:4px;'}transition:all 0.25s;"></div>
+        <!-- Lobby Manual Participant Control Notice -->
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+          <span style="font-size:22px;">👥</span>
+          <div>
+            <b style="color:#ffffff;font-size:13px;display:block;">تحكم المعلم الكامل بالمشاركين من قاعة اللوبي</b>
+            <small style="color:#a1a4be;font-size:11.5px;">لا يتم إدخال أي بوتات تلقائياً؛ ينضم الطلاب الحقيقيون برمز القاعة، ويمكنك إضافة أو حذف طلاب تجريبيين (Bots) يدوياً من داخل قاعة الانتظار.</small>
           </div>
         </div>
 
@@ -198,11 +190,11 @@
     setMode(selectedMode, selectedAI);
     closeModePicker();
 
-    // Update CardArenaEngine manager mode
+    // Update CardArenaEngine manager mode without auto-spawning bots
     if (global.ScoreARCardArena && typeof global.ScoreARCardArena.getManager === 'function') {
       try {
         const mgr = global.ScoreARCardArena.getManager();
-        if (mgr && typeof mgr.setGameMode === 'function') mgr.setGameMode(selectedMode, selectedAI, 4);
+        if (mgr && typeof mgr.setGameMode === 'function') mgr.setGameMode(selectedMode, false, 0);
       } catch(e){}
     }
 

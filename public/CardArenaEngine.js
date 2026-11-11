@@ -36,8 +36,8 @@
   class GameModeManager {
     constructor(options = {}) {
       this.mode = 'SOLO';
-      this.aiEnabled = true;
-      this.minPlayers = 4;
+      this.aiEnabled = false;
+      this.minPlayers = 0;
       this.players = {};
       this.claimedCards = new Set(); // Exclusive pool: no card repeats except BETTER_LUCK
       this.teams = {
@@ -50,13 +50,37 @@
       this.aiTimer = null;
     }
 
-    setGameMode(mode, aiEnabled = true, minPlayers = 4) {
+    setGameMode(mode, aiEnabled = false, minPlayers = 0) {
       this.mode = mode || 'SOLO';
       this.aiEnabled = Boolean(aiEnabled);
-      this.minPlayers = minPlayers;
-      if (this.aiEnabled && Object.keys(this.players).length < minPlayers) {
-        this.populateAIBots(minPlayers);
+      this.minPlayers = Number(minPlayers) || 0;
+      if (this.aiEnabled && this.minPlayers > 0 && Object.keys(this.players).length < this.minPlayers) {
+        this.populateAIBots(this.minPlayers);
       }
+    }
+
+    syncRoster(roomPlayers = [], preserveId = null) {
+      if (!Array.isArray(roomPlayers)) return;
+      const validIds = new Set(roomPlayers.map(p => String(p.id)));
+      if (preserveId) validIds.add(String(preserveId));
+      Object.keys(this.players).forEach(pid => {
+        if (!validIds.has(String(pid))) delete this.players[pid];
+      });
+      roomPlayers.forEach(rp => {
+        if (!rp || !rp.id) return;
+        const pid = String(rp.id);
+        const isBot = Boolean(rp.isBot || rp.isDemo || rp.isAI);
+        if (!this.players[pid]) {
+          this.registerPlayer(pid, rp.name, isBot);
+        } else {
+          if (rp.name) this.players[pid].name = rp.name;
+          this.players[pid].isAI = isBot;
+        }
+        if (typeof rp.score === 'number') this.players[pid].score = rp.score;
+        if (typeof rp.streak === 'number') this.players[pid].streak = rp.streak;
+        if (rp.avatarId) this.players[pid].avatarId = rp.avatarId;
+      });
+      this.notifyState();
     }
 
     registerPlayer(id, name, isAI = false, preferredTeam = null) {
@@ -186,9 +210,9 @@
 
     activateCard(senderId, instanceId, targetId = null) {
       const sender = this.players[senderId];
-      if (!sender) return;
+      if (!sender) return null;
       const idx = sender.hand.findIndex(c => c.instanceId === instanceId);
-      if (idx === -1) return;
+      if (idx === -1) return null;
       const card = sender.hand.splice(idx, 1)[0];
       let target = targetId && this.players[targetId] ? this.players[targetId] : sender;
 
@@ -197,22 +221,27 @@
         if (trapIdx !== -1) {
           const trap = target.trapSlots.splice(trapIdx, 1)[0];
           if (trap.id === 'REVERSE_JUDGE') {
+            const origTarget = target;
             target = sender;
             this.applyCardEffect(card, sender, target);
-            this.onCardEvent({ type: 'REFLECTED', sourcePlayer: sender, targetPlayer: this.players[targetId], card, trapCard: trap, message: `⚖️ انقلاب مذهل! ${this.players[targetId].name} عكس "${card.nameAr}" بمرآة القاضي لترتد على ${sender.name}!` });
+            const ev = { type: 'REFLECTED', sourcePlayer: sender, targetPlayer: origTarget, affectedPlayer: sender, card, trapCard: trap, message: `⚖️ انقلاب مذهل! ${origTarget.name} عكس "${card.nameAr}" بمرآة القاضي لترتد على ${sender.name}!` };
+            this.onCardEvent(ev);
             this.notifyState();
-            return;
+            return ev;
           } else {
-            this.onCardEvent({ type: 'BLOCKED', sourcePlayer: sender, targetPlayer: target, card, trapCard: trap, message: `🛡️ صد فوري! درع "${trap.nameAr}" لدى ${target.name} حطّم هجوم "${card.nameAr}" من ${sender.name}!` });
+            const ev = { type: 'BLOCKED', sourcePlayer: sender, targetPlayer: target, affectedPlayer: null, card, trapCard: trap, message: `🛡️ صد فوري! درع "${trap.nameAr}" لدى ${target.name} حطّم هجوم "${card.nameAr}" من ${sender.name}!` };
+            this.onCardEvent(ev);
             this.notifyState();
-            return;
+            return ev;
           }
         }
       }
 
       const msg = this.applyCardEffect(card, sender, target);
-      this.onCardEvent({ type: 'EXECUTED', sourcePlayer: sender, targetPlayer: target, card, message: msg });
+      const ev = { type: 'EXECUTED', sourcePlayer: sender, targetPlayer: target, affectedPlayer: target, card, message: msg };
+      this.onCardEvent(ev);
       this.notifyState();
+      return ev;
     }
 
     applyCardEffect(card, sender, target) {
@@ -220,32 +249,37 @@
         case 'PLUS_50': sender.score += 50; return `✨ ${sender.name} أضاف +50 نقطة لرصيده!`;
         case 'MINUS_50': target.score = Math.max(0, target.score - 50); return `💥 ${sender.name} خصم 50 نقطة من رصيد ${target.name}!`;
         case 'SWAP_STUDENT': {
-          const tmp = sender.score; sender.score = target.score; target.score = tmp;
+          if (sender.score === target.score) {
+            target.score = Math.max(0, target.score - 100);
+            sender.score += 100;
+          } else {
+            const tmp = sender.score; sender.score = target.score; target.score = tmp;
+          }
           return `🔄 انقلاب مراكز! ${sender.name} بدّل نقاطه (${sender.score}) مع ${target.name} (${target.score})!`;
         }
         case 'POINT_LEECH': {
-          const stolen = Math.round(target.score * 0.20);
+          const stolen = target.score > 0 ? Math.max(20, Math.min(target.score, Math.round(target.score * 0.20))) : 50;
           target.score = Math.max(0, target.score - stolen);
           sender.score += stolen;
-          return `🩸 ${sender.name} سرق ${stolen} نقطة (20%) من ${target.name}!`;
+          return `🩸 ${sender.name} سرق ${stolen} نقطة من ${target.name}!`;
         }
         case 'SCORE_EQUALIZER': {
           const allScores = Object.values(this.players).map(p => p.score).sort((a,b) => b - a);
           const top3 = allScores.slice(0, 3);
           const avg = Math.round(top3.reduce((a,b) => a + b, 0) / (top3.length || 1));
-          sender.score = Math.max(sender.score, avg);
+          sender.score = avg > sender.score ? avg : (sender.score + 75);
           return `⚖️ معادل النقاط رفع نقاط ${sender.name} إلى ${sender.score}!`;
         }
         case 'MULTIPLIER_2X': sender.status.multiplier = 2; return `⚡ ${sender.name} فعّل مضاعف النقاط 2X لسؤاله القادم!`;
-        case 'PIN_STUDENT': target.status.isPinned = true; return `❄️ ${sender.name} قام بتجميد ${target.name} للسؤال القادم!`;
-        case 'SCREEN_FOG': target.status.hasFog = true; return `💨 ضباب الرؤية غطى شاشة هاتف ${target.name}!`;
+        case 'PIN_STUDENT': target.status.isPinned = true; return `❄️ ${sender.name} قام بتجميد ${target.name}!`;
+        case 'SCREEN_FOG': target.status.hasFog = true; return `💨 ضباب الرؤية غطى شاشة ${target.name}!`;
         case 'TIME_SLICER': target.status.timeSliced = true; return `⏳ مقص الوقت اقتطع نصف وقت الإجابة لـ ${target.name}!`;
         case 'BLOCK_DRAW': target.status.blockDrawTurns = 2; return `🚫 تم حظر سحب الكروت لـ ${target.name} لجولتين!`;
-        case 'ERASER_50_50': return `✂️ ${sender.name} استخدم ممحاة 50/50 لحذف خيارين خاطئين!`;
+        case 'ERASER_50_50': sender.status.eraserActive = true; return `✂️ ${sender.name} استخدم ممحاة 50/50 لحذف خيارين خاطئين!`;
         case 'FREE_GIFT': sender.score += 75; return `🎁 هدية مجانية! ${sender.name} ربح +75 نقطة ذهبية!`;
-        case 'DRAW_ALL': this.grantRandomCard(sender.id); this.grantRandomCard(sender.id); return `🎒 ${sender.name} ملأ حقيبة كروته بالكامل!`;
+        case 'DRAW_ALL': while (sender.hand.length < 3) { if (!this.grantRandomCard(sender.id)) break; } return `🎒 ${sender.name} ملأ حقيبة كروته بالكامل!`;
         case 'BETTER_LUCK': sender.score += 10; this.grantRandomCard(sender.id); return `🍀 ${sender.name} أعاد تدوير حظه مع +10 نقاط ترضية!`;
-        case 'ASK_QUESTION': return `❓ ${sender.name} بدأ رهان المائة!`;
+        case 'ASK_QUESTION': sender.score += 100; return `❓ ${sender.name} كسب تحدي رهان المائة (+100 نقطة)!`;
         default: return `⚡ ${sender.name} استخدم كارت "${card.nameAr}"!`;
       }
     }

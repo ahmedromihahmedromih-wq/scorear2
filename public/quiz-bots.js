@@ -133,6 +133,17 @@
     const correctIdx = (Array.isArray(qData.correct) && qData.correct.length > 0) ? Number(qData.correct[0]) : 0;
 
     bots.forEach(bot => {
+      const cardP = global.ScoreARCardArena?.getManager?.()?.players?.[bot.id];
+      if (cardP?.status?.isPinned || bot.isPinned) {
+        if (cardP?.status) cardP.status.isPinned = false;
+        bot.isPinned = false;
+        return;
+      }
+      const hasFog = Boolean(cardP?.status?.hasFog || bot.hasFog);
+      const isSliced = Boolean(cardP?.status?.timeSliced || bot.timeSliced);
+      if (cardP?.status) { cardP.status.hasFog = false; cardP.status.timeSliced = false; }
+      bot.hasFog = false; bot.timeSliced = false;
+
       // 1. Calculate delay in seconds based on bot's speed profile
       let delaySec = 6;
       if (bot.speed === 'fast') {
@@ -144,10 +155,14 @@
       } else { // medium
         delaySec = 5 + Math.random() * 6; // 5s to 11s
       }
-      delaySec = Math.min(delaySec, Math.max(1.5, timeLimit - 1.5));
+      if (hasFog) delaySec += 4;
+      const effectiveLimit = isSliced ? Math.max(3, Math.floor(timeLimit / 2)) : timeLimit;
+      if (isSliced && delaySec > effectiveLimit) return;
+      delaySec = Math.min(delaySec, Math.max(1.5, effectiveLimit - 1.5));
 
       // 2. Determine chosen option based on accuracy probability
-      const isCorrect = Math.random() < (bot.accuracy || 0.6);
+      const effAcc = hasFog ? ((bot.accuracy || 0.6) * 0.4) : (bot.accuracy || 0.6);
+      const isCorrect = Math.random() < effAcc;
       let chosenIndex = correctIdx;
       if (!isCorrect) {
         const wrongIndices = [];
@@ -160,6 +175,12 @@
       // 3. Schedule the answer dispatch
       const tId = setTimeout(() => {
         if (room.status !== 'question') return;
+        const cpNow = global.ScoreARCardArena?.getManager?.()?.players?.[bot.id];
+        if (cpNow?.status?.isPinned || bot.isPinned) {
+          if (cpNow?.status) cpNow.status.isPinned = false;
+          bot.isPinned = false;
+          return;
+        }
         const remaining = Math.max(1, Math.round(timeLimit - delaySec));
         if (global.ScoreARQuizHost && typeof global.ScoreARQuizHost.handleHostIncomingMessage === 'function') {
           global.ScoreARQuizHost.handleHostIncomingMessage({

@@ -85,7 +85,7 @@
     if (!migrated.length) { if (global.toast) global.toast('لا توجد أسئلة صالحة'); alert('لا توجد أسئلة صالحة'); return; }
 
     const activeGameMode = (global.ScoreARGameModes && typeof global.ScoreARGameModes.getMode === 'function') ? global.ScoreARGameModes.getMode() : 'SOLO';
-    const aiEnabled = (global.ScoreARGameModes && typeof global.ScoreARGameModes.isAIEnabled === 'function') ? global.ScoreARGameModes.isAIEnabled() : true;
+    const aiEnabled = (global.ScoreARGameModes && typeof global.ScoreARGameModes.isAIEnabled === 'function') ? global.ScoreARGameModes.isAIEnabled() : false;
     activeQuestions = migrated;
     currentRoom = { pin, world: w, players: [], answers: {}, isLocked: false, status: 'lobby', mode: activeGameMode, gameMode: activeGameMode, aiEnabled };
 
@@ -97,17 +97,9 @@
       global.ScoreARCardArena.initArena(pin, 'host', true);
       if (global.ScoreARCardArena.getManager) {
         const mgr = global.ScoreARCardArena.getManager();
-        if (mgr && typeof mgr.setGameMode === 'function') mgr.setGameMode(activeGameMode, aiEnabled, 4);
+        if (mgr && typeof mgr.setGameMode === 'function') mgr.setGameMode(activeGameMode, false, 0);
+        if (mgr && typeof mgr.syncRoster === 'function') mgr.syncRoster(currentRoom.players);
       }
-    }
-    if (aiEnabled) {
-      setTimeout(() => {
-        if (currentRoom && currentRoom.players && currentRoom.players.length === 0) {
-          addDemoPlayer('🤖 أرجون الذكي');
-          addDemoPlayer('🤖 سارة المجرة');
-          addDemoPlayer('🤖 فارس الزمن');
-        }
-      }, 500);
     }
 
     if (view()) view().renderHostLobby(getOrCreateStage(), currentRoom, isRoomLocked);
@@ -127,6 +119,7 @@
   }
 
   function refreshLobbyUi() {
+    if (currentRoom && global.ScoreARCardArena?.syncHostRoster) global.ScoreARCardArena.syncHostRoster(currentRoom.players);
     if (view() && currentRoom) view().refreshLobbyUi(currentRoom);
   }
 
@@ -346,6 +339,7 @@
     }, 1000);
 
     const cardMgr = global.ScoreARCardArena?.getManager?.();
+    if (global.ScoreARCardArena?.syncHostRoster) global.ScoreARCardArena.syncHostRoster(currentRoom.players);
     if (cardMgr && Array.isArray(evalResult.fastestTop2)) {
       evalResult.fastestTop2.forEach(w => { if (currentRoom.players.some(p => String(p.id) === String(w.id) && (p.isBot || p.isDemo))) cardMgr.grantRandomCard(w.id); });
     }

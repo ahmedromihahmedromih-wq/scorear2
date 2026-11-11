@@ -97,11 +97,11 @@
     if (msg.gameMode || msg.mode) {
       const gMode = msg.gameMode || msg.mode;
       if (global.ScoreARGameModes && typeof global.ScoreARGameModes.setMode === 'function') {
-        global.ScoreARGameModes.setMode(gMode, msg.aiEnabled ?? true);
+        global.ScoreARGameModes.setMode(gMode, false);
       }
       if (global.ScoreARCardArena && typeof global.ScoreARCardArena.getManager === 'function') {
         const mgr = global.ScoreARCardArena.getManager();
-        if (mgr) mgr.setGameMode(gMode, msg.aiEnabled ?? true);
+        if (mgr) mgr.setGameMode(gMode, false, 0);
       }
     }
     if (msg.type === 'QUESTION_READING') {
@@ -309,10 +309,28 @@
     if (view()) view().renderStudentRoomClosed(getOrCreateStudentStage(), reason, currentStudent, currentScore, currentWorldId);
   }
 
+  function cutTimeInHalf() {
+    if (timeRemaining > 2) {
+      timeRemaining = Math.max(2, Math.floor(timeRemaining / 2));
+      const txt = document.getElementById('studentTimerText');
+      if (txt) txt.textContent = timeRemaining;
+    }
+  }
+
+  function syncScoreFromHost(newScore) {
+    if (typeof newScore === 'number' && !isNaN(newScore)) {
+      currentScore = Math.max(0, newScore);
+      saveActiveSession();
+      document.querySelectorAll('#studentTotalScoreBadge, .student-live-score-val').forEach(el => { el.textContent = currentScore; });
+    }
+  }
+
   global.ScoreARQuizStudent = {
     startStudentSession, submitAnswer, renderStudentQuestion, renderStudentResult,
     closeStudentSession, renderStudentRoomClosed, saveActiveSession, clearActiveSession,
-    tryRestoreSession, sendReaction, getPin: () => currentPin, get state() { return currentStudent; }
+    tryRestoreSession, sendReaction, cutTimeInHalf, syncScoreFromHost,
+    hasAnswered: () => hasAnsweredCurrentQ, getScore: () => currentScore,
+    getPin: () => currentPin, get state() { return currentStudent; }
   };
   global.ScoreARStudent = global.ScoreARQuizStudent;
 

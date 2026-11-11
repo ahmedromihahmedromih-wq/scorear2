@@ -10,14 +10,15 @@
   function lb() { return global.ScoreARHostLeaderboard || null; }
   function getModeInfo() {
     const mode = (global.ScoreARGameModes && typeof global.ScoreARGameModes.getMode === 'function') ? global.ScoreARGameModes.getMode() : (global.currentLobbyGameMode || 'SOLO');
-    const aiEnabled = (global.ScoreARGameModes && typeof global.ScoreARGameModes.isAIEnabled === 'function') ? global.ScoreARGameModes.isAIEnabled() : (global.currentLobbyAIEnabled ?? true);
-    return { mode, gameMode: mode, aiEnabled };
+    const aiEnabled = (global.ScoreARGameModes && typeof global.ScoreARGameModes.isAIEnabled === 'function') ? global.ScoreARGameModes.isAIEnabled() : Boolean(global.currentLobbyAIEnabled);
+    const roster = (global.ScoreARQuizHost?.getPlayers?.() || []).map(p => ({ id: p.id, name: p.name, score: p.score || 0, streak: p.streak || 0, avatarId: p.avatarId || 'char_01', isBot: Boolean(p.isBot || p.isDemo) }));
+    return { mode, gameMode: mode, aiEnabled, roster };
   }
 
   function publishRoomOpen(pin, worldId = 'royal') {
     const pStr = String(pin).padStart(6, '0');
-    const { mode, gameMode, aiEnabled } = getModeInfo();
-    if (rt()) rt().publish('ROOM_OPEN', { pin: pStr, worldId, mode, gameMode, aiEnabled, timestamp: Date.now() });
+    const { mode, gameMode, aiEnabled, roster } = getModeInfo();
+    if (rt()) rt().publish('ROOM_OPEN', { pin: pStr, worldId, mode, gameMode, aiEnabled, roster, timestamp: Date.now() });
     try {
       const db = (global.ScoreARAuth?.getDb?.()) || global.firebase?.database?.();
       if (db && pStr) {
@@ -38,14 +39,14 @@
 
   function publishQuestionReading(qIndex, total, qData, worldId = 'royal') {
     if (rt()) {
-      const { mode, gameMode, aiEnabled } = getModeInfo();
-      rt().publish('QUESTION_READING', { qIndex, totalQuestions: total, q: qData.text || qData.q, skill: qData.skill || 'سؤال', readingDuration: 10, worldId, mode, gameMode, aiEnabled });
+      const { mode, gameMode, aiEnabled, roster } = getModeInfo();
+      rt().publish('QUESTION_READING', { qIndex, totalQuestions: total, q: qData.text || qData.q, skill: qData.skill || 'سؤال', readingDuration: 10, worldId, mode, gameMode, aiEnabled, roster });
     }
   }
 
   function publishQuestionStart(qIndex, total, qData, timeRemaining, worldId = 'royal') {
     if (rt()) {
-      const { mode, gameMode, aiEnabled } = getModeInfo();
+      const { mode, gameMode, aiEnabled, roster } = getModeInfo();
       rt().publish('QUESTION_START', {
         qIndex,
         totalQuestions: total,
@@ -57,6 +58,7 @@
         mode,
         gameMode,
         aiEnabled,
+        roster,
         imageUrl: qData.imageUrl || null,
         isDouble: !!(qData.isDouble || qData.multiplier === 2)
       });
@@ -64,8 +66,8 @@
   }
 
   function publishQuestionResult(payload) {
-    const { mode, gameMode, aiEnabled } = getModeInfo();
-    if (rt()) rt().publish('QUESTION_RESULT', { ...payload, mode, gameMode, aiEnabled });
+    const { mode, gameMode, aiEnabled, roster } = getModeInfo();
+    if (rt()) rt().publish('QUESTION_RESULT', { ...payload, mode, gameMode, aiEnabled, roster });
   }
 
   function publishContestCompleted(podium, totalPlayers, fullLeaderboard = []) {
@@ -102,12 +104,18 @@
 
       const chosen = ans ? (ans.chosenIndices !== undefined ? ans.chosenIndices : ans.optionIndex) : -1;
       const optionOrder = ans ? ans.optionOrder : null;
+      const cardP = global.ScoreARCardArena?.getManager?.()?.players?.[pIdStr];
+      const wasPinned = Boolean(cardP?.status?.isPinned || p.isPinned);
+      if (wasPinned) {
+        if (cardP?.status) cardP.status.isPinned = false;
+        p.isPinned = false;
+      }
 
-      const isAnsCorrect = (evaluator && typeof evaluator.isCorrect === 'function')
+      const isAnsCorrect = !wasPinned && ((evaluator && typeof evaluator.isCorrect === 'function')
         ? evaluator.isCorrect(qData, chosen, optionOrder)
-        : (ans && Array.isArray(qData.correct) && qData.correct.includes(Number(ans.optionIndex)));
+        : (ans && Array.isArray(qData.correct) && qData.correct.includes(Number(ans.optionIndex))));
 
-      let earned = 0, respTime = null, scoreFormula = '';
+      let earned = 0, respTime = null, scoreFormula = wasPinned ? 'مجمد بكارت تثبيت ❄️' : '';
       if (isAnsCorrect) {
         // Robust Authoritative Server Time Calculation
         const rawTs = (ans && typeof ans.ts === 'number' && !isNaN(ans.ts))
@@ -123,7 +131,10 @@
         const derivedTimeRemaining = Math.max(0, totalTime - elapsedSec);
 
         const base = Number(qData.points) || 1000;
-        const mult = (qData.isDouble || qData.multiplier === 2) ? 2 : (Number(qData.multiplier) || 1);
+        const cardMult = (cardP?.status?.multiplier === 2 || p.cardMultiplier === 2) ? 2 : 1;
+        if (cardP?.status) cardP.status.multiplier = 1;
+        p.cardMultiplier = 1;
+        const mult = ((qData.isDouble || qData.multiplier === 2) ? 2 : (Number(qData.multiplier) || 1)) * cardMult;
         const tf = (0.5 + 0.5 * (derivedTimeRemaining / (totalTime || 20)));
         earned = Math.round(base * tf * mult);
         scoreFormula = `${base} × ${tf.toFixed(2)} × ${mult} = ${earned}`;
@@ -137,7 +148,16 @@
 
       p.score = (p.score || 0) + earned;
       p.lastPointsGained = earned;
-      p.streak = isAnsCorrect ? ((p.streak || 0) + 1) : 0;
+      if (isAnsCorrect) {
+        p.streak = (p.streak || 0) + 1;
+      } else {
+        const saverIdx = cardP?.trapSlots ? cardP.trapSlots.findIndex(t => t.id === 'STREAK_SAVER') : -1;
+        if (saverIdx !== -1) {
+          cardP.trapSlots.splice(saverIdx, 1);
+        } else {
+          p.streak = 0;
+        }
+      }
 
       playerResults[pIdStr] = {
         id: p.id,
@@ -174,8 +194,6 @@
     if (!room) return;
 
     if (msg.type === 'STUDENT_JOIN') {
-      const { mode: jMode, gameMode: jGMode, aiEnabled: jAi } = getModeInfo();
-      if (rt() && room.pin) rt().publish('ROOM_MODE_UPDATE', { pin: room.pin, mode: jMode, gameMode: jGMode, aiEnabled: jAi });
       const p = msg.player || {};
       const exists = room.players.find(x => x.id === p.id || x.name === p.name);
       if (!exists && p.id && p.name) {
@@ -193,6 +211,9 @@
         if (p.avatarId) exists.avatarId = p.avatarId;
         if (typeof ctx.onPlayerReconnected === 'function') ctx.onPlayerReconnected(exists);
       }
+      if (global.ScoreARCardArena?.syncHostRoster) global.ScoreARCardArena.syncHostRoster(room.players);
+      const { mode: jMode, gameMode: jGMode, aiEnabled: jAi, roster: jRoster } = getModeInfo();
+      if (rt() && room.pin) rt().publish('ROOM_MODE_UPDATE', { pin: room.pin, mode: jMode, gameMode: jGMode, aiEnabled: jAi, roster: jRoster });
     } else if (msg.type === 'STUDENT_ANSWER' || msg.type === 'STUDENT_ANSWERED') {
       const qIndex = ctx.currentQIndex;
       if (!room.answers[qIndex]) room.answers[qIndex] = {};

@@ -153,7 +153,7 @@
         }).join('')}</div>` : ''}
         ${resData.why ? `<div style="background:rgba(16,185,129,0.12);border:1px dashed #10b981;border-radius:10px;padding:6px 12px;width:100%;max-width:360px;text-align:right;font-size:11px;color:#d1fae5;font-weight:700;">💡 <b>التفسير:</b> ${escapeHtml(resData.why)}</div>` : ''}
         <div style="background:rgba(18,19,41,0.85);border:1px solid rgba(142,100,239,0.3);border-radius:14px;padding:10px 16px;width:100%;max-width:360px;display:flex;justify-content:space-around;align-items:center;">
-          <div><div style="font-size:11px;color:#a89bff;font-weight:700;">مجموع نقاطك</div><div style="font-size:17px;font-weight:900;color:#52d9ed;">${currentScore}</div></div>
+          <div><div style="font-size:11px;color:#a89bff;font-weight:700;">مجموع نقاطك</div><div class="student-live-score-val" style="font-size:17px;font-weight:900;color:#52d9ed;">${Number(myResult?.totalScore ?? currentScore)}</div></div>
           <div style="width:1px;height:24px;background:rgba(255,255,255,0.15);"></div>
           <div><div style="font-size:11px;color:#a89bff;font-weight:700;">ترتيبك الحالي</div><div style="font-size:17px;font-weight:900;color:#fcd34d;">المركز ${currentRank}</div></div>
         </div>
@@ -242,7 +242,7 @@
           <div style="display:flex;justify-content:space-around;align-items:center;">
             <div>
               <div style="font-size:11px;color:#a89bff;font-weight:700;">مجموع نقاطي</div>
-              <div style="font-size:20px;font-weight:900;color:#38bdf8;font-family:monospace;">${myInfo.score ?? currentScore}</div>
+              <div class="student-live-score-val" style="font-size:20px;font-weight:900;color:#38bdf8;font-family:monospace;">${myInfo.score ?? currentScore}</div>
             </div>
             <div style="width:1px;height:28px;background:rgba(255,255,255,0.15);"></div>
             <div>

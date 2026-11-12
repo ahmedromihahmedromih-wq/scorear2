@@ -1,8 +1,9 @@
 {
   "projects": {
-    "default": "scorear-staging-test",
-    "staging": "scorear-staging-test",
-    "production": "scorear2"
+    "default": "scorear2",
+    "production": "scorear2",
+    "scorear-e4186": "scorear-e4186",
+    "staging": "scorear-staging-test"
   },
   "targets": {},
   "etags": {}

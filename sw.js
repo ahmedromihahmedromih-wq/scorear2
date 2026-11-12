@@ -4,12 +4,11 @@
  * Ensures resilient classroom gameplay on slow or intermittent school networks.
  */
 
-const CACHE_NAME = 'scorear-v8-b2a-cache';
+const CACHE_NAME = 'scorear-v13-organized-cache';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './worlds.js',
   './cards.json',
   './assets/characters/char_01_avatar.webp',
   './assets/characters/teacher_ahmed.jpg'

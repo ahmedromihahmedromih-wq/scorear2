@@ -1,9 +1,9 @@
 node_modules/
+dist/
+public/
+*.log
+*.zip
 .firebase/
 .tmp*
-dist/
 tests/
 scratch/
-database-debug.log
-firebase-debug.log
-*.log

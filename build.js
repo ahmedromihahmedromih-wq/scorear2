@@ -68,6 +68,13 @@ console.log('✅ Copied clean root HTML and metadata files to public/ and dist/'
   }
 });
 
+// Ensure js/engines/assets is synchronized so characters-v4.js (which resolves assets relative to its script URL) resolves 100% seamlessly
+['public', 'dist'].forEach(target => {
+  const dest = path.join(__dirname, target, 'js', 'engines', 'assets');
+  copyDirRecursiveSync(path.join(__dirname, 'assets'), dest);
+});
+console.log('✅ Synchronized js/engines/assets fallback for characters-v4 engine');
+
 // Clean legacy folders
 ['engine', 'public/engine', 'dist/engine'].forEach(d => {
   const p = path.join(__dirname, d);

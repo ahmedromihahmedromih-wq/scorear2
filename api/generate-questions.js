@@ -1,74 +1,86 @@
 /**
  * ScoreAR Serverless API: /api/generate-questions
- * Item 2, 3, 7: Secure Gemini 2.0 Flash generation, ID Token verification (firebase-admin),
- * Teacher/Admin role check, Daily Quota (20/day) via Admin RTDB,
- * Prompt Injection Guardrails, Bloom cognitive levels, and strict source quotations.
- * Strictly Rule 7 Compliant (<500 lines).
+ * Phase 1: Robust Gemini 2.0 Flash Generation, Universal CORS, and Dynamic Firebase-Admin.
+ * Strictly Rule 7 Compliant (<350 lines).
  */
-import { getApps, initializeApp, cert } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
-import { getDatabase } from 'firebase-admin/database';
 
-function getAdminServices() {
-  if (getApps().length) {
-    return { auth: getAuth(), db: getDatabase() };
+const ALLOWED_ORIGINS = [
+  'https://scorear2.web.app',
+  'https://scorear2.firebaseapp.com',
+  'https://socerar2.vercel.app',
+  'https://scorear2.vercel.app'
+];
+
+function setCorsHeaders(req, res) {
+  const origin = req.headers.origin || '';
+  const isAllowed = ALLOWED_ORIGINS.includes(origin) ||
+    origin.endsWith('.vercel.app') ||
+    origin.startsWith('http://localhost:') ||
+    origin.startsWith('http://127.0.0.1:');
+
+  const allowOrigin = isAllowed ? origin : (origin ? ALLOWED_ORIGINS[0] : '*');
+  res.setHeader('Access-Control-Allow-Origin', allowOrigin);
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Max-Age', '86400');
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return true;
+  }
+  return false;
+}
+
+let cachedAdmin = null;
+async function getAdminServices() {
+  if (cachedAdmin) return cachedAdmin;
+
+  const rawSa = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (!rawSa) {
+    return { auth: null, db: null, missingSa: true };
   }
 
-  const rawSa = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT;
-  if (!rawSa) return { auth: null, db: null };
-
   try {
+    const { getApps, initializeApp, cert } = await import('firebase-admin/app');
+    const { getAuth } = await import('firebase-admin/auth');
+    const { getDatabase } = await import('firebase-admin/database');
+
+    if (getApps().length) {
+      cachedAdmin = { auth: getAuth(), db: getDatabase(), missingSa: false };
+      return cachedAdmin;
+    }
+
     const sa = typeof rawSa === 'string' ? JSON.parse(rawSa) : rawSa;
     const app = initializeApp({
       credential: cert(sa),
-      databaseURL: 'https://scorear2-default-rtdb.europe-west1.firebasedatabase.app'
+      databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://scorear2-default-rtdb.europe-west1.firebasedatabase.app'
     });
-    return { auth: getAuth(app), db: getDatabase(app) };
+    cachedAdmin = { auth: getAuth(app), db: getDatabase(app), missingSa: false };
+    return cachedAdmin;
   } catch (e) {
     console.error('[generate-questions] firebase-admin init error:', e.message);
-    return { auth: null, db: null };
+    return { auth: null, db: null, missingSa: false, initError: e.message };
   }
 }
 
 function sanitizeText(str) {
   if (!str) return '';
   return String(str)
-    .replace(/<[^>]*>/g, '') // Strip HTML tags
+    .replace(/<[^>]*>/g, '')
     .replace(/[\u0000-\u0008\u000B-\u000C\u000E-\u001F]/g, '')
     .trim();
 }
 
 export default async function handler(req, res) {
-  // 1. Strict Explicit CORS
-  const origin = req.headers.origin || '';
-  const explicitAllowedOrigins = new Set([
-    'https://socerar2.vercel.app',
-    'https://scorear2.vercel.app',
-    'https://scorear2.web.app',
-    'https://scorear2.firebaseapp.com'
-  ]);
+  // 1. Universal Safe CORS & Preflight Response
+  if (setCorsHeaders(req, res)) return;
 
-  if (process.env.VERCEL_URL) explicitAllowedOrigins.add(`https://${process.env.VERCEL_URL}`);
-  if (process.env.VERCEL_BRANCH_URL) explicitAllowedOrigins.add(`https://${process.env.VERCEL_BRANCH_URL}`);
-
-  const isLocalDev = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
-  const isAllowed = explicitAllowedOrigins.has(origin) || (isLocalDev && process.env.NODE_ENV !== 'production');
-
-  if (origin && !isAllowed) {
-    return res.status(403).json({ error: 'رفض CORS: النطاق غير مصرح به.' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'طريقة غير مدعومة. يرجى استخدام POST.' });
   }
-
-  if (origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  }
-
-  if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'طريقة غير مدعومة. يرجى استخدام POST.' });
 
   try {
-    // 2. Authentication & Teacher Role Verification
+    // 2. Authentication: Teacher / Admin verification
     const authHeader = req.headers.authorization || req.headers.Authorization || '';
     if (!authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'عفواً، يجب تسجيل دخول المعلم أولاً لاستخدام التوليد الذكي.' });
@@ -77,7 +89,7 @@ export default async function handler(req, res) {
 
     let teacherUid = null;
     let isTeacher = false;
-    const { auth, db } = getAdminServices();
+    const { auth, db, missingSa, initError } = await getAdminServices();
 
     if (auth) {
       try {
@@ -100,12 +112,18 @@ export default async function handler(req, res) {
         teacherUid = 'test_student_uid';
         isTeacher = false;
       }
+    } else if (missingSa) {
+      return res.status(500).json({
+        error: 'مفتاح الخدمة السحابي غير مضبوط (يرجى ضبط متغير FIREBASE_ADMIN_SERVICE_ACCOUNT في إعدادات Vercel Dashboard).'
+      });
     } else {
-      return res.status(401).json({ error: 'فشل التحقق: مفتاح الخدمة FIREBASE_ADMIN_SERVICE_ACCOUNT غير مهيأ.' });
+      return res.status(500).json({
+        error: 'فشل تهيئة خدمة المصادقة السحابية: ' + (initError || 'خطأ غير معروف')
+      });
     }
 
     if (!teacherUid) {
-      return res.status(401).json({ error: 'رمز الجلسة غير صالح أو ملغي. يرجى إعادة تسجيل الدخول.' });
+      return res.status(401).json({ error: 'رمز الجلسة غير صالح أو منتهي الصلاحية. يرجى إعادة تسجيل الدخول.' });
     }
 
     if (!isTeacher) {
@@ -117,9 +135,13 @@ export default async function handler(req, res) {
     let quotaData = { usedCount: 0, limit: 20, lastUsedAt: 0 };
 
     if (db) {
-      const qSnap = await db.ref(`scorear_ai_quotas/${teacherUid}/${today}`).once('value');
-      const val = qSnap.val();
-      if (val) quotaData = Object.assign(quotaData, val);
+      try {
+        const qSnap = await db.ref(`scorear_ai_quotas/${teacherUid}/${today}`).once('value');
+        const val = qSnap.val();
+        if (val) quotaData = Object.assign(quotaData, val);
+      } catch (e) {
+        console.warn('[generate-questions] Quota check notice:', e.message);
+      }
     }
 
     if (quotaData.usedCount >= (quotaData.limit || 20)) {
@@ -132,10 +154,12 @@ export default async function handler(req, res) {
     // 4. API Key Verification
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     if (!apiKey && process.env.NODE_ENV !== 'test') {
-      return res.status(500).json({ error: 'مفتاح الذكاء الاصطناعي غير مضبوط في إعدادات الخادم.' });
+      return res.status(500).json({
+        error: 'مفتاح الذكاء الاصطناعي غير مضبوط (يرجى ضبط GEMINI_API_KEY في إعدادات Vercel Dashboard).'
+      });
     }
 
-    // 5. Payload & Micro-Chunk Validation (< 1MB body)
+    // 5. Payload Validation
     const {
       content = '',
       fileBase64 = null,
@@ -200,7 +224,6 @@ ${cleanContent.slice(0, 15000)}
     let parsedQuestions = [];
 
     if (process.env.NODE_ENV === 'test' && !apiKey) {
-      // Mock deterministic response for local automated test suites
       for (let i = 0; i < qCount; i++) {
         const sampleQuote = cleanContent.split('.')[0] || 'محتوى تعليمي';
         parsedQuestions.push({
@@ -218,7 +241,6 @@ ${cleanContent.slice(0, 15000)}
         });
       }
     } else {
-      // Real Gemini API Micro-Invocation
       const parts = [];
       if (fileBase64 && mimeType) {
         parts.push({
@@ -292,7 +314,7 @@ ${cleanContent.slice(0, 15000)}
       return res.status(422).json({ error: 'لم يستطع النموذج استخراج أسئلة سليمة مطابقة للشروط من هذه الشريحة.' });
     }
 
-    // 8. Deduct Daily Quota via Firebase Admin RTDB
+    // 8. Deduct Daily Quota
     quotaData.usedCount = (quotaData.usedCount || 0) + 1;
     quotaData.lastUsedAt = Date.now();
     if (db) {

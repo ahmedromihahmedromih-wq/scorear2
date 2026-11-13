@@ -199,6 +199,10 @@
         "updatedAt": {
           ".validate": "newData.isNumber()"
         },
+        "progress": {
+          ".read": "auth != null && (auth.uid === $uid || auth.token.role === 'admin')",
+          ".write": "auth != null && (auth.uid === $uid || auth.token.role === 'admin')"
+        },
         "$other": {
           ".validate": false
         }

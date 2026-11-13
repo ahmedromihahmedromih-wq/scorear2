@@ -1,69 +1,78 @@
 /**
  * ScoreAR Serverless API: /api/upload-token
- * Items 3, 4, 5 & 8: Vercel Blob client upload token generation,
- * direct upload, and teacher-isolated orphan image deletion.
- * Strictly Rule 7 Compliant (<500 lines).
+ * Phase 1: Vercel Blob Image Uploads, Universal CORS, and Dynamic Firebase-Admin.
+ * Strictly Rule 7 Compliant (<350 lines).
  */
-import { getApps, initializeApp, cert } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
-import { put, del } from '@vercel/blob';
-import { handleUpload } from '@vercel/blob/client';
 
-// Initialize firebase-admin singleton using FIREBASE_ADMIN_SERVICE_ACCOUNT
-function getAdminAuth() {
-  if (getApps().length) return getAuth();
+const ALLOWED_ORIGINS = [
+  'https://scorear2.web.app',
+  'https://scorear2.firebaseapp.com',
+  'https://socerar2.vercel.app',
+  'https://scorear2.vercel.app'
+];
 
-  const rawSa = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT;
+function setCorsHeaders(req, res) {
+  const origin = req.headers.origin || '';
+  const isAllowed = ALLOWED_ORIGINS.includes(origin) ||
+    origin.endsWith('.vercel.app') ||
+    origin.startsWith('http://localhost:') ||
+    origin.startsWith('http://127.0.0.1:');
+
+  const allowOrigin = isAllowed ? origin : (origin ? ALLOWED_ORIGINS[0] : '*');
+  res.setHeader('Access-Control-Allow-Origin', allowOrigin);
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Max-Age', '86400');
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return true;
+  }
+  return false;
+}
+
+let cachedAuth = null;
+async function getAdminAuth() {
+  if (cachedAuth) return cachedAuth;
+
+  const rawSa = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT;
   if (!rawSa) {
-    return null; // Fail closed if missing
+    return { auth: null, missingSa: true };
   }
 
   try {
+    const { getApps, initializeApp, cert } = await import('firebase-admin/app');
+    const { getAuth } = await import('firebase-admin/auth');
+
+    if (getApps().length) {
+      cachedAuth = { auth: getAuth(), missingSa: false };
+      return cachedAuth;
+    }
+
     const sa = typeof rawSa === 'string' ? JSON.parse(rawSa) : rawSa;
-    initializeApp({ credential: cert(sa) });
-    return getAuth();
+    const app = initializeApp({
+      credential: cert(sa),
+      databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://scorear2-default-rtdb.europe-west1.firebasedatabase.app'
+    });
+    cachedAuth = { auth: getAuth(app), missingSa: false };
+    return cachedAuth;
   } catch (e) {
-    console.error('[firebase-admin] Failed to parse FIREBASE_ADMIN_SERVICE_ACCOUNT:', e.message);
-    return null;
+    console.error('[upload-token] firebase-admin init error:', e.message);
+    return { auth: null, missingSa: false, initError: e.message };
   }
 }
 
 export default async function handler(req, res) {
-  // 1. Strict Explicit CORS (Item 3)
-  const origin = req.headers.origin || '';
-  const explicitAllowedOrigins = new Set([
-    'https://socerar2.vercel.app',
-    'https://scorear2.vercel.app',
-    'https://scorear2.web.app',
-    'https://scorear2.firebaseapp.com'
-  ]);
+  // 1. Universal Safe CORS & Preflight Response
+  if (setCorsHeaders(req, res)) return;
 
-  if (process.env.VERCEL_URL) {
-    explicitAllowedOrigins.add(`https://${process.env.VERCEL_URL}`);
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'طريقة غير مدعومة. يرجى استخدام POST.' });
   }
-  if (process.env.VERCEL_BRANCH_URL) {
-    explicitAllowedOrigins.add(`https://${process.env.VERCEL_BRANCH_URL}`);
-  }
-
-  const isLocalDev = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
-  const isAllowed = explicitAllowedOrigins.has(origin) || (isLocalDev && process.env.NODE_ENV !== 'production');
-
-  if (origin && !isAllowed) {
-    return res.status(403).json({ error: 'رفض CORS: النطاق غير مصرح به.' });
-  }
-
-  if (origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  }
-
-  if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'طريقة غير مدعومة. يرجى استخدام POST.' });
 
   try {
-    // 2. Authentication: Teacher/Admin ID Token verification via firebase-admin
-    const authHeader = req.headers.authorization || '';
+    // 2. Authentication: Teacher / Admin ID Token verification
+    const authHeader = req.headers.authorization || req.headers.Authorization || '';
     if (!authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'عفواً، يجب تسجيل دخول المعلم أولاً لرفع أو حذف صور الأسئلة.' });
     }
@@ -72,22 +81,16 @@ export default async function handler(req, res) {
     let teacherUid = null;
     let isTeacher = false;
 
-    const auth = getAdminAuth();
+    const { auth, missingSa, initError } = await getAdminAuth();
     if (auth) {
       try {
         const decoded = await auth.verifyIdToken(idToken, true);
         teacherUid = decoded.uid;
         isTeacher = (decoded.role === 'teacher' || decoded.role === 'admin');
       } catch (e) {
-        console.warn('[upload-token] verifyIdToken error:', e.message);
+        console.warn('[upload-token] verifyIdToken notice:', e.message);
       }
-    } else if (!idToken.startsWith('test_') && process.env.NODE_ENV !== 'test') {
-      // Fail closed when service account is not configured in runtime
-      return res.status(401).json({ error: 'فشل التحقق: مفتاح الخدمة FIREBASE_ADMIN_SERVICE_ACCOUNT غير مهيأ في الخادم.' });
-    }
-
-    // Local automated test harness support
-    if (!teacherUid && process.env.NODE_ENV === 'test') {
+    } else if (process.env.NODE_ENV === 'test') {
       if (idToken.startsWith('test_teacher_token_')) {
         teacherUid = idToken.replace('test_teacher_token_', 'teacher_');
         isTeacher = true;
@@ -95,6 +98,14 @@ export default async function handler(req, res) {
         teacherUid = 'test_student_uid';
         isTeacher = false;
       }
+    } else if (missingSa) {
+      return res.status(500).json({
+        error: 'مفتاح الخدمة السحابي غير مضبوط (يرجى ضبط متغير FIREBASE_ADMIN_SERVICE_ACCOUNT في إعدادات Vercel Dashboard).'
+      });
+    } else {
+      return res.status(500).json({
+        error: 'فشل تهيئة خدمة المصادقة السحابية: ' + (initError || 'خطأ غير معروف')
+      });
     }
 
     if (!teacherUid) {
@@ -105,14 +116,13 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'غير مصرح: إدارة ورفع صور الأسئلة مخصص لحسابات المعلمين والأدمن فقط.' });
     }
 
-    // 3. Isolated Image Deletion with Cross-Teacher Check (Item 5)
+    // 3. Image Deletion via @vercel/blob
     if (req.body && req.body.action === 'delete') {
       const targetUrl = req.body.url;
       if (!targetUrl || typeof targetUrl !== 'string') {
         return res.status(400).json({ error: 'رابط الصورة المطلوب حذفها مفقود.' });
       }
 
-      // Security Check: Path MUST contain /quiz-images/{teacherUid}/
       const expectedPathPrefix = `/quiz-images/${teacherUid}/`;
       if (!targetUrl.includes(expectedPathPrefix)) {
         return res.status(403).json({ error: 'غير مصرح: لا يمكنك حذف صور تخص معلماً آخر.' });
@@ -120,6 +130,7 @@ export default async function handler(req, res) {
 
       try {
         if (process.env.BLOB_READ_WRITE_TOKEN) {
+          const { del } = await import('@vercel/blob');
           await del(targetUrl);
         }
         return res.status(200).json({ success: true, deletedUrl: targetUrl });
@@ -137,7 +148,6 @@ export default async function handler(req, res) {
       const cleanBase64 = rawBase64.replace(/^data:[^;]+;base64,/, '');
       const buffer = Buffer.from(cleanBase64, 'base64');
 
-      // Enforce file restrictions: type & size
       const allowedTypes = ['image/webp', 'image/jpeg', 'image/png'];
       if (!allowedTypes.includes(mime)) {
         return res.status(400).json({ error: 'نوع الملف غير مدعوم. الأنواع المسموحة فقط: WebP, JPEG, PNG.' });
@@ -148,22 +158,30 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: `حجم الصورة (${(buffer.length / 1024).toFixed(1)}KB) يتجاوز الحد المسموح (500KB).` });
       }
 
-      // Path strictly isolated to quiz-images/{uid}/
       const filename = `quiz-images/${teacherUid}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.webp`;
 
       if (process.env.BLOB_READ_WRITE_TOKEN) {
+        const { put } = await import('@vercel/blob');
         const blob = await put(filename, buffer, {
           access: 'public',
           contentType: mime
         });
         return res.status(200).json({ url: blob.url, size: buffer.length, contentType: mime });
       } else {
-        const mockUrl = `https://scorear-cdn.vercel.app/${filename}`;
-        return res.status(200).json({ url: mockUrl, size: buffer.length, contentType: mime, notice: 'dev_mock_blob' });
+        return res.status(500).json({
+          error: 'رمز التخزين السحابي غير مضبوط (يرجى ضبط BLOB_READ_WRITE_TOKEN في إعدادات Vercel Dashboard).'
+        });
       }
     }
 
-    // 5. Vercel Blob client upload handleUpload protocol (Path prefix: quiz-images/{uid}/)
+    // 5. Vercel Blob client upload handleUpload protocol
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      return res.status(500).json({
+        error: 'رمز التخزين السحابي غير مضبوط (يرجى ضبط BLOB_READ_WRITE_TOKEN في إعدادات Vercel Dashboard).'
+      });
+    }
+
+    const { handleUpload } = await import('@vercel/blob/client');
     const jsonResponse = await handleUpload({
       body: req.body,
       request: req,

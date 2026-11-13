@@ -187,17 +187,21 @@
                     </div>
                   </div>
 
-                  ${top.length > 0 ? `
-                    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                      ${top.map((p, pIdx) => `
-                        <div style="background:#0c0d1d;border:1px solid ${pIdx === 0 ? '#9665ff88' : '#ffffff16'};padding:4px 10px;border-radius:999px;display:flex;align-items:center;gap:5px;font-size:11px;">
-                          <span style="color:#c9baff;font-weight:900;">#${pIdx + 1}</span>
-                          <span style="color:#f6f3ff;font-weight:800;">${escapeHtml(p.name)}</span>
-                          <span style="color:#58dce3;font-size:10px;">(${p.score || 0}ن)</span>
-                        </div>
-                      `).join('')}
-                    </div>
-                  ` : ''}
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <button type="button" onclick="ScoreARQuizReports.exportSessionExcel(${sIdx})" style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;gap:4px;"><span>📊 كشف Excel</span></button>
+                    ${top.length > 0 ? `<button type="button" onclick="ScoreARQuizReports.printWinnerCertificate(${sIdx})" style="background:linear-gradient(135deg,#d97706,#f59e0b);color:#000;border:none;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;gap:4px;"><span>🏆 شهادة الفائز</span></button>` : ''}
+                    ${top.length > 0 ? `
+                      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                        ${top.map((p, pIdx) => `
+                          <div style="background:#0c0d1d;border:1px solid ${pIdx === 0 ? '#9665ff88' : '#ffffff16'};padding:4px 10px;border-radius:999px;display:flex;align-items:center;gap:5px;font-size:11px;">
+                            <span style="color:#c9baff;font-weight:900;">#${pIdx + 1}</span>
+                            <span style="color:#f6f3ff;font-weight:800;">${escapeHtml(p.name)}</span>
+                            <span style="color:#58dce3;font-size:10px;">(${p.score || 0}ن)</span>
+                          </div>
+                        `).join('')}
+                      </div>
+                    ` : ''}
+                  </div>
                 </div>
 
                 ${qStats.length > 0 ? `
@@ -395,12 +399,76 @@
     }
   }
 
+  function exportSessionExcel(sessionIndex) {
+    const s = cachedSessions[sessionIndex];
+    if (!s) return;
+    if (!global.XLSX) {
+      if (global.toast) global.toast('محرك Excel قيد التحميل، يرجى الانتظار ثانية.');
+      return;
+    }
+    const rows = [
+      ['تقرير نتائج مسابقة سكور آر (ScoreAR)'],
+      ['عنوان المسابقة:', s.quizTitle || 'مسابقة سكور آر'],
+      ['رمز القاعة:', s.pin || '---'],
+      ['تاريخ الجلسة:', s.createdAt ? new Date(s.createdAt).toLocaleString('ar-EG') : 'جلسة حديثة'],
+      ['إجمالي المشاركين:', s.totalStudents || 0],
+      [],
+      ['الترتيب', 'اسم الطالب', 'مجموع النقاط', 'المركز']
+    ];
+    const leaderboard = (s.top3 && s.top3.length) ? s.top3 : (s.leaderboard || []);
+    leaderboard.forEach((p, idx) => {
+      rows.push([
+        idx + 1,
+        p.name || 'طالب',
+        p.score || 0,
+        idx === 0 ? 'الأول 🥇' : idx === 1 ? 'الثاني 🥈' : idx === 2 ? 'الثالث 🥉' : 'مشارك'
+      ]);
+    });
+    if (s.questionStats && s.questionStats.length) {
+      rows.push([], ['تحليل أداء الأسئلة ونسب الصواب']);
+      rows.push(['رقم السؤال', 'نص السؤال', 'نسبة الصواب', 'صواب', 'خطأ', 'إجمالي']);
+      s.questionStats.forEach((q, qIdx) => {
+        rows.push([qIdx + 1, q.questionText || '', `${q.accuracy || 0}%`, q.correctAnswers || 0, q.wrongAnswers || 0, q.totalAnswers || 0]);
+      });
+    }
+    const ws = global.XLSX.utils.aoa_to_sheet(rows);
+    const wb = global.XLSX.utils.book_new();
+    global.XLSX.utils.book_append_sheet(wb, ws, 'كشف الدرجات');
+    const safeTitle = (s.quizTitle || 'ScoreAR').replace(/[/\\?%*:|"<>]/g, '_');
+    global.XLSX.writeFile(wb, `كشف_درجات_${safeTitle}_${s.pin || ''}.xlsx`);
+    if (global.toast) global.toast('تم تصدير كشف الدرجات بصيغة Excel بنجاح 📊');
+  }
+
+  function printWinnerCertificate(sessionIndex) {
+    const s = cachedSessions[sessionIndex];
+    if (!s) return;
+    const top1 = (s.top3 && s.top3[0]) || (s.leaderboard && s.leaderboard[0]);
+    if (!top1) {
+      if (global.toast) global.toast('لا يوجد فائز مسجل لهذه الجلسة.');
+      return;
+    }
+    if (global.ScoreARPodiumCapture && typeof global.ScoreARPodiumCapture.downloadWinnerCertificate === 'function') {
+      const winnerData = {
+        name: top1.name || 'بطل سكور آر',
+        score: top1.score || 0,
+        avatarId: top1.avatarId || 'char_01',
+        quizTitle: s.quizTitle || 'مسابقة سكور آر'
+      };
+      global.ScoreARPodiumCapture.downloadWinnerCertificate(winnerData, 1, s.worldId || 'royal');
+      if (global.toast) global.toast('جاري تنزيل شهادة التقدير الملكية للبطل الفائز 🌟');
+    } else {
+      if (global.toast) global.toast('محرك الشهادات غير محمل حالياً.');
+    }
+  }
+
   global.ScoreARQuizReports = {
     openReportsHub,
     closeReportsHub,
     switchTab: (t) => { currentTab = t; renderReportsView(); },
     editWeakQuestion,
-    resumeQuiz
+    resumeQuiz,
+    exportSessionExcel,
+    printWinnerCertificate
   };
 
 })(typeof window !== 'undefined' ? window : this);

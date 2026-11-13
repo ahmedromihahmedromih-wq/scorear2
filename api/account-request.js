@@ -9,10 +9,12 @@
 export default async function handler(req, res) {
   const origin = req.headers.origin || '';
   const allowedOrigins = [
-    'https://scorear-e4186.web.app',
-    'https://scorear-e4186.firebaseapp.com',
     'https://scorear2.web.app',
-    'https://scorear2.firebaseapp.com'
+    'https://scorear2.firebaseapp.com',
+    'https://socerar2.vercel.app',
+    'https://scorear2.vercel.app',
+    'https://scorear-e4186.web.app',
+    'https://scorear-e4186.firebaseapp.com'
   ];
   const isAllowed = allowedOrigins.includes(origin) || origin.endsWith('.vercel.app') || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
   res.setHeader('Access-Control-Allow-Origin', isAllowed ? origin : allowedOrigins[0]);
@@ -65,9 +67,10 @@ export default async function handler(req, res) {
 
       if (!getApps().length) {
         let credential = null;
-        if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        const rawSa = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT;
+        if (rawSa) {
           try {
-            credential = cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT));
+            credential = cert(typeof rawSa === 'string' ? JSON.parse(rawSa) : rawSa);
           } catch (e) {}
         } else if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
           credential = cert({

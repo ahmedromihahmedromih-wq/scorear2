@@ -138,7 +138,8 @@
         attempt++;
         if (onStatus) onStatus(`إرسال شريحة (${topic.title}) [محاولة ${attempt}/${maxRetries}]...`);
 
-        const resp = await fetch('/api/generate-questions', {
+        const apiUrl = (typeof window !== 'undefined' && window.SCOREAR_API_URL ? window.SCOREAR_API_URL : '') + '/api/generate-questions';
+        const resp = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

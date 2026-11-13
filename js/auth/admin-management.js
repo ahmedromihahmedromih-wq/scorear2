@@ -46,7 +46,8 @@
     if (auth && auth.currentUser) {
       idToken = await auth.currentUser.getIdToken(true);
     }
-    const res = await fetch('/api/account-request', {
+    const apiUrl = (typeof window !== 'undefined' && window.SCOREAR_API_URL ? window.SCOREAR_API_URL : '') + '/api/account-request';
+    const res = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

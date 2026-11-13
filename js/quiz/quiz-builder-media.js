@@ -106,7 +106,8 @@
       }
     }
 
-    const response = await fetch('/api/upload-token', {
+    const apiUrl = (typeof window !== 'undefined' && window.SCOREAR_API_URL ? window.SCOREAR_API_URL : '') + '/api/upload-token';
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -255,7 +256,8 @@
         }
       }
       if (!idToken) return;
-      await fetch('/api/upload-token', {
+      const apiUrl = (typeof window !== 'undefined' && window.SCOREAR_API_URL ? window.SCOREAR_API_URL : '') + '/api/upload-token';
+      await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
         body: JSON.stringify({ action: 'delete', url: imageUrl })

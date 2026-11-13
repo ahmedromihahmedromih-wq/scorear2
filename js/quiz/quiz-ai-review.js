@@ -164,7 +164,8 @@
       if (!user) throw new Error('يرجى تسجيل الدخول أولاً.');
       const idToken = await user.getIdToken(true);
 
-      const resp = await fetch('/api/generate-questions', {
+      const apiUrl = (typeof window !== 'undefined' && window.SCOREAR_API_URL ? window.SCOREAR_API_URL : '') + '/api/generate-questions';
+      const resp = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
         body: JSON.stringify({

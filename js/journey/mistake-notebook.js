@@ -226,18 +226,9 @@
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          ${due.length > 0 ? `
-            <button onclick="ScoreARMistakeNotebook.startReviewSession()" class="btn launch-primary" style="padding:10px 20px;font-size:13px;">
-              ${ui.icon('play', { size: 15 })} راجع أخطائي الآن (${due.length})
-            </button>
-          ` : `
-            <button disabled class="btn launch-outline" style="padding:10px 18px;font-size:13px;opacity:0.6;cursor:not-allowed;">
-              ${ui.icon('clock', { size: 15 })} لا توجد أخطاء جاهزة للمراجعة
-            </button>
-          `}
-          <button onclick="ScoreARMistakeNotebook.closeNotebook()" class="btn launch-outline" style="padding:8px 14px;font-size:13px;">
-            ${ui.icon('close', { size: 15 })} إغلاق
-          </button>
+          ${active.length > 0 ? `<button onclick="ScoreARMistakeNotebook.trainWithAI()" class="btn launch-outline" style="padding:9px 16px;font-size:13px;border-color:#a855f7;color:#d8b4fe;">${ui.icon('spark', { size: 15 })} درّبني على أخطائي بالذكاء الاصطناعي ⚡</button>` : ''}
+          ${due.length > 0 ? `<button onclick="ScoreARMistakeNotebook.startReviewSession()" class="btn launch-primary" style="padding:10px 20px;font-size:13px;">${ui.icon('play', { size: 15 })} راجع أخطائي الآن (${due.length})</button>` : `<button disabled class="btn launch-outline" style="padding:10px 18px;font-size:13px;opacity:0.6;cursor:not-allowed;">${ui.icon('clock', { size: 15 })} لا توجد أخطاء جاهزة للمراجعة</button>`}
+          <button onclick="ScoreARMistakeNotebook.closeNotebook()" class="btn launch-outline" style="padding:8px 14px;font-size:13px;">${ui.icon('close', { size: 15 })} إغلاق</button>
         </div>
       </header>
       <main style="max-width:960px;width:100%;margin:0 auto;padding:24px 20px;flex:1;display:flex;flex-direction:column;gap:20px;">
@@ -480,12 +471,29 @@
     `;
   }
 
+  function trainWithAI() {
+    const state = loadState();
+    const active = state.mistakes.filter(m => !m.archived && !m.mastered);
+    if (!active.length) { if (global.toast) global.toast('لا توجد أخطاء نشطة حالياً للتدريب عليها.'); return; }
+    const remedialText = active.slice(0, 5).map((m, idx) =>
+      `[مسألة ${idx + 1} - مهارة: ${m.skill || 'عام'}]\nالسؤال: ${m.questionText}\nخطأ الطالب: ${m.chosenOption || 'لم يجب'}\nالإجابة الصحيحة: ${m.opts ? m.opts[m.answer] : ''}`
+    ).join('\n\n');
+    closeNotebook();
+    if (global.ScoreARQuizAI?.openAiStudio) {
+      global.ScoreARQuizAI.openAiStudio({
+        mode: 'remedial', initialTitle: 'اختبار علاجي مخصص لمعالجة الأخطاء ⚡',
+        initialText: `صغ اختباراً علاجياً تفاعلياً جديداً لتقوية الفهم في المسائل والمفاهيم التالية وفق أخطاء الطالب الفعلية:\n\n${remedialText}`
+      });
+      if (global.toast) global.toast('تم فتح أستوديو الذكاء الاصطناعي لاختبارك العلاجي 🌟');
+    }
+  }
+
   if (typeof window !== 'undefined') loadState();
 
   global.ScoreARMistakeNotebook = {
     loadState, saveState, migrateV1ToV2, recordMistake, getActiveMistakes, getMasteredMistakes,
     isDueForReview, openNotebook, closeNotebook, startReviewSession, closeReviewSession,
-    handleReviewOptionClick, nextReviewQuestion, renderNotebookHtml, shuffleOptions
+    handleReviewOptionClick, nextReviewQuestion, renderNotebookHtml, shuffleOptions, trainWithAI
   };
 
 })(typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : this));

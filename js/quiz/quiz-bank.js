@@ -133,7 +133,7 @@
         </div>
       </header>
 
-      <main class="scorear-bank-main scorear-open-page">
+      <main class="scorear-bank-main">
         ${ui().cosmicBackdrop ? ui().cosmicBackdrop() : ''}
         <div class="scorear-bank-inner">
           ${renderHeroBanner(allQuizzes, allQuestions, allFolders)}

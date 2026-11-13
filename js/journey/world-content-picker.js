@@ -166,7 +166,7 @@
         </div>
 
         <!-- Main Content Area -->
-        <div style="flex:1;overflow-y:auto;padding:16px 22px;">
+        <div style="flex:1 1 0%;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:16px 22px;">
           ${activeTab === 'quizzes' ? `
             <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));gap:12px;">
               ${!quizzes.length ? `

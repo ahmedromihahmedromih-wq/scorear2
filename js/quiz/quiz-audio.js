@@ -20,14 +20,16 @@
   let sfxVolume = 0.85;
 
   const MUSIC_TRACKS = {
-    royal: 'assets/audio/music/royal.mp3',
-    oasis: 'assets/audio/music/oasis.mp3',
-    cosmic: 'assets/audio/music/cosmic.mp3',
-    treasure: 'assets/audio/music/treasure.mp3',
-    stadium: 'assets/audio/music/stadium.mp3',
+    lobby: 'assets/audio/music/treasure.mp3',
+    waiting: 'assets/audio/music/treasure.mp3',
+    question: 'assets/audio/music/magic.mp3',
+    royal: 'assets/audio/music/magic.mp3',
+    oasis: 'assets/audio/music/magic.mp3',
+    cosmic: 'assets/audio/music/magic.mp3',
+    treasure: 'assets/audio/music/magic.mp3',
+    stadium: 'assets/audio/music/magic.mp3',
     magic: 'assets/audio/music/magic.mp3',
-    lobby: 'assets/audio/music/lobby_warm.mp3',
-    victory: 'assets/audio/music/victory.mp3'
+    victory: 'assets/audio/music/magic.mp3'
   };
 
   const SFX_FILES = {
@@ -103,12 +105,13 @@
   }
 
   function playMusic(trackId, customVol = null) {
-    const key = String(trackId || 'royal').toLowerCase();
+    const rawKey = String(trackId || 'magic').toLowerCase().trim();
+    const key = (rawKey === 'lobby' || rawKey === 'waiting') ? 'lobby' : (MUSIC_TRACKS[rawKey] ? rawKey : 'magic');
     const vol = (typeof customVol === 'number') ? customVol : musicVolume;
     desiredTrack = key;
     desiredVol = vol;
     if (isMuted) { updateMuteIcons(); return; }
-    const url = MUSIC_TRACKS[key] || MUSIC_TRACKS.royal;
+    const url = MUSIC_TRACKS[key] || 'assets/audio/music/magic.mp3';
 
     if (currentMusic && currentTrackName === key) {
       currentMusic.volume = vol;

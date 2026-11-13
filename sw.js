@@ -4,7 +4,7 @@
  * Ensures resilient classroom gameplay on slow or intermittent school networks.
  */
 
-const CACHE_NAME = 'scorear-v13-organized-cache';
+const CACHE_NAME = 'scorear-v14-audio-unified-cache';
 const STATIC_ASSETS = [
   './',
   './index.html',
